@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '@src/middlewares/auth';
 import * as s from './service';
 
 export async function getAll(_req: Request, res: Response) {
@@ -6,27 +7,20 @@ export async function getAll(_req: Request, res: Response) {
   res.json(r);
 }
 
-export async function create(req: Request, res: Response) {
-  const { name, weightClass } = req.body;
-  if (!name || !weightClass) return res.status(400).json({ error: 'invalid' });
-  const r = await s.add(name, weightClass);
-  res.status(201).json(r);
-}
-
-export async function update(req: Request, res: Response) {
-  const { id } = req.params;
-  const { name, weightClass } = req.body;
-  if (!id || !name || !weightClass) return res.status(400).json({ error: 'invalid' });
-  const r = await s.edit(id, name, weightClass);
+export async function getProfile(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const r = await s.getById(req.user.userId);
   if (!r) return res.status(404).json({ error: 'not_found' });
   res.json(r);
 }
 
-export async function remove(req: Request, res: Response) {
-  const { id } = req.params;
-  if (!id) return res.status(400).json({ error: 'invalid' });
-  await s.del(id);
-  res.status(204).end();
+export async function updateProfile(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const { name, weightClass } = req.body;
+  if (!name || !weightClass) return res.status(400).json({ error: 'invalid' });
+  const r = await s.edit(req.user.userId, name, weightClass);
+  if (!r) return res.status(404).json({ error: 'not_found' });
+  res.json(r);
 }
 
 

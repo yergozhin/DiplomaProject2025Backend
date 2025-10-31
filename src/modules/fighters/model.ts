@@ -1,7 +1,8 @@
 export type Fighter = {
   id: string;
-  name: string;
-  weightClass: string;
+  email: string;
+  name: string | null;
+  weightClass: string | null;
 };
 
 
