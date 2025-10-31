@@ -1,0 +1,8 @@
+docs/diagrams/*.tmp
+docs/diagrams/*.bak
+docs/
+outline.md
+notes_2025.md
+.env
+
+
