@@ -5,6 +5,7 @@ import * as c from './controller';
 
 const r = Router();
 r.get('/', requireAuth, requireRole(Roles.Fighter), c.getAll);
+r.post('/request', requireAuth, requireRole(Roles.Fighter), c.sendRequest);
 export default r;
 
 
