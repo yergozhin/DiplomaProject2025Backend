@@ -10,11 +10,11 @@ export async function register(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'invalid' });
-  const u = await service.login(email, password);
-  if (!u) return res.status(401).json({ error: 'unauthorized' });
-  res.json(u);
+  const { email, password, role } = req.body;
+  if (!email || !password || !role) return res.status(400).json({ error: 'invalid' });
+  const result = await service.login(email, password, role);
+  if (!result) return res.status(401).json({ error: 'unauthorized' });
+  res.json(result);
 }
 
 

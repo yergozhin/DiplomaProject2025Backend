@@ -1,7 +1,8 @@
 export type AuthUser = {
   id: string;
   email: string;
-  role: 'fighter' | 'plo';
+  role: string;
+  password_hash?: string;
 };
 
 
