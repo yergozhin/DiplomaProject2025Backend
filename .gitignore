@@ -10,3 +10,4 @@ notes_2025.md
 docs/
 docs/diagrams/*.tmp
 docs/diagrams/*.bak
+src/db/migrations/
