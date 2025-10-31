@@ -12,4 +12,8 @@ export function getById(id: string) {
   return repo.getById(id);
 }
 
+export function listExcept(userId: string) {
+  return repo.allExcept(userId);
+}
+
 

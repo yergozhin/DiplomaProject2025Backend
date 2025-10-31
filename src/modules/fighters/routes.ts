@@ -5,6 +5,7 @@ import * as c from './controller';
 
 const r = Router();
 r.get('/', c.getAll);
+r.get('/list', requireAuth, requireRole(Roles.Fighter), c.getList);
 r.get('/profile', requireAuth, requireRole(Roles.Fighter), c.getProfile);
 r.put('/profile', requireAuth, requireRole(Roles.Fighter), c.updateProfile);
 export default r;

@@ -23,4 +23,10 @@ export async function updateProfile(req: AuthRequest, res: Response) {
   res.json(r);
 }
 
+export async function getList(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const r = await s.listExcept(req.user.userId);
+  res.json(r);
+}
+
 
