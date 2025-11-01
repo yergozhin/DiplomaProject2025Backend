@@ -72,10 +72,18 @@ export async function getAvailableByFighterId(fighterId: string): Promise<any[]>
     join fights f on o.fight_id = f.id
     join offers oa on oa.fight_id = f.id and oa.event_id = o.event_id and oa.event_slot_id = o.event_slot_id and oa.plo_id = o.plo_id and oa.fighter_id = f.fighter_a_id
     join offers ob on ob.fight_id = f.id and ob.event_id = o.event_id and ob.event_slot_id = o.event_slot_id and ob.plo_id = o.plo_id and ob.fighter_id = f.fighter_b_id
-    where o.fighter_id = $1 and o.status = 'pending'
+    where o.fighter_id = $1 
+      and o.status = 'pending'
+      and oa.status != 'rejected'
+      and ob.status != 'rejected'
     order by o.created_at desc
   `, [fighterId]);
   return r.rows;
+}
+
+export async function updateStatus(id: string, fighterId: string, status: 'accepted' | 'rejected'): Promise<Offer | null> {
+  const r = await query('update offers set status=$1 where id=$2 and fighter_id=$3 returning id, fight_id as "fightId", event_id as "eventId", event_slot_id as "eventSlotId", fighter_id as "fighterId", plo_id as "ploId", amount, currency, status, created_at as "createdAt"', [status, id, fighterId]);
+  return r.rows[0] || null;
 }
 
 

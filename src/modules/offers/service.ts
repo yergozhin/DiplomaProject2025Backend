@@ -51,4 +51,19 @@ export function getAvailableByFighterId(fighterId: string) {
   return repo.getAvailableByFighterId(fighterId);
 }
 
+export async function updateOfferStatus(fighterId: string, offerId: string, status: 'accepted' | 'rejected') {
+  const offer = await repo.getById(offerId);
+  if (!offer) {
+    return { error: 'offer_not_found' };
+  }
+  if (offer.fighterId !== fighterId) {
+    return { error: 'forbidden' };
+  }
+  if (offer.status !== 'pending') {
+    return { error: 'offer_already_responded' };
+  }
+  const updated = await repo.updateStatus(offerId, fighterId, status);
+  return { offer: updated };
+}
+
 

@@ -48,4 +48,23 @@ export async function getAvailableOffers(req: AuthRequest, res: Response) {
   res.json(r);
 }
 
+export async function updateOfferStatus(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const { offerId, status } = req.body;
+  if (!offerId || !status) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  if (status !== 'accepted' && status !== 'rejected') {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const result = await s.updateOfferStatus(req.user.userId, offerId, status);
+  if ('error' in result) {
+    if (result.error === 'offer_not_found') return res.status(404).json({ error: 'offer_not_found' });
+    if (result.error === 'forbidden') return res.status(403).json({ error: 'forbidden' });
+    if (result.error === 'offer_already_responded') return res.status(400).json({ error: 'offer_already_responded' });
+    return res.status(400).json({ error: result.error });
+  }
+  res.json(result.offer);
+}
+
 
