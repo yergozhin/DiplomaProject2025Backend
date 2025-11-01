@@ -40,4 +40,14 @@ export async function getRequestsTo(fighterId: string): Promise<any[]> {
   return r.rows;
 }
 
+export async function getById(id: string): Promise<Fight | null> {
+  const r = await query('select id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status from fights where id=$1', [id]);
+  return r.rows[0] || null;
+}
+
+export async function accept(id: string): Promise<Fight | null> {
+  const r = await query('update fights set status=$1 where id=$2 returning id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status', ['accepted', id]);
+  return r.rows[0] || null;
+}
+
 

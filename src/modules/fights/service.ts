@@ -27,4 +27,22 @@ export function getRequestsTo(fighterId: string) {
   return repo.getRequestsTo(fighterId);
 }
 
+export async function acceptFight(fightId: string, fighterId: string) {
+  const fight = await repo.getById(fightId);
+  if (!fight) {
+    return { error: 'fight_not_found' };
+  }
+  if (fight.status !== 'requested') {
+    return { error: 'invalid_status' };
+  }
+  if (fight.fighterBId !== fighterId) {
+    return { error: 'not_receiver' };
+  }
+  const updated = await repo.accept(fightId);
+  if (!updated) {
+    return { error: 'accept_failed' };
+  }
+  return updated;
+}
+
 
