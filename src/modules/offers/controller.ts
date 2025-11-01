@@ -42,4 +42,10 @@ export async function deleteOffer(req: AuthRequest, res: Response) {
   res.status(204).end();
 }
 
+export async function getAvailableOffers(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const r = await s.getAvailableByFighterId(req.user.userId);
+  res.json(r);
+}
+
 

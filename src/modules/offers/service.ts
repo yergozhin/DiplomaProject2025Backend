@@ -47,4 +47,8 @@ export async function deleteOffer(ploId: string, fightId: string) {
   return { success: true };
 }
 
+export function getAvailableByFighterId(fighterId: string) {
+  return repo.getAvailableByFighterId(fighterId);
+}
+
 

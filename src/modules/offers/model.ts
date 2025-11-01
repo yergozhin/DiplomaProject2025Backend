@@ -7,6 +7,7 @@ export type Offer = {
   ploId: string;
   amount: number;
   currency: string;
+  status: 'pending' | 'accepted' | 'rejected';
   createdAt: string;
 };
 
