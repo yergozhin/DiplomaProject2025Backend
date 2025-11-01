@@ -17,7 +17,18 @@ export async function getById(id: string): Promise<Fighter | null> {
 }
 
 export async function allExcept(excludeId: string): Promise<Fighter[]> {
-  const r = await query('select id, email, name, weight_class as "weightClass" from users where role=$1 and id != $2 order by name', ['fighter', excludeId]);
+  const r = await query(`
+    select distinct u.id, u.email, u.name, u.weight_class as "weightClass" 
+    from users u
+    where u.role = $1 
+      and u.id != $2
+      and not exists (
+        select 1 from fights f 
+        where f.status in ('requested', 'accepted', 'scheduled')
+          and ((f.fighter_a_id = u.id and f.fighter_b_id = $2) or (f.fighter_a_id = $2 and f.fighter_b_id = u.id))
+      )
+    order by u.name
+  `, ['fighter', excludeId]);
   return r.rows as Fighter[];
 }
 
