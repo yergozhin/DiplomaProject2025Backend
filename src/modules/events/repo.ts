@@ -12,7 +12,7 @@ export async function create(ploId: string, name: string): Promise<Event> {
 }
 
 export async function addSlot(eventId: string, startTime: string): Promise<EventSlot> {
-  const r = await query('insert into event_slots (event_id, start_time) values ($1, $2) returning id, event_id as "eventId", start_time as "startTime"', [eventId, startTime]);
+  const r = await query('insert into event_slots (event_id, start_time) values ($1, $2) returning id, event_id as "eventId", start_time as "startTime", fight_id as "fightId"', [eventId, startTime]);
   return r.rows[0];
 }
 

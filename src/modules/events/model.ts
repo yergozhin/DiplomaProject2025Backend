@@ -9,6 +9,7 @@ export type EventSlot = {
   id: string;
   eventId: string;
   startTime: string;
+  fightId: string | null;
 };
 
 
