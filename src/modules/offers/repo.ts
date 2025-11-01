@@ -86,4 +86,17 @@ export async function updateStatus(id: string, fighterId: string, status: 'accep
   return r.rows[0] || null;
 }
 
+export async function getOffersForFightEventSlot(fightId: string, eventId: string, eventSlotId: string, ploId: string): Promise<Offer[]> {
+  const r = await query('select id, fight_id as "fightId", event_id as "eventId", event_slot_id as "eventSlotId", fighter_id as "fighterId", plo_id as "ploId", amount, currency, status, created_at as "createdAt" from offers where fight_id=$1 and event_id=$2 and event_slot_id=$3 and plo_id=$4', [fightId, eventId, eventSlotId, ploId]);
+  return r.rows as Offer[];
+}
+
+export async function updateFightStatus(fightId: string, status: string): Promise<void> {
+  await query('update fights set status=$1 where id=$2', [status, fightId]);
+}
+
+export async function updateEventSlotFight(eventSlotId: string, fightId: string): Promise<void> {
+  await query('update event_slots set fight_id=$1 where id=$2', [fightId, eventSlotId]);
+}
+
 

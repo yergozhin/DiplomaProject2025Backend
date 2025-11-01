@@ -63,6 +63,13 @@ export async function updateOfferStatus(fighterId: string, offerId: string, stat
     return { error: 'offer_already_responded' };
   }
   const updated = await repo.updateStatus(offerId, fighterId, status);
+  if (updated && status === 'accepted') {
+    const offers = await repo.getOffersForFightEventSlot(offer.fightId, offer.eventId, offer.eventSlotId, offer.ploId);
+    if (offers.length === 2 && offers.every(o => o.status === 'accepted')) {
+      await repo.updateFightStatus(offer.fightId, 'scheduled');
+      await repo.updateEventSlotFight(offer.eventSlotId, offer.fightId);
+    }
+  }
   return { offer: updated };
 }
 
