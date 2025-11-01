@@ -50,4 +50,28 @@ export async function accept(id: string): Promise<Fight | null> {
   return r.rows[0] || null;
 }
 
+export async function getAccepted(): Promise<any[]> {
+  const r = await query(`
+    select 
+      f.id,
+      f.status,
+      f.fighter_a_id as "fighterAId",
+      f.fighter_b_id as "fighterBId",
+      ua.id as "fighterAUserId",
+      ua.email as "fighterAEmail",
+      ua.name as "fighterAName",
+      ua.weight_class as "fighterAWeightClass",
+      ub.id as "fighterBUserId",
+      ub.email as "fighterBEmail",
+      ub.name as "fighterBName",
+      ub.weight_class as "fighterBWeightClass"
+    from fights f
+    join users ua on f.fighter_a_id = ua.id
+    join users ub on f.fighter_b_id = ub.id
+    where f.status = $1
+    order by f.id desc
+  `, ['accepted']);
+  return r.rows;
+}
+
 

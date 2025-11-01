@@ -41,4 +41,9 @@ export async function acceptFight(req: AuthRequest, res: Response) {
   res.json(result);
 }
 
+export async function getAccepted(_req: AuthRequest, res: Response) {
+  const r = await s.getAccepted();
+  res.json(r);
+}
+
 

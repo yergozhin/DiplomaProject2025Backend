@@ -45,4 +45,8 @@ export async function acceptFight(fightId: string, fighterId: string) {
   return updated;
 }
 
+export function getAccepted() {
+  return repo.getAccepted();
+}
+
 
