@@ -4,7 +4,7 @@ export function list() {
   return repo.all();
 }
 
-export async function sendOffers(ploId: string, fightId: string, eventId: string, eventSlotId: string) {
+export async function sendOffers(ploId: string, fightId: string, eventId: string, eventSlotId: string, fighterAAmount: number, fighterACurrency: string, fighterBAmount: number, fighterBCurrency: string) {
   const fight = await repo.getFightById(fightId);
   if (!fight) {
     return { error: 'fight_not_found' };
@@ -29,9 +29,22 @@ export async function sendOffers(ploId: string, fightId: string, eventId: string
   if (slot.fightId !== null) {
     return { error: 'slot_already_assigned' };
   }
-  const offerA = await repo.create(fightId, eventId, eventSlotId, fight.fighterAId, ploId);
-  const offerB = await repo.create(fightId, eventId, eventSlotId, fight.fighterBId, ploId);
+  const existing = await repo.findExistingOffer(fightId, ploId);
+  if (existing) {
+    return { error: 'offer_already_exists' };
+  }
+  const offerA = await repo.create(fightId, eventId, eventSlotId, fight.fighterAId, ploId, fighterAAmount, fighterACurrency);
+  const offerB = await repo.create(fightId, eventId, eventSlotId, fight.fighterBId, ploId, fighterBAmount, fighterBCurrency);
   return { offers: [offerA, offerB] };
+}
+
+export async function deleteOffer(ploId: string, fightId: string) {
+  const existing = await repo.findExistingOffer(fightId, ploId);
+  if (!existing) {
+    return { error: 'offer_not_found' };
+  }
+  await repo.deleteByFightAndPlo(fightId, ploId);
+  return { success: true };
 }
 
 

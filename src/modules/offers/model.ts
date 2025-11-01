@@ -5,6 +5,8 @@ export type Offer = {
   eventSlotId: string;
   fighterId: string;
   ploId: string;
+  amount: number;
+  currency: string;
   createdAt: string;
 };
 
