@@ -16,4 +16,14 @@ export async function addSlot(eventId: string, startTime: string): Promise<Event
   return r.rows[0];
 }
 
+export async function getByPloId(ploId: string): Promise<any[]> {
+  const events = await query('select id, name, plo_id as "ploId", created_at as "createdAt" from events where plo_id = $1 order by created_at desc', [ploId]);
+  const result = [];
+  for (const event of events.rows) {
+    const slots = await query('select id, event_id as "eventId", start_time as "startTime", fight_id as "fightId" from event_slots where event_id = $1 order by start_time', [event.id]);
+    result.push({ ...event, slots: slots.rows });
+  }
+  return result;
+}
+
 

@@ -17,4 +17,10 @@ export async function create(req: AuthRequest, res: Response) {
   res.status(201).json(event);
 }
 
+export async function getMyEvents(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const r = await s.getByPloId(req.user.userId);
+  res.json(r);
+}
+
 

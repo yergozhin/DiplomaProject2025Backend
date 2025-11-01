@@ -15,4 +15,8 @@ export async function createEvent(ploId: string, name: string, slots: string[]) 
   return { ...event, slots: createdSlots };
 }
 
+export function getByPloId(ploId: string) {
+  return repo.getByPloId(ploId);
+}
+
 
