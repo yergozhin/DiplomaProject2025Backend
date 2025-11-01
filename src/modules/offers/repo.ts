@@ -74,8 +74,8 @@ export async function getAvailableByFighterId(fighterId: string): Promise<any[]>
     join offers ob on ob.fight_id = f.id and ob.event_id = o.event_id and ob.event_slot_id = o.event_slot_id and ob.plo_id = o.plo_id and ob.fighter_id = f.fighter_b_id
     where o.fighter_id = $1 
       and o.status = 'pending'
-      and oa.status != 'rejected'
-      and ob.status != 'rejected'
+      and not (oa.status = 'rejected' or ob.status = 'rejected')
+      and not (oa.status = 'accepted' and ob.status = 'accepted')
     order by o.created_at desc
   `, [fighterId]);
   return r.rows;
