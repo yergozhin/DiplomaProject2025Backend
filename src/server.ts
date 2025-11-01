@@ -1,6 +1,7 @@
 import morgan from 'morgan';
 import path from 'path';
 import helmet from 'helmet';
+import cors from 'cors';
 import express, { Request, Response, NextFunction } from 'express';
 import logger from 'jet-logger';
 
@@ -22,7 +23,8 @@ const app = express();
 
 // **** Middleware **** //
 
-// Basic middleware
+app.use(cors());
+
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
