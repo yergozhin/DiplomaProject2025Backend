@@ -21,4 +21,10 @@ export async function sendRequest(req: AuthRequest, res: Response) {
   res.status(201).json(result);
 }
 
+export async function getRequestsTo(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const r = await s.getRequestsTo(req.user.userId);
+  res.json(r);
+}
+
 

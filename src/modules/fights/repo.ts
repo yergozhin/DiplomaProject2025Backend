@@ -21,4 +21,23 @@ export async function getFighterById(id: string): Promise<{ id: string } | null>
   return r.rows[0] || null;
 }
 
+export async function getRequestsTo(fighterId: string): Promise<any[]> {
+  const r = await query(`
+    select 
+      f.id,
+      f.status,
+      f.fighter_a_id as "fighterAId",
+      f.fighter_b_id as "fighterBId",
+      u.id as "senderId",
+      u.email as "senderEmail",
+      u.name as "senderName",
+      u.weight_class as "senderWeightClass"
+    from fights f
+    join users u on f.fighter_a_id = u.id
+    where f.fighter_b_id = $1 and f.status = $2
+    order by f.id desc
+  `, [fighterId, 'requested']);
+  return r.rows;
+}
+
 

@@ -23,4 +23,8 @@ export async function sendRequest(fromFighterId: string, toFighterId: string) {
   return repo.create(fromFighterId, toFighterId);
 }
 
+export function getRequestsTo(fighterId: string) {
+  return repo.getRequestsTo(fighterId);
+}
+
 
