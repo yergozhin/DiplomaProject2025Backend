@@ -51,6 +51,10 @@ export function getAvailableByFighterId(fighterId: string) {
   return repo.getAvailableByFighterId(fighterId);
 }
 
+export function getAvailableOffersForFightByFighter(fightId: string, fighterId: string) {
+  return repo.getAvailableOffersForFightByFighter(fightId, fighterId);
+}
+
 export async function updateOfferStatus(fighterId: string, offerId: string, status: 'accepted' | 'rejected') {
   const offer = await repo.getById(offerId);
   if (!offer) {

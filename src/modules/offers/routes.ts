@@ -6,6 +6,7 @@ import * as c from './controller';
 const r = Router();
 r.get('/', requireAuth, requireRole(Roles.PLO), c.getAll);
 r.get('/available-offers', requireAuth, requireRole(Roles.Fighter), c.getAvailableOffers);
+r.get('/available-offers/fight/:fightId', requireAuth, requireRole(Roles.Fighter), c.getAvailableOffersForFight);
 r.post('/', requireAuth, requireRole(Roles.PLO), c.sendOffers);
 r.delete('/', requireAuth, requireRole(Roles.PLO), c.deleteOffer);
 r.patch('/status', requireAuth, requireRole(Roles.Fighter), c.updateOfferStatus);

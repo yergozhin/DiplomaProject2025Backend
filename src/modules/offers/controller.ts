@@ -67,4 +67,14 @@ export async function updateOfferStatus(req: AuthRequest, res: Response) {
   res.json(result.offer);
 }
 
+export async function getAvailableOffersForFight(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const { fightId } = req.params;
+  if (!fightId) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const r = await s.getAvailableOffersForFightByFighter(fightId, req.user.userId);
+  res.json(r);
+}
+
 
