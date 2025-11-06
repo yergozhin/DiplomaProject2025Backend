@@ -140,7 +140,7 @@ export async function getAvailableFightsForPlo(ploId: string): Promise<any[]> {
     from fights f
     join users ua on f.fighter_a_id = ua.id
     join users ub on f.fighter_b_id = ub.id
-    where f.status in ('accepted', 'scheduled')
+    where f.status = 'accepted'
       and (
         not exists (
           select 1 from offers o where o.fight_id = f.id and o.plo_id = $1
@@ -150,17 +150,6 @@ export async function getAvailableFightsForPlo(ploId: string): Promise<any[]> {
           where o.fight_id = f.id 
             and o.plo_id = $1 
             and o.status = 'rejected'
-        )
-        or exists (
-          select 1 from offers oa, offers ob
-          where oa.fight_id = f.id 
-            and oa.plo_id = $1
-            and oa.fighter_id = f.fighter_a_id
-            and ob.fight_id = f.id
-            and ob.plo_id = $1
-            and ob.fighter_id = f.fighter_b_id
-            and oa.status = 'accepted'
-            and ob.status = 'accepted'
         )
       )
     order by f.id desc
