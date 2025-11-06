@@ -57,4 +57,8 @@ export function getScheduledForFighter(fighterId: string) {
   return repo.getScheduledForFighter(fighterId);
 }
 
+export function getAvailableFightsForPlo(ploId: string) {
+  return repo.getAvailableFightsForPlo(ploId);
+}
+
 

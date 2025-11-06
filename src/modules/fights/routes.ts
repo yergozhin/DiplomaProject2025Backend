@@ -8,6 +8,7 @@ r.get('/', requireAuth, requireRole(Roles.Fighter), c.getAll);
 r.get('/accepted', requireAuth, requireAnyRole(Roles.Fighter, Roles.PLO), c.getAccepted);
 r.get('/accepted/my', requireAuth, requireRole(Roles.Fighter), c.getAcceptedForFighter);
 r.get('/scheduled', requireAuth, requireRole(Roles.Fighter), c.getScheduled);
+r.get('/available-for-plo', requireAuth, requireRole(Roles.PLO), c.getAvailableFightsForPlo);
 r.get('/requests', requireAuth, requireRole(Roles.Fighter), c.getRequestsTo);
 r.post('/request', requireAuth, requireRole(Roles.Fighter), c.sendRequest);
 r.put('/:id/accept', requireAuth, requireRole(Roles.Fighter), c.acceptFight);

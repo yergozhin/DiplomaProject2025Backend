@@ -58,4 +58,10 @@ export async function getScheduled(req: AuthRequest, res: Response) {
   res.json(r);
 }
 
+export async function getAvailableFightsForPlo(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const r = await s.getAvailableFightsForPlo(req.user.userId);
+  res.json(r);
+}
+
 

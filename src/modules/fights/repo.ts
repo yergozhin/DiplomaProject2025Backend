@@ -122,4 +122,50 @@ export async function getScheduledForFighter(fighterId: string): Promise<any[]> 
   return r.rows;
 }
 
+export async function getAvailableFightsForPlo(ploId: string): Promise<any[]> {
+  const r = await query(`
+    select 
+      f.id,
+      f.status,
+      f.fighter_a_id as "fighterAId",
+      f.fighter_b_id as "fighterBId",
+      ua.id as "fighterAUserId",
+      ua.email as "fighterAEmail",
+      ua.name as "fighterAName",
+      ua.weight_class as "fighterAWeightClass",
+      ub.id as "fighterBUserId",
+      ub.email as "fighterBEmail",
+      ub.name as "fighterBName",
+      ub.weight_class as "fighterBWeightClass"
+    from fights f
+    join users ua on f.fighter_a_id = ua.id
+    join users ub on f.fighter_b_id = ub.id
+    where f.status in ('accepted', 'scheduled')
+      and (
+        not exists (
+          select 1 from offers o where o.fight_id = f.id and o.plo_id = $1
+        )
+        or exists (
+          select 1 from offers o 
+          where o.fight_id = f.id 
+            and o.plo_id = $1 
+            and o.status = 'rejected'
+        )
+        or exists (
+          select 1 from offers oa, offers ob
+          where oa.fight_id = f.id 
+            and oa.plo_id = $1
+            and oa.fighter_id = f.fighter_a_id
+            and ob.fight_id = f.id
+            and ob.plo_id = $1
+            and ob.fighter_id = f.fighter_b_id
+            and oa.status = 'accepted'
+            and ob.status = 'accepted'
+        )
+      )
+    order by f.id desc
+  `, [ploId]);
+  return r.rows;
+}
+
 
