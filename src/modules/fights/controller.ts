@@ -46,4 +46,10 @@ export async function getAccepted(_req: AuthRequest, res: Response) {
   res.json(r);
 }
 
+export async function getScheduled(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const r = await s.getScheduledForFighter(req.user.userId);
+  res.json(r);
+}
+
 
