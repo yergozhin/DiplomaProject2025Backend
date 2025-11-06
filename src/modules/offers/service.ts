@@ -72,6 +72,7 @@ export async function updateOfferStatus(fighterId: string, offerId: string, stat
     if (offers.length === 2 && offers.every(o => o.status === 'accepted')) {
       await repo.updateFightStatus(offer.fightId, 'scheduled');
       await repo.updateEventSlotFight(offer.eventSlotId, offer.fightId);
+      await repo.rejectPendingOffersForEventSlot(offer.eventSlotId, offer.fightId);
     }
   }
   return { offer: updated };

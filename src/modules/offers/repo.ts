@@ -99,6 +99,10 @@ export async function updateEventSlotFight(eventSlotId: string, fightId: string)
   await query('update event_slots set fight_id=$1 where id=$2', [fightId, eventSlotId]);
 }
 
+export async function rejectPendingOffersForEventSlot(eventSlotId: string, excludeFightId: string): Promise<void> {
+  await query('update offers set status=$1 where event_slot_id=$2 and fight_id!=$3 and status=$4', ['rejected', eventSlotId, excludeFightId, 'pending']);
+}
+
 export async function getAvailableOffersForFightByFighter(fightId: string, fighterId: string): Promise<any[]> {
   const r = await query(`
     select 
