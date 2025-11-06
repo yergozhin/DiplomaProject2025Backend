@@ -31,6 +31,11 @@ export async function findExistingOffer(fightId: string, ploId: string): Promise
   return r.rows[0] || null;
 }
 
+export async function getOffersForFightEventSlotPlo(fightId: string, eventId: string, eventSlotId: string, ploId: string): Promise<Offer[]> {
+  const r = await query('select id, fight_id as "fightId", event_id as "eventId", event_slot_id as "eventSlotId", fighter_id as "fighterId", plo_id as "ploId", amount, currency, status, created_at as "createdAt" from offers where fight_id=$1 and event_id=$2 and event_slot_id=$3 and plo_id=$4', [fightId, eventId, eventSlotId, ploId]);
+  return r.rows as Offer[];
+}
+
 export async function getById(id: string): Promise<Offer | null> {
   const r = await query('select id, fight_id as "fightId", event_id as "eventId", event_slot_id as "eventSlotId", fighter_id as "fighterId", plo_id as "ploId", amount, currency, status, created_at as "createdAt" from offers where id=$1', [id]);
   return r.rows[0] || null;

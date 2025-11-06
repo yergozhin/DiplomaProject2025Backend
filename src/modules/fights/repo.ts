@@ -145,11 +145,11 @@ export async function getAvailableFightsForPlo(ploId: string): Promise<any[]> {
         not exists (
           select 1 from offers o where o.fight_id = f.id and o.plo_id = $1
         )
-        or exists (
+        or not exists (
           select 1 from offers o 
           where o.fight_id = f.id 
             and o.plo_id = $1 
-            and o.status = 'rejected'
+            and o.status in ('pending', 'accepted')
         )
       )
     order by f.id desc

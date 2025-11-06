@@ -29,9 +29,12 @@ export async function sendOffers(ploId: string, fightId: string, eventId: string
   if (slot.fightId !== null) {
     return { error: 'slot_already_assigned' };
   }
-  const existing = await repo.findExistingOffer(fightId, ploId);
-  if (existing) {
-    return { error: 'offer_already_exists' };
+  const existingOffers = await repo.getOffersForFightEventSlotPlo(fightId, eventId, eventSlotId, ploId);
+  if (existingOffers.length > 0) {
+    const allRejected = existingOffers.every(o => o.status === 'rejected');
+    if (!allRejected) {
+      return { error: 'offer_already_exists' };
+    }
   }
   const offerA = await repo.create(fightId, eventId, eventSlotId, fight.fighterAId, ploId, fighterAAmount, fighterACurrency);
   const offerB = await repo.create(fightId, eventId, eventSlotId, fight.fighterBId, ploId, fighterBAmount, fighterBCurrency);
