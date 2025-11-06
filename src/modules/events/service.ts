@@ -19,4 +19,15 @@ export function getByPloId(ploId: string) {
   return repo.getByPloId(ploId);
 }
 
+export async function getAvailableSlotsForEvent(eventId: string, ploId: string) {
+  const event = await repo.getById(eventId);
+  if (!event) {
+    return { error: 'event_not_found' };
+  }
+  if (event.ploId !== ploId) {
+    return { error: 'event_not_owned' };
+  }
+  return repo.getAvailableSlots(eventId);
+}
+
 

@@ -26,4 +26,14 @@ export async function getByPloId(ploId: string): Promise<any[]> {
   return result;
 }
 
+export async function getById(id: string): Promise<Event | null> {
+  const r = await query('select id, name, plo_id as "ploId", created_at as "createdAt" from events where id = $1', [id]);
+  return r.rows[0] || null;
+}
+
+export async function getAvailableSlots(eventId: string): Promise<EventSlot[]> {
+  const r = await query('select id, event_id as "eventId", start_time as "startTime", fight_id as "fightId" from event_slots where event_id = $1 and fight_id is null order by start_time', [eventId]);
+  return r.rows as EventSlot[];
+}
+
 

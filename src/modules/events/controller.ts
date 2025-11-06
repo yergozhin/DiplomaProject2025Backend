@@ -23,4 +23,17 @@ export async function getMyEvents(req: AuthRequest, res: Response) {
   res.json(r);
 }
 
+export async function getAvailableSlots(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const { eventId } = req.params;
+  if (!eventId) return res.status(400).json({ error: 'invalid' });
+  const result = await s.getAvailableSlotsForEvent(eventId, req.user.userId);
+  if ('error' in result) {
+    if (result.error === 'event_not_found') return res.status(404).json({ error: 'event_not_found' });
+    if (result.error === 'event_not_owned') return res.status(403).json({ error: 'forbidden' });
+    return res.status(400).json({ error: result.error });
+  }
+  res.json(result);
+}
+
 
