@@ -6,6 +6,7 @@ import * as c from './controller';
 const r = Router();
 r.get('/', requireAuth, requireRole(Roles.Fighter), c.getAll);
 r.get('/accepted', requireAuth, requireAnyRole(Roles.Fighter, Roles.PLO), c.getAccepted);
+r.get('/accepted/my', requireAuth, requireRole(Roles.Fighter), c.getAcceptedForFighter);
 r.get('/scheduled', requireAuth, requireRole(Roles.Fighter), c.getScheduled);
 r.get('/requests', requireAuth, requireRole(Roles.Fighter), c.getRequestsTo);
 r.post('/request', requireAuth, requireRole(Roles.Fighter), c.sendRequest);

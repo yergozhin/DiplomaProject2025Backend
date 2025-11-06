@@ -74,6 +74,30 @@ export async function getAccepted(): Promise<any[]> {
   return r.rows;
 }
 
+export async function getAcceptedForFighter(fighterId: string): Promise<any[]> {
+  const r = await query(`
+    select 
+      f.id,
+      f.status,
+      f.fighter_a_id as "fighterAId",
+      f.fighter_b_id as "fighterBId",
+      ua.id as "fighterAUserId",
+      ua.email as "fighterAEmail",
+      ua.name as "fighterAName",
+      ua.weight_class as "fighterAWeightClass",
+      ub.id as "fighterBUserId",
+      ub.email as "fighterBEmail",
+      ub.name as "fighterBName",
+      ub.weight_class as "fighterBWeightClass"
+    from fights f
+    join users ua on f.fighter_a_id = ua.id
+    join users ub on f.fighter_b_id = ub.id
+    where f.status = $1 and (f.fighter_a_id = $2 or f.fighter_b_id = $2)
+    order by f.id desc
+  `, ['accepted', fighterId]);
+  return r.rows;
+}
+
 export async function getScheduledForFighter(fighterId: string): Promise<any[]> {
   const r = await query(`
     select 

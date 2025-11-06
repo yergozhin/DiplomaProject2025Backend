@@ -49,6 +49,10 @@ export function getAccepted() {
   return repo.getAccepted();
 }
 
+export function getAcceptedForFighter(fighterId: string) {
+  return repo.getAcceptedForFighter(fighterId);
+}
+
 export function getScheduledForFighter(fighterId: string) {
   return repo.getScheduledForFighter(fighterId);
 }
