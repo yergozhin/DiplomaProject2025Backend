@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verify, TokenPayload } from '@src/utils/jwt';
+import { Roles } from '@src/common/constants/Roles';
 
 export interface AuthRequest extends Request {
   user?: TokenPayload;
@@ -24,7 +25,7 @@ export function requireRole(role: string) {
     if (!req.user) {
       return res.status(401).json({ error: 'unauthorized' });
     }
-    if (req.user.role !== role) {
+    if (req.user.role !== role && req.user.role !== Roles.Admin) {
       return res.status(403).json({ error: 'forbidden' });
     }
     next();
@@ -36,7 +37,7 @@ export function requireAnyRole(...roles: string[]) {
     if (!req.user) {
       return res.status(401).json({ error: 'unauthorized' });
     }
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(req.user.role) && req.user.role !== Roles.Admin) {
       return res.status(403).json({ error: 'forbidden' });
     }
     next();
