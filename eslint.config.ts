@@ -5,6 +5,10 @@ import stylisticTs from '@stylistic/eslint-plugin-ts';
 import nodePlugin from 'eslint-plugin-n';
 import { defineConfig } from 'eslint/config';
 
+if (typeof globalThis.structuredClone !== 'function') {
+  globalThis.structuredClone = (value: unknown) => JSON.parse(JSON.stringify(value));
+}
+
 export default defineConfig([
   eslint.configs.recommended,
   nodePlugin.configs['flat/recommended-script'],
