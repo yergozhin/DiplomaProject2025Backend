@@ -1,6 +1,7 @@
 /* eslint-disable n/no-process-env */
 
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import moduleAlias from 'module-alias';
 
@@ -9,11 +10,14 @@ import moduleAlias from 'module-alias';
 const NODE_ENV = (process.env.NODE_ENV ?? 'development');
 
 // Configure "dotenv"
-const result2 = dotenv.config({
-  path: path.join(__dirname, `./config/.env.${NODE_ENV}`),
-});
-if (result2.error) {
-  throw result2.error;
+const envPath = path.join(__dirname, `./config/.env.${NODE_ENV}`);
+
+if (fs.existsSync(envPath)) {
+  dotenv.config({
+    path: envPath,
+  });
+} else {
+  dotenv.config();
 }
 
 // Configure moduleAlias
