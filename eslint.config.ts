@@ -1,3 +1,5 @@
+/* eslint-disable n/no-unsupported-features/node-builtins */
+
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import stylisticJs from '@stylistic/eslint-plugin-js';
@@ -6,7 +8,9 @@ import nodePlugin from 'eslint-plugin-n';
 import { defineConfig } from 'eslint/config';
 
 if (typeof globalThis.structuredClone !== 'function') {
-  globalThis.structuredClone = (value: unknown) => JSON.parse(JSON.stringify(value));
+  globalThis.structuredClone = <T>(value: T): T => (
+    JSON.parse(JSON.stringify(value)) as T
+  );
 }
 
 export default defineConfig([
