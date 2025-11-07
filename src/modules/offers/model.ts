@@ -1,4 +1,6 @@
-export type Offer = {
+export type OfferStatus = 'pending' | 'accepted' | 'rejected';
+
+export interface Offer {
   id: string;
   fightId: string;
   eventId: string;
@@ -7,8 +9,22 @@ export type Offer = {
   ploId: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: OfferStatus;
   createdAt: string;
-};
+}
+
+export interface OfferWithFightDetails extends Offer {
+  eventName: string;
+  slotStartTime: string;
+  ploEmail: string;
+  fighterAId: string;
+  fighterBId: string;
+  fighterAStatus: OfferStatus;
+  fighterBStatus: OfferStatus;
+}
+
+export interface OfferWithOverallStatus extends OfferWithFightDetails {
+  overallStatus: OfferStatus;
+}
 
 

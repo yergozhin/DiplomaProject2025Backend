@@ -1,28 +1,43 @@
 import { query } from '@src/db/client';
-import { Fight } from './model';
+import type {
+  Fight,
+  FightRequestWithSender,
+  FightWithFighters,
+} from './model';
 
 export async function all(): Promise<Fight[]> {
-  const r = await query('select id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status from fights order by id desc');
-  return r.rows as Fight[];
+  const r = await query<Fight>(
+    'select id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status from fights order by id desc',
+  );
+  return r.rows;
 }
 
 export async function create(fighterAId: string, fighterBId: string): Promise<Fight> {
-  const r = await query('insert into fights (fighter_a_id, fighter_b_id, status) values ($1, $2, $3) returning id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status', [fighterAId, fighterBId, 'requested']);
+  const r = await query<Fight>(
+    'insert into fights (fighter_a_id, fighter_b_id, status) values ($1, $2, $3) returning id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status',
+    [fighterAId, fighterBId, 'requested'],
+  );
   return r.rows[0];
 }
 
 export async function findExisting(fighterAId: string, fighterBId: string): Promise<Fight | null> {
-  const r = await query('select id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status from fights where ((fighter_a_id=$1 and fighter_b_id=$2) or (fighter_a_id=$2 and fighter_b_id=$1)) and status != $3 limit 1', [fighterAId, fighterBId, 'deleted']);
+  const r = await query<Fight>(
+    'select id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status from fights where ((fighter_a_id=$1 and fighter_b_id=$2) or (fighter_a_id=$2 and fighter_b_id=$1)) and status != $3 limit 1',
+    [fighterAId, fighterBId, 'deleted'],
+  );
   return r.rows[0] || null;
 }
 
 export async function getFighterById(id: string): Promise<{ id: string } | null> {
-  const r = await query('select id from users where id=$1 and role=$2', [id, 'fighter']);
+  const r = await query<{ id: string }>(
+    'select id from users where id=$1 and role=$2',
+    [id, 'fighter'],
+  );
   return r.rows[0] || null;
 }
 
-export async function getRequestsTo(fighterId: string): Promise<any[]> {
-  const r = await query(`
+export async function getRequestsTo(fighterId: string): Promise<FightRequestWithSender[]> {
+  const r = await query<FightRequestWithSender>(`
     select 
       f.id,
       f.status,
@@ -41,17 +56,23 @@ export async function getRequestsTo(fighterId: string): Promise<any[]> {
 }
 
 export async function getById(id: string): Promise<Fight | null> {
-  const r = await query('select id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status from fights where id=$1', [id]);
+  const r = await query<Fight>(
+    'select id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status from fights where id=$1',
+    [id],
+  );
   return r.rows[0] || null;
 }
 
 export async function accept(id: string): Promise<Fight | null> {
-  const r = await query('update fights set status=$1 where id=$2 returning id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status', ['accepted', id]);
+  const r = await query<Fight>(
+    'update fights set status=$1 where id=$2 returning id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status',
+    ['accepted', id],
+  );
   return r.rows[0] || null;
 }
 
-export async function getAccepted(): Promise<any[]> {
-  const r = await query(`
+export async function getAccepted(): Promise<FightWithFighters[]> {
+  const r = await query<FightWithFighters>(`
     select 
       f.id,
       f.status,
@@ -74,8 +95,8 @@ export async function getAccepted(): Promise<any[]> {
   return r.rows;
 }
 
-export async function getAcceptedForFighter(fighterId: string): Promise<any[]> {
-  const r = await query(`
+export async function getAcceptedForFighter(fighterId: string): Promise<FightWithFighters[]> {
+  const r = await query<FightWithFighters>(`
     select 
       f.id,
       f.status,
@@ -98,8 +119,8 @@ export async function getAcceptedForFighter(fighterId: string): Promise<any[]> {
   return r.rows;
 }
 
-export async function getScheduledForFighter(fighterId: string): Promise<any[]> {
-  const r = await query(`
+export async function getScheduledForFighter(fighterId: string): Promise<FightWithFighters[]> {
+  const r = await query<FightWithFighters>(`
     select 
       f.id,
       f.status,
@@ -122,8 +143,8 @@ export async function getScheduledForFighter(fighterId: string): Promise<any[]> 
   return r.rows;
 }
 
-export async function getAvailableFightsForPlo(ploId: string): Promise<any[]> {
-  const r = await query(`
+export async function getAvailableFightsForPlo(ploId: string): Promise<FightWithFighters[]> {
+  const r = await query<FightWithFighters>(`
     select 
       f.id,
       f.status,

@@ -2,6 +2,14 @@ import { Response } from 'express';
 import { AuthRequest } from '@src/middlewares/auth';
 import * as s from './service';
 
+interface FightRequestBody {
+  fighterId?: unknown;
+}
+
+function parseId(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value : null;
+}
+
 export async function getAll(_req: AuthRequest, res: Response) {
   const r = await s.list();
   res.json(r);
@@ -9,7 +17,8 @@ export async function getAll(_req: AuthRequest, res: Response) {
 
 export async function sendRequest(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-  const { fighterId } = req.body;
+  const body = req.body as FightRequestBody;
+  const fighterId = parseId(body.fighterId);
   if (!fighterId) return res.status(400).json({ error: 'invalid' });
   const result = await s.sendRequest(req.user.userId, fighterId);
   if ('error' in result) {

@@ -9,13 +9,12 @@ async function run() {
     const sql = fs.readFileSync(path.join(dir, f), 'utf8');
     await pool.query(sql);
   }
-  process.exit(0);
 }
 
-run().catch(e => {
-  // eslint-disable-next-line no-console
-  console.error(e);
-  process.exit(1);
+run().catch((err: unknown) => {
+  const message = err instanceof Error ? err.stack ?? err.message : String(err);
+  process.stderr.write(`${message}\n`);
+  throw err;
 });
 
 

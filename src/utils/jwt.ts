@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SECRET = process.env.JWT_SECRET || '';
+const SECRET = process.env.JWT_SECRET ?? '';
 
 export interface TokenPayload {
   userId: string;

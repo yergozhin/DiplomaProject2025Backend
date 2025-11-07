@@ -2,6 +2,39 @@ import { Response } from 'express';
 import { AuthRequest } from '@src/middlewares/auth';
 import * as s from './service';
 
+interface SendOffersBody {
+  fightId?: unknown;
+  eventId?: unknown;
+  eventSlotId?: unknown;
+  fighterAAmount?: unknown;
+  fighterACurrency?: unknown;
+  fighterBAmount?: unknown;
+  fighterBCurrency?: unknown;
+}
+
+interface DeleteOfferBody {
+  fightId?: unknown;
+}
+
+interface UpdateOfferBody {
+  offerId?: unknown;
+  status?: unknown;
+}
+
+function parseId(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value : null;
+}
+
+function parseCurrency(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value : null;
+}
+
+function parseAmount(value: unknown): number | null {
+  if (typeof value !== 'number') return null;
+  if (!Number.isFinite(value)) return null;
+  return value;
+}
+
 export async function getAll(_req: AuthRequest, res: Response) {
   const r = await s.list();
   res.json(r);
@@ -9,8 +42,15 @@ export async function getAll(_req: AuthRequest, res: Response) {
 
 export async function sendOffers(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-  const { fightId, eventId, eventSlotId, fighterAAmount, fighterACurrency, fighterBAmount, fighterBCurrency } = req.body;
-  if (!fightId || !eventId || !eventSlotId || fighterAAmount === undefined || !fighterACurrency || fighterBAmount === undefined || !fighterBCurrency) {
+  const body = req.body as SendOffersBody;
+  const fightId = parseId(body.fightId);
+  const eventId = parseId(body.eventId);
+  const eventSlotId = parseId(body.eventSlotId);
+  const fighterAAmount = parseAmount(body.fighterAAmount);
+  const fighterACurrency = parseCurrency(body.fighterACurrency);
+  const fighterBAmount = parseAmount(body.fighterBAmount);
+  const fighterBCurrency = parseCurrency(body.fighterBCurrency);
+  if (!fightId || !eventId || !eventSlotId || fighterAAmount === null || !fighterACurrency || fighterBAmount === null || !fighterBCurrency) {
     return res.status(400).json({ error: 'invalid' });
   }
   const result = await s.sendOffers(req.user.userId, fightId, eventId, eventSlotId, fighterAAmount, fighterACurrency, fighterBAmount, fighterBCurrency);
@@ -30,7 +70,8 @@ export async function sendOffers(req: AuthRequest, res: Response) {
 
 export async function deleteOffer(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-  const { fightId } = req.body;
+  const body = req.body as DeleteOfferBody;
+  const fightId = parseId(body.fightId);
   if (!fightId) {
     return res.status(400).json({ error: 'invalid' });
   }
@@ -50,7 +91,9 @@ export async function getAvailableOffers(req: AuthRequest, res: Response) {
 
 export async function updateOfferStatus(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-  const { offerId, status } = req.body;
+  const body = req.body as UpdateOfferBody;
+  const offerId = parseId(body.offerId);
+  const status = parseCurrency(body.status);
   if (!offerId || !status) {
     return res.status(400).json({ error: 'invalid' });
   }

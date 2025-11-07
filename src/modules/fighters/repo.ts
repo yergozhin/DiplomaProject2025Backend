@@ -1,23 +1,32 @@
 import { query } from '@src/db/client';
-import { Fighter } from './model';
+import type { Fighter } from './model';
 
 export async function all(): Promise<Fighter[]> {
-  const r = await query('select id, email, name, weight_class as "weightClass" from users where role=$1 order by name', ['fighter']);
-  return r.rows as Fighter[];
+  const r = await query<Fighter>(
+    'select id, email, name, weight_class as "weightClass" from users where role=$1 order by name',
+    ['fighter'],
+  );
+  return r.rows;
 }
 
 export async function update(id: string, name: string, weightClass: string): Promise<Fighter | null> {
-  const r = await query('update users set name=$2, weight_class=$3 where id=$1 and role=$4 returning id, email, name, weight_class as "weightClass"', [id, name, weightClass, 'fighter']);
+  const r = await query<Fighter>(
+    'update users set name=$2, weight_class=$3 where id=$1 and role=$4 returning id, email, name, weight_class as "weightClass"',
+    [id, name, weightClass, 'fighter'],
+  );
   return r.rows[0] || null;
 }
 
 export async function getById(id: string): Promise<Fighter | null> {
-  const r = await query('select id, email, name, weight_class as "weightClass" from users where id=$1 and role=$2', [id, 'fighter']);
+  const r = await query<Fighter>(
+    'select id, email, name, weight_class as "weightClass" from users where id=$1 and role=$2',
+    [id, 'fighter'],
+  );
   return r.rows[0] || null;
 }
 
 export async function allExcept(excludeId: string): Promise<Fighter[]> {
-  const r = await query(`
+  const r = await query<Fighter>(`
     select distinct u.id, u.email, u.name, u.weight_class as "weightClass" 
     from users u
     where u.role = $1 
@@ -29,7 +38,7 @@ export async function allExcept(excludeId: string): Promise<Fighter[]> {
       )
     order by u.name
   `, ['fighter', excludeId]);
-  return r.rows as Fighter[];
+  return r.rows;
 }
 
 
