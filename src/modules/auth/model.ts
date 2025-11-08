@@ -3,6 +3,7 @@ export interface AuthUser {
   email: string;
   role: string;
   password_hash?: string;
+  plo_status?: 'unverified' | 'verified' | null;
 }
 
 
