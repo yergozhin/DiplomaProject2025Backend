@@ -13,6 +13,12 @@ function parseStatus(value: unknown): 'unverified' | 'verified' | null {
   return null;
 }
 
+export async function listPlos(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const plos = await s.getPlos();
+  res.json(plos);
+}
+
 export async function updatePloStatus(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
   const { ploId } = req.params;

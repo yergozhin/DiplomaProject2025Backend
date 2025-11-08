@@ -20,6 +20,7 @@ export default {
   },
   Admin: {
     Base: '/admin',
+    Plos: '/plos',
     PloStatus: '/plos/:ploId/status',
   },
   Users: {
