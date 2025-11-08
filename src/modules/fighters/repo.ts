@@ -49,6 +49,11 @@ const VERIFICATION_COLUMNS = `
   created_at as "createdAt"
 `;
 
+function isUuid(value: string | null | undefined): value is string {
+  if (!value) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 function buildFullName(firstName: string | null, lastName: string | null): string | null {
   const parts: string[] = [];
   if (firstName && firstName.trim().length > 0) parts.push(firstName.trim());
@@ -181,6 +186,7 @@ export async function updateRecord(
   adminId: string,
   fields: FighterRecordFields,
 ): Promise<Fighter | null> {
+  const adminUuid = isUuid(adminId) ? adminId : null;
   const r = await query<Fighter>(
     `update users
       set total_fights=$3,
@@ -190,14 +196,14 @@ export async function updateRecord(
           awards=$7,
           record_confirmed=$8,
           record_admin_notes=$9,
-          record_confirmed_by=case when $8 then $2 else null end,
+          record_confirmed_by=case when $8 and $2 is not null then $2 else null end,
           record_confirmed_at=case when $8 then now() else null end,
           profile_updated_at=now()
       where id=$1 and role=$10
       returning ${FIGHTER_COLUMNS}`,
     [
       fighterId,
-      adminId,
+      adminUuid,
       fields.totalFights,
       fields.wins,
       fields.losses,
@@ -283,6 +289,7 @@ export async function updateVerificationStatus(
   adminNote: string | null,
 ): Promise<{ verification: FighterVerification | null; fighter: Fighter | null }> {
   const client = await pool.connect();
+  const adminUuid = isUuid(adminId) ? adminId : null;
   try {
     await client.query('begin');
     const existingRes = await client.query<FighterVerification>(
@@ -362,7 +369,7 @@ export async function updateVerificationStatus(
              reviewed_at=now()
        where id=$1
        returning ${VERIFICATION_COLUMNS}`,
-      [verificationId, status, adminId, adminNote],
+      [verificationId, status, adminUuid, adminNote],
     );
 
     await client.query('commit');
