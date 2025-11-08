@@ -42,6 +42,9 @@ export async function getAll(_req: AuthRequest, res: Response) {
 
 export async function sendOffers(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  if (req.user.role === 'plo' && req.user.ploStatus !== 'verified') {
+    return res.status(403).json({ error: 'plo_not_verified' });
+  }
   const body = req.body as SendOffersBody;
   const fightId = parseId(body.fightId);
   const eventId = parseId(body.eventId);
@@ -70,6 +73,9 @@ export async function sendOffers(req: AuthRequest, res: Response) {
 
 export async function deleteOffer(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  if (req.user.role === 'plo' && req.user.ploStatus !== 'verified') {
+    return res.status(403).json({ error: 'plo_not_verified' });
+  }
   const body = req.body as DeleteOfferBody;
   const fightId = parseId(body.fightId);
   if (!fightId) {

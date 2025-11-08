@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '@src/middlewares/auth';
+import { Roles } from '@src/common/constants/Roles';
 import * as s from './service';
 
 interface EventCreateBody {
@@ -30,6 +31,9 @@ export async function getAll(_req: AuthRequest, res: Response) {
 
 export async function create(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  if (req.user.role === Roles.PLO && req.user.ploStatus !== 'verified') {
+    return res.status(403).json({ error: 'plo_not_verified' });
+  }
   const body = req.body as EventCreateBody;
   const name = parseName(body.name);
   const slots = parseSlots(body.slots);

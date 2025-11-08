@@ -31,6 +31,7 @@ function buildAdminResponse() {
       id: adminId,
       email: ADMIN_EMAIL,
       role: Roles.Admin,
+      ploStatus: null,
     },
     token,
   };
@@ -58,7 +59,12 @@ export async function login(email: string, password: string, role: Role) {
   if (!user) return null;
   const passwordHash = hashPassword(password);
   if (user.password_hash !== passwordHash) return null;
-  const token = sign({ userId: user.id, role: user.role });
+  const tokenPayload = {
+    userId: user.id,
+    role: user.role,
+    ploStatus: user.role === Roles.PLO ? user.plo_status ?? 'unverified' : null,
+  };
+  const token = sign(tokenPayload);
   return {
     user: {
       id: user.id,

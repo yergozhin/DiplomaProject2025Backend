@@ -8,6 +8,7 @@ const SECRET = process.env.JWT_SECRET ?? '';
 export interface TokenPayload {
   userId: string;
   role: string;
+  ploStatus?: 'unverified' | 'verified' | null;
 }
 
 export function sign(payload: TokenPayload): string {
