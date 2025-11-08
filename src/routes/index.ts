@@ -5,6 +5,7 @@ import FighterRoutes from '@src/modules/fighters/routes';
 import FightRoutes from '@src/modules/fights/routes';
 import EventRoutes from '@src/modules/events/routes';
 import OfferRoutes from '@src/modules/offers/routes';
+import AdminRoutes from '@src/modules/admin/routes';
 
 import Paths from '@src/common/constants/Paths';
 import UserRoutes from './UserRoutes';
@@ -36,6 +37,7 @@ apiRouter.use(Paths.Fighters.Base, FighterRoutes);
 apiRouter.use(Paths.Fights.Base, FightRoutes);
 apiRouter.use(Paths.Events.Base, EventRoutes);
 apiRouter.use(Paths.Offers.Base, OfferRoutes);
+apiRouter.use(Paths.Admin.Base, AdminRoutes);
 
 apiRouter.get('/db-health', async (_req, res) => {
   const r = await query('select 1 as ok');

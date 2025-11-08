@@ -18,6 +18,10 @@ export default {
   Offers: {
     Base: '/offers',
   },
+  Admin: {
+    Base: '/admin',
+    PloStatus: '/plos/:ploId/status',
+  },
   Users: {
     Base: '/users',
     Get: '/all',

@@ -1,0 +1,7 @@
+import * as repo from './repo';
+
+export function setPloStatus(ploId: string, status: 'unverified' | 'verified') {
+  return repo.updatePloStatus(ploId, status);
+}
+
+
