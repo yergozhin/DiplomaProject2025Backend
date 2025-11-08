@@ -13,7 +13,7 @@ export async function listPlos(): Promise<Array<{ id: string; email: string; sta
       select id, email, plo_status, name
         from users
        where role = 'plo'
-       order by created_at desc nulls last, email
+       order by email
     `,
   );
   return r.rows.map((row) => ({
