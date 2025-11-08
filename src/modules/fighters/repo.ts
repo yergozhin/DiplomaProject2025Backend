@@ -1,5 +1,5 @@
-import { query } from '@src/db/client';
-import type { Fighter } from './model';
+import pool, { query } from '@src/db/client';
+import type { Fighter, FighterVerification } from './model';
 
 const FIGHTER_COLUMNS = `
   id,
@@ -22,8 +22,6 @@ const FIGHTER_COLUMNS = `
   bio,
   profile_created_at as "profileCreatedAt",
   profile_updated_at as "profileUpdatedAt",
-  verification_links as "verificationLinks",
-  verification_contacts as "verificationContacts",
   total_fights as "totalFights",
   wins as "wins",
   losses as "losses",
@@ -33,6 +31,22 @@ const FIGHTER_COLUMNS = `
   record_confirmed_at as "recordConfirmedAt",
   record_confirmed_by as "recordConfirmedBy",
   record_admin_notes as "recordAdminNotes"
+`;
+
+const VERIFICATION_COLUMNS = `
+  id,
+  fighter_id as "fighterId",
+  type,
+  value,
+  wins,
+  losses,
+  draws,
+  awards,
+  status,
+  admin_id as "adminId",
+  admin_note as "adminNote",
+  reviewed_at as "reviewedAt",
+  created_at as "createdAt"
 `;
 
 function buildFullName(firstName: string | null, lastName: string | null): string | null {
@@ -58,8 +72,6 @@ export interface FighterProfileFields {
   status: string | null;
   profilePicture: string | null;
   bio: string | null;
-  verificationLinks: string | null;
-  verificationContacts: string | null;
 }
 
 export interface FighterRecordFields {
@@ -70,6 +82,18 @@ export interface FighterRecordFields {
   awards: string | null;
   recordConfirmed: boolean;
   recordAdminNotes: string | null;
+}
+
+export type VerificationType = 'link' | 'contact' | 'image';
+export type VerificationStatus = 'pending' | 'accepted' | 'rejected';
+
+export interface CreateVerificationFields {
+  type: VerificationType;
+  value: string;
+  wins: number;
+  losses: number;
+  draws: number;
+  awards: string | null;
 }
 
 export async function all(): Promise<Fighter[]> {
@@ -99,12 +123,10 @@ export async function updateProfile(id: string, fields: FighterProfileFields): P
           status=$13,
           profile_picture=$14,
           bio=$15,
-          verification_links=$16,
-          verification_contacts=$17,
           profile_updated_at=now(),
           profile_created_at=coalesce(profile_created_at, now()),
-          name=$18
-      where id=$1 and role=$19
+          name=$16
+      where id=$1 and role=$17
       returning ${FIGHTER_COLUMNS}`,
     [
       id,
@@ -122,8 +144,6 @@ export async function updateProfile(id: string, fields: FighterProfileFields): P
       fields.status,
       fields.profilePicture,
       fields.bio,
-      fields.verificationLinks,
-      fields.verificationContacts,
       fullName,
       'fighter',
     ],
@@ -189,5 +209,156 @@ export async function updateRecord(
     ],
   );
   return r.rows[0] || null;
+}
+
+export async function createVerification(
+  fighterId: string,
+  data: CreateVerificationFields,
+): Promise<FighterVerification> {
+  const r = await query<FighterVerification>(
+    `insert into fighter_verifications (
+        fighter_id,
+        type,
+        value,
+        wins,
+        losses,
+        draws,
+        awards
+      ) values ($1, $2, $3, $4, $5, $6, $7)
+      returning ${VERIFICATION_COLUMNS}`,
+    [
+      fighterId,
+      data.type,
+      data.value,
+      data.wins,
+      data.losses,
+      data.draws,
+      data.awards,
+    ],
+  );
+  return r.rows[0];
+}
+
+export async function listVerificationsByFighter(fighterId: string): Promise<FighterVerification[]> {
+  const r = await query<FighterVerification>(
+    `select ${VERIFICATION_COLUMNS}
+       from fighter_verifications
+       where fighter_id = $1
+       order by created_at desc`,
+    [fighterId],
+  );
+  return r.rows;
+}
+
+export async function listPendingVerifications(): Promise<FighterVerification[]> {
+  const r = await query<FighterVerification>(
+    `select ${VERIFICATION_COLUMNS}
+       from fighter_verifications
+       where status = 'pending'
+       order by created_at`,
+  );
+  return r.rows;
+}
+
+export async function updateVerificationStatus(
+  verificationId: string,
+  adminId: string,
+  status: Exclude<VerificationStatus, 'pending'>,
+  adminNote: string | null,
+): Promise<{ verification: FighterVerification | null; fighter: Fighter | null }> {
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    const existingRes = await client.query<FighterVerification>(
+      `select ${VERIFICATION_COLUMNS}
+         from fighter_verifications
+         where id = $1
+         for update`,
+      [verificationId],
+    );
+    const existing = existingRes.rows[0];
+    if (existing?.status !== 'pending') {
+      await client.query('rollback');
+      return { verification: null, fighter: null };
+    }
+
+    let updatedFighter: Fighter | null = null;
+
+    if (status === 'accepted') {
+      const fighterRes = await client.query<{
+        id: string;
+        total_fights: number | null;
+        wins: number | null;
+        losses: number | null;
+        draws: number | null;
+        awards: string | null;
+      }>(
+        `select id, total_fights, wins, losses, draws, awards
+           from users
+           where id = $1 and role = 'fighter'
+           for update`,
+        [existing.fighterId],
+      );
+      const fighterRow = fighterRes.rows[0];
+      if (!fighterRow) {
+        await client.query('rollback');
+        return { verification: null, fighter: null };
+      }
+      const currentWins = fighterRow.wins ?? 0;
+      const currentLosses = fighterRow.losses ?? 0;
+      const currentDraws = fighterRow.draws ?? 0;
+      const currentTotal = fighterRow.total_fights ?? 0;
+
+      const newWins = currentWins + (existing.wins ?? 0);
+      const newLosses = currentLosses + (existing.losses ?? 0);
+      const newDraws = currentDraws + (existing.draws ?? 0);
+      const newTotal = currentTotal + (existing.wins ?? 0) + (existing.losses ?? 0) + (existing.draws ?? 0);
+
+      let newAwards = fighterRow.awards;
+      if (existing.awards) {
+        newAwards = newAwards ? `${newAwards}\n${existing.awards}` : existing.awards;
+      }
+
+      await client.query(
+        `update users
+           set total_fights=$2,
+               wins=$3,
+               losses=$4,
+               draws=$5,
+               awards=$6,
+               profile_updated_at=now()
+         where id=$1`,
+        [existing.fighterId, newTotal, newWins, newLosses, newDraws, newAwards],
+      );
+
+      const fighterUpdated = await client.query<Fighter>(
+        `select ${FIGHTER_COLUMNS} from users where id=$1`,
+        [existing.fighterId],
+      );
+      updatedFighter = fighterUpdated.rows[0] || null;
+    }
+
+    const updatedVerificationRes = await client.query<FighterVerification>(
+      `update fighter_verifications
+         set status=$2,
+             admin_id=$3,
+             admin_note=$4,
+             reviewed_at=now()
+       where id=$1
+       returning ${VERIFICATION_COLUMNS}`,
+      [verificationId, status, adminId, adminNote],
+    );
+
+    await client.query('commit');
+    return {
+      verification: updatedVerificationRes.rows[0] || null,
+      fighter: updatedFighter,
+    };
+  } catch (err) {
+    await client.query('rollback');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 

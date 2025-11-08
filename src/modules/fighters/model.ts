@@ -19,8 +19,6 @@ export interface Fighter {
   bio: string | null;
   profileCreatedAt: string | null;
   profileUpdatedAt: string | null;
-  verificationLinks: string | null;
-  verificationContacts: string | null;
   totalFights: number | null;
   wins: number | null;
   losses: number | null;
@@ -30,6 +28,22 @@ export interface Fighter {
   recordConfirmedAt: string | null;
   recordConfirmedBy: string | null;
   recordAdminNotes: string | null;
+}
+
+export interface FighterVerification {
+  id: string;
+  fighterId: string;
+  type: 'link' | 'contact' | 'image';
+  value: string;
+  wins: number;
+  losses: number;
+  draws: number;
+  awards: string | null;
+  status: 'pending' | 'accepted' | 'rejected';
+  adminId: string | null;
+  adminNote: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
 }
 
 
