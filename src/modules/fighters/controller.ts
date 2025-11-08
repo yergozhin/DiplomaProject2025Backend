@@ -284,4 +284,15 @@ export async function getFightersWithPendingVerifications(_req: AuthRequest, res
   res.json(fighters);
 }
 
+export async function getPendingVerificationDetails(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const { fighterId } = req.params;
+  if (typeof fighterId !== 'string' || fighterId.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const result = await s.getPendingVerificationDetails(fighterId);
+  if (!result.fighter) return res.status(404).json({ error: 'not_found' });
+  res.json(result);
+}
+
 

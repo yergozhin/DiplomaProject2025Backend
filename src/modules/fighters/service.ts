@@ -51,4 +51,8 @@ export function listFightersWithPendingVerifications() {
   return repo.listFightersWithPendingVerifications();
 }
 
+export function getPendingVerificationDetails(fighterId: string) {
+  return repo.getPendingVerificationDetails(fighterId);
+}
+
 

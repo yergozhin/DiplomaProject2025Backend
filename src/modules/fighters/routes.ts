@@ -13,6 +13,7 @@ r.get('/verifications', requireAuth, requireRole(Roles.Fighter), c.getMyVerifica
 r.get('/verifications/pending', requireAuth, requireRole(Roles.Admin), c.getPendingVerifications);
 r.patch('/verifications/:verificationId/status', requireAuth, requireRole(Roles.Admin), c.reviewVerification);
 r.get('/pending-verifications/fighters', requireAuth, requireRole(Roles.Admin), c.getFightersWithPendingVerifications);
+r.get('/pending-verifications/:fighterId', requireAuth, requireRole(Roles.Admin), c.getPendingVerificationDetails);
 r.put('/:fighterId/record', requireAuth, requireRole(Roles.Admin), c.updateRecord);
 export default r;
 

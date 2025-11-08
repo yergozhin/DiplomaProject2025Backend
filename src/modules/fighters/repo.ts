@@ -378,3 +378,26 @@ export async function updateVerificationStatus(
   }
 }
 
+export async function getPendingVerificationDetails(
+  fighterId: string,
+): Promise<{ fighter: Fighter | null; verifications: FighterVerification[] }> {
+  const fighterRes = await query<Fighter>(
+    `select ${FIGHTER_COLUMNS}
+       from users
+       where id = $1 and role = 'fighter'`,
+    [fighterId],
+  );
+  const fighter = fighterRes.rows[0] || null;
+  if (!fighter) {
+    return { fighter: null, verifications: [] };
+  }
+  const verificationsRes = await query<FighterVerification>(
+    `select ${VERIFICATION_COLUMNS}
+       from fighter_verifications
+       where fighter_id = $1
+       order by created_at desc`,
+    [fighterId],
+  );
+  return { fighter, verifications: verificationsRes.rows };
+}
+
