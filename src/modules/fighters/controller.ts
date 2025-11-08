@@ -178,7 +178,7 @@ export async function updateRecord(req: AuthRequest, res: Response) {
   }
 
   if (totalFights.value !== null) {
-    const sum = (wins.value || 0) + (losses.value || 0) + (draws.value || 0);
+    const sum = (wins.value ?? 0) + (losses.value ?? 0) + (draws.value ?? 0);
     if (sum > totalFights.value) {
       return res.status(400).json({ error: 'invalid' });
     }
