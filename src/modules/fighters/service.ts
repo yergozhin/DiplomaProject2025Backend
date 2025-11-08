@@ -47,4 +47,8 @@ export function updateVerificationStatus(
   return repo.updateVerificationStatus(verificationId, adminId, status, adminNote);
 }
 
+export function listFightersWithPendingVerifications() {
+  return repo.listFightersWithPendingVerifications();
+}
+
 

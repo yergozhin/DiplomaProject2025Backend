@@ -279,4 +279,9 @@ export async function reviewVerification(req: AuthRequest, res: Response) {
   res.json(result);
 }
 
+export async function getFightersWithPendingVerifications(_req: AuthRequest, res: Response) {
+  const fighters = await s.listFightersWithPendingVerifications();
+  res.json(fighters);
+}
+
 

@@ -260,6 +260,22 @@ export async function listPendingVerifications(): Promise<FighterVerification[]>
   return r.rows;
 }
 
+export async function listFightersWithPendingVerifications(): Promise<Fighter[]> {
+  const r = await query<Fighter>(
+    `select ${FIGHTER_COLUMNS}
+       from users u
+       where u.role = 'fighter'
+         and exists (
+           select 1
+           from fighter_verifications fv
+           where fv.fighter_id = u.id
+             and fv.status = 'pending'
+         )
+       order by u.first_name nulls last, u.last_name nulls last, u.name`,
+  );
+  return r.rows;
+}
+
 export async function updateVerificationStatus(
   verificationId: string,
   adminId: string,
