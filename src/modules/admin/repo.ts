@@ -7,7 +7,7 @@ interface PloRow {
   name: string | null;
 }
 
-export async function listPlos(): Promise<Array<{ id: string; email: string; status: 'unverified' | 'verified'; name: string | null }>> {
+export async function listPlos(): Promise<{ id: string; email: string; status: 'unverified' | 'verified'; name: string | null }[]> {
   const r = await query<PloRow>(
     `
       select id, email, plo_status, name
