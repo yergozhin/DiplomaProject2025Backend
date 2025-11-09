@@ -56,6 +56,11 @@ export async function getAll(_req: AuthRequest, res: Response) {
   res.json(r);
 }
 
+export async function getPublished(_req: AuthRequest, res: Response) {
+  const r = await s.listPublished();
+  res.json(r);
+}
+
 export async function create(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
   if (req.user.role === Roles.PLO && req.user.ploStatus !== 'verified') {

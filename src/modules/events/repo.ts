@@ -28,6 +28,16 @@ export async function all(): Promise<Event[]> {
   return r.rows;
 }
 
+export async function getPublished(): Promise<Event[]> {
+  const r = await query<Event>(
+    `select ${EVENT_SELECT}
+       from events
+      where status = 'published'
+   order by created_at desc`,
+  );
+  return r.rows;
+}
+
 export async function create(ploId: string, name: string): Promise<Event> {
   const r = await query<Event>(
     `insert into events (plo_id, name, event_name, created_at, updated_at)

@@ -6,6 +6,10 @@ export function list() {
   return repo.all();
 }
 
+export function listPublished() {
+  return repo.getPublished();
+}
+
 export async function createEvent(ploId: string, name: string, slots: string[]) {
   const event = await repo.create(ploId, name);
   const createdSlots: EventSlot[] = [];
