@@ -1,6 +1,7 @@
 export const Roles = {
   Fighter: 'fighter',
   PLO: 'plo',
+  Spectator: 'spectator',
   Admin: 'admin',
 } as const;
 

@@ -9,7 +9,9 @@ interface AuthRequestBody {
 }
 
 function parseRole(value: unknown): Role | null {
-  if (value === Roles.Fighter || value === Roles.PLO) return value;
+  if (value === Roles.Fighter || value === Roles.PLO || value === Roles.Spectator) {
+    return value;
+  }
   return null;
 }
 
