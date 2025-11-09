@@ -35,4 +35,8 @@ export function updateEvent(eventId: string, ploId: string, fields: EventUpdateF
   return repo.updateEvent(eventId, ploId, fields);
 }
 
+export function publishEvent(eventId: string, ploId: string) {
+  return repo.publishEvent(eventId, ploId);
+}
+
 

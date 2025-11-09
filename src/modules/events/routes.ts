@@ -9,6 +9,7 @@ r.get('/owned-events', requireAuth, requireRole(Roles.PLO), c.getMyEvents);
 r.get('/:eventId/available-slots', requireAuth, requireRole(Roles.PLO), c.getAvailableSlots);
 r.post('/', requireAuth, requireRole(Roles.PLO), c.create);
 r.put('/:eventId', requireAuth, requireRole(Roles.PLO), c.updateEvent);
+r.patch('/:eventId/publish', requireAuth, requireRole(Roles.PLO), c.publishEvent);
 export default r;
 
 

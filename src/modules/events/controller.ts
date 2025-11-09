@@ -123,3 +123,33 @@ export async function updateEvent(req: AuthRequest, res: Response) {
   res.json(updated);
 }
 
+interface EventStatusBody {
+  status?: unknown;
+}
+
+export async function publishEvent(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  if (req.user.role === Roles.PLO && req.user.ploStatus !== 'verified') {
+    return res.status(403).json({ error: 'plo_not_verified' });
+  }
+  const { eventId } = req.params;
+  if (typeof eventId !== 'string' || eventId.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const body = req.body as EventStatusBody;
+  if (body.status !== undefined && body.status !== 'published') {
+    return res.status(400).json({ error: 'invalid_status' });
+  }
+
+  const result = await s.publishEvent(eventId, req.user.userId);
+  if (!result.event) {
+    if (result.error === 'not_found') return res.status(404).json({ error: 'not_found' });
+    if (result.error === 'invalid_status') return res.status(400).json({ error: 'invalid_status_transition' });
+    if (result.error === 'missing_required_fields') return res.status(400).json({ error: 'missing_required_fields' });
+    if (result.error === 'no_slots') return res.status(400).json({ error: 'no_slots' });
+    return res.status(400).json({ error: 'invalid' });
+  }
+
+  res.json(result.event);
+}
+

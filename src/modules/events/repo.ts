@@ -1,26 +1,29 @@
 import { query } from '@src/db/client';
 import type { Event, EventSlot, EventWithSlots } from './model';
 
+const EVENT_SELECT = `
+  id,
+  name,
+  plo_id as "ploId",
+  created_at as "createdAt",
+  event_name as "eventName",
+  event_description as "eventDescription",
+  venue_name as "venueName",
+  venue_address as "venueAddress",
+  city,
+  country,
+  venue_capacity as "venueCapacity",
+  poster_image as "posterImage",
+  ticket_link as "ticketLink",
+  status,
+  updated_at as "updatedAt"
+`;
+
 export async function all(): Promise<Event[]> {
   const r = await query<Event>(
-    `select
-       id,
-       name,
-       plo_id as "ploId",
-       created_at as "createdAt",
-       event_name as "eventName",
-       event_description as "eventDescription",
-       venue_name as "venueName",
-       venue_address as "venueAddress",
-       city,
-       country,
-       venue_capacity as "venueCapacity",
-       poster_image as "posterImage",
-       ticket_link as "ticketLink",
-       status,
-       updated_at as "updatedAt"
-     from events
-     order by created_at desc`,
+    `select ${EVENT_SELECT}
+       from events
+   order by created_at desc`,
   );
   return r.rows;
 }
@@ -29,22 +32,7 @@ export async function create(ploId: string, name: string): Promise<Event> {
   const r = await query<Event>(
     `insert into events (plo_id, name, event_name, created_at, updated_at)
         values ($1, $2, $2, now(), now())
-      returning
-        id,
-        name,
-        plo_id as "ploId",
-        created_at as "createdAt",
-        event_name as "eventName",
-        event_description as "eventDescription",
-        venue_name as "venueName",
-        venue_address as "venueAddress",
-        city,
-        country,
-        venue_capacity as "venueCapacity",
-        poster_image as "posterImage",
-        ticket_link as "ticketLink",
-        status,
-        updated_at as "updatedAt"`,
+      returning ${EVENT_SELECT}`,
     [ploId, name],
   );
   return r.rows[0];
@@ -60,25 +48,10 @@ export async function addSlot(eventId: string, startTime: string): Promise<Event
 
 export async function getByPloId(ploId: string): Promise<EventWithSlots[]> {
   const events = await query<Event>(
-    `select
-        id,
-        name,
-        plo_id as "ploId",
-        created_at as "createdAt",
-        event_name as "eventName",
-        event_description as "eventDescription",
-        venue_name as "venueName",
-        venue_address as "venueAddress",
-        city,
-        country,
-        venue_capacity as "venueCapacity",
-        poster_image as "posterImage",
-        ticket_link as "ticketLink",
-        status,
-        updated_at as "updatedAt"
-      from events
+    `select ${EVENT_SELECT}
+       from events
       where plo_id = $1
-      order by created_at desc`,
+   order by created_at desc`,
     [ploId],
   );
   const result: EventWithSlots[] = [];
@@ -94,24 +67,9 @@ export async function getByPloId(ploId: string): Promise<EventWithSlots[]> {
 
 export async function getById(id: string): Promise<Event | null> {
   const r = await query<Event>(
-    `select
-       id,
-       name,
-       plo_id as "ploId",
-       created_at as "createdAt",
-       event_name as "eventName",
-       event_description as "eventDescription",
-       venue_name as "venueName",
-       venue_address as "venueAddress",
-       city,
-       country,
-       venue_capacity as "venueCapacity",
-       poster_image as "posterImage",
-       ticket_link as "ticketLink",
-       status,
-       updated_at as "updatedAt"
-     from events
-     where id = $1`,
+    `select ${EVENT_SELECT}
+       from events
+      where id = $1`,
     [id],
   );
   return r.rows[0] || null;
@@ -123,6 +81,73 @@ export async function getAvailableSlots(eventId: string): Promise<EventSlot[]> {
     [eventId],
   );
   return r.rows;
+}
+
+type PublishEventError = 'not_found' | 'invalid_status' | 'missing_required_fields' | 'no_slots';
+
+export async function publishEvent(
+  eventId: string,
+  ploId: string,
+): Promise<{ event: Event | null; error?: PublishEventError }> {
+  const eventRes = await query<Event>(
+    `select ${EVENT_SELECT}
+       from events
+      where id = $1
+        and plo_id = $2`,
+    [eventId, ploId],
+  );
+  const event = eventRes.rows[0];
+  if (!event) {
+    return { event: null, error: 'not_found' };
+  }
+
+  if (event.status !== 'draft') {
+    return { event: null, error: 'invalid_status' };
+  }
+
+  const requiredFields = [
+    event.venueName,
+    event.venueAddress,
+    event.city,
+    event.country,
+    event.venueCapacity,
+    event.posterImage,
+    event.ticketLink,
+  ];
+
+  const missing = requiredFields.some((value) => {
+    if (value === null || value === undefined) return true;
+    if (typeof value === 'number') return value <= 0;
+    if (typeof value === 'string') return value.trim().length === 0;
+    return false;
+  });
+
+  if (missing) {
+    return { event: null, error: 'missing_required_fields' };
+  }
+
+  const slotsRes = await query<{ count: number }>(
+    'select count(*)::int as count from event_slots where event_id = $1',
+    [eventId],
+  );
+  const slotCount = slotsRes.rows[0]?.count ?? 0;
+  if (slotCount === 0) {
+    return { event: null, error: 'no_slots' };
+  }
+
+  const updatedRes = await query<Event>(
+    `
+      update events
+         set status = 'published',
+             updated_at = now()
+       where id = $1
+         and plo_id = $2
+      returning ${EVENT_SELECT}
+    `,
+    [eventId, ploId],
+  );
+
+  return { event: updatedRes.rows[0] || null };
 }
 
 export interface EventUpdateFields {
@@ -157,22 +182,7 @@ export async function updateEvent(
              updated_at = now()
        where id = $1
          and plo_id = $2
-      returning
-        id,
-        name,
-        plo_id as "ploId",
-        created_at as "createdAt",
-        event_name as "eventName",
-        event_description as "eventDescription",
-        venue_name as "venueName",
-        venue_address as "venueAddress",
-        city,
-        country,
-        venue_capacity as "venueCapacity",
-        poster_image as "posterImage",
-        ticket_link as "ticketLink",
-        status,
-        updated_at as "updatedAt"
+      returning ${EVENT_SELECT}
     `,
     [
       eventId,
