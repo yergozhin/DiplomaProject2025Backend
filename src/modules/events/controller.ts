@@ -136,7 +136,7 @@ export async function publishEvent(req: AuthRequest, res: Response) {
   if (typeof eventId !== 'string' || eventId.trim().length === 0) {
     return res.status(400).json({ error: 'invalid' });
   }
-  const body = req.body as EventStatusBody;
+  const body = (req.body ?? {}) as EventStatusBody;
   if (body.status !== undefined && body.status !== 'published') {
     return res.status(400).json({ error: 'invalid_status' });
   }
