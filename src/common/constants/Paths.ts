@@ -23,6 +23,9 @@ export default {
     Plos: '/plos',
     PloStatus: '/plos/:ploId/status',
   },
+  Plos: {
+    Base: '/plos',
+  },
   Users: {
     Base: '/users',
     Get: '/all',
