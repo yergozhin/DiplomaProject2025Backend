@@ -1,5 +1,6 @@
 import * as repo from './repo';
 import { EventSlot } from './model';
+import type { EventUpdateFields } from './repo';
 
 export function list() {
   return repo.all();
@@ -28,6 +29,10 @@ export async function getAvailableSlotsForEvent(eventId: string, ploId: string) 
     return { error: 'event_not_owned' };
   }
   return repo.getAvailableSlots(eventId);
+}
+
+export function updateEvent(eventId: string, ploId: string, fields: EventUpdateFields) {
+  return repo.updateEvent(eventId, ploId, fields);
 }
 
 

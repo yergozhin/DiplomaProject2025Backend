@@ -27,8 +27,8 @@ export async function all(): Promise<Event[]> {
 
 export async function create(ploId: string, name: string): Promise<Event> {
   const r = await query<Event>(
-    `insert into events (plo_id, name)
-        values ($1, $2)
+    `insert into events (plo_id, name, event_name, created_at, updated_at)
+        values ($1, $2, $2, now(), now())
       returning
         id,
         name,
@@ -123,6 +123,75 @@ export async function getAvailableSlots(eventId: string): Promise<EventSlot[]> {
     [eventId],
   );
   return r.rows;
+}
+
+export interface EventUpdateFields {
+  eventName: string | null;
+  eventDescription: string | null;
+  venueName: string | null;
+  venueAddress: string | null;
+  city: string | null;
+  country: string | null;
+  venueCapacity: number | null;
+  posterImage: string | null;
+  ticketLink: string | null;
+  status: string | null;
+}
+
+export async function updateEvent(
+  eventId: string,
+  ploId: string,
+  fields: EventUpdateFields,
+): Promise<Event | null> {
+  const r = await query<Event>(
+    `
+      update events
+         set event_name = $3,
+             event_description = $4,
+             venue_name = $5,
+             venue_address = $6,
+             city = $7,
+             country = $8,
+             venue_capacity = $9,
+             poster_image = $10,
+             ticket_link = $11,
+             status = $12,
+             updated_at = now()
+       where id = $1
+         and plo_id = $2
+      returning
+        id,
+        name,
+        plo_id as "ploId",
+        created_at as "createdAt",
+        event_name as "eventName",
+        event_description as "eventDescription",
+        venue_name as "venueName",
+        venue_address as "venueAddress",
+        city,
+        country,
+        venue_capacity as "venueCapacity",
+        poster_image as "posterImage",
+        ticket_link as "ticketLink",
+        status,
+        updated_at as "updatedAt"
+    `,
+    [
+      eventId,
+      ploId,
+      fields.eventName,
+      fields.eventDescription,
+      fields.venueName,
+      fields.venueAddress,
+      fields.city,
+      fields.country,
+      fields.venueCapacity,
+      fields.posterImage,
+      fields.ticketLink,
+      fields.status,
+    ],
+  );
+  return r.rows[0] || null;
 }
 
 

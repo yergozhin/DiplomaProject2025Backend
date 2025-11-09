@@ -8,6 +8,19 @@ interface EventCreateBody {
   slots?: unknown;
 }
 
+interface EventUpdateBody {
+  eventName?: unknown;
+  eventDescription?: unknown;
+  venueName?: unknown;
+  venueAddress?: unknown;
+  city?: unknown;
+  country?: unknown;
+  venueCapacity?: unknown;
+  posterImage?: unknown;
+  ticketLink?: unknown;
+  status?: unknown;
+}
+
 function parseName(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value : null;
 }
@@ -22,6 +35,21 @@ function parseSlots(value: unknown): string[] | null {
     slots.push(item);
   }
   return slots.length > 0 ? slots : null;
+}
+
+function parseOptionalString(value: unknown) {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function parseOptionalInt(value: unknown) {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value !== 'number') return null;
+  if (!Number.isFinite(value)) return null;
+  const int = Math.round(value);
+  return int >= 0 ? int : null;
 }
 
 export async function getAll(_req: AuthRequest, res: Response) {
@@ -63,4 +91,37 @@ export async function getAvailableSlots(req: AuthRequest, res: Response) {
   res.json(result);
 }
 
+export async function updateEvent(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  if (req.user.role === Roles.PLO && req.user.ploStatus !== 'verified') {
+    return res.status(403).json({ error: 'plo_not_verified' });
+  }
+  const { eventId } = req.params;
+  if (typeof eventId !== 'string' || eventId.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+
+  const body = req.body as EventUpdateBody;
+  const venueCapacity = parseOptionalInt(body.venueCapacity);
+  if (body.venueCapacity !== undefined && venueCapacity === null) {
+    return res.status(400).json({ error: 'invalid_capacity' });
+  }
+
+  const payload = {
+    eventName: parseOptionalString(body.eventName),
+    eventDescription: parseOptionalString(body.eventDescription),
+    venueName: parseOptionalString(body.venueName),
+    venueAddress: parseOptionalString(body.venueAddress),
+    city: parseOptionalString(body.city),
+    country: parseOptionalString(body.country),
+    venueCapacity,
+    posterImage: parseOptionalString(body.posterImage),
+    ticketLink: parseOptionalString(body.ticketLink),
+    status: parseOptionalString(body.status),
+  };
+
+  const updated = await s.updateEvent(eventId, req.user.userId, payload);
+  if (!updated) return res.status(404).json({ error: 'not_found' });
+  res.json(updated);
+}
 
