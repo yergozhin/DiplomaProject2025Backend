@@ -18,7 +18,6 @@ interface EventUpdateBody {
   venueCapacity?: unknown;
   posterImage?: unknown;
   ticketLink?: unknown;
-  status?: unknown;
 }
 
 function parseName(value: unknown): string | null {
@@ -117,7 +116,6 @@ export async function updateEvent(req: AuthRequest, res: Response) {
     venueCapacity,
     posterImage: parseOptionalString(body.posterImage),
     ticketLink: parseOptionalString(body.ticketLink),
-    status: parseOptionalString(body.status),
   };
 
   const updated = await s.updateEvent(eventId, req.user.userId, payload);

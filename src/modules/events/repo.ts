@@ -135,7 +135,6 @@ export interface EventUpdateFields {
   venueCapacity: number | null;
   posterImage: string | null;
   ticketLink: string | null;
-  status: string | null;
 }
 
 export async function updateEvent(
@@ -155,7 +154,6 @@ export async function updateEvent(
              venue_capacity = $9,
              poster_image = $10,
              ticket_link = $11,
-             status = $12,
              updated_at = now()
        where id = $1
          and plo_id = $2
@@ -188,7 +186,6 @@ export async function updateEvent(
       fields.venueCapacity,
       fields.posterImage,
       fields.ticketLink,
-      fields.status,
     ],
   );
   return r.rows[0] || null;
