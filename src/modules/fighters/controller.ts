@@ -191,14 +191,7 @@ export async function updateRecord(req: AuthRequest, res: Response) {
     return res.status(400).json({ error: 'invalid' });
   }
 
-  if (totalFights.value !== null) {
-    const sum = (wins.value ?? 0) + (losses.value ?? 0) + (draws.value ?? 0);
-    if (sum > totalFights.value) {
-      return res.status(400).json({ error: 'invalid' });
-    }
-  }
-
-  const updated = await s.updateRecord(fighterId, req.user.userId, {
+  const result = await s.updateRecord(fighterId, req.user.userId, {
     totalFights: totalFights.value,
     wins: wins.value,
     losses: losses.value,
@@ -208,8 +201,12 @@ export async function updateRecord(req: AuthRequest, res: Response) {
     recordAdminNotes: recordAdminNotes.value,
   });
 
-  if (!updated) return res.status(404).json({ error: 'not_found' });
-  res.json(updated);
+  if (!result.fighter) {
+    if (result.error === 'invalid_record') return res.status(400).json({ error: 'invalid' });
+    if (result.error === 'not_found') return res.status(404).json({ error: 'not_found' });
+    return res.status(400).json({ error: 'invalid' });
+  }
+  res.json(result.fighter);
 }
 
 export async function createVerification(req: AuthRequest, res: Response) {

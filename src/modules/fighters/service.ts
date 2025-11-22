@@ -1,4 +1,5 @@
 import * as repo from './repo';
+import type { Fighter } from './model';
 import type {
   FighterProfileFields,
   FighterRecordFields,
@@ -22,8 +23,22 @@ export function listExcept(userId: string) {
   return repo.allExcept(userId);
 }
 
-export function updateRecord(fighterId: string, adminId: string, fields: FighterRecordFields) {
-  return repo.updateRecord(fighterId, adminId, fields);
+export async function updateRecord(
+  fighterId: string,
+  adminId: string,
+  fields: FighterRecordFields,
+): Promise<{ fighter: Fighter | null; error?: 'invalid_record' | 'not_found' }> {
+  if (fields.totalFights !== null) {
+    const sum = (fields.wins ?? 0) + (fields.losses ?? 0) + (fields.draws ?? 0);
+    if (sum > fields.totalFights) {
+      return { fighter: null, error: 'invalid_record' };
+    }
+  }
+  const updated = await repo.updateRecord(fighterId, adminId, fields);
+  if (!updated) {
+    return { fighter: null, error: 'not_found' };
+  }
+  return { fighter: updated };
 }
 
 export function createVerification(fighterId: string, payload: CreateVerificationFields) {
