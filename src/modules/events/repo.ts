@@ -85,6 +85,44 @@ export async function getById(id: string): Promise<Event | null> {
   return r.rows[0] || null;
 }
 
+export async function getByIdAndPloId(id: string, ploId: string): Promise<Event | null> {
+  const r = await query<Event>(
+    `select ${EVENT_SELECT}
+       from events
+      where id = $1
+        and plo_id = $2`,
+    [id, ploId],
+  );
+  return r.rows[0] || null;
+}
+
+export async function getSlotCount(eventId: string): Promise<number> {
+  const r = await query<{ count: number }>(
+    'select count(*)::int as count from event_slots where event_id = $1',
+    [eventId],
+  );
+  return r.rows[0]?.count ?? 0;
+}
+
+export async function updateEventStatus(
+  eventId: string,
+  ploId: string,
+  status: string,
+): Promise<Event | null> {
+  const r = await query<Event>(
+    `
+      update events
+         set status = $3,
+             updated_at = now()
+       where id = $1
+         and plo_id = $2
+      returning ${EVENT_SELECT}
+    `,
+    [eventId, ploId, status],
+  );
+  return r.rows[0] || null;
+}
+
 export async function getAvailableSlots(eventId: string): Promise<EventSlot[]> {
   const r = await query<EventSlot>(
     'select id, event_id as "eventId", start_time as "startTime", fight_id as "fightId" from event_slots where event_id = $1 and fight_id is null order by start_time',
@@ -93,72 +131,6 @@ export async function getAvailableSlots(eventId: string): Promise<EventSlot[]> {
   return r.rows;
 }
 
-type PublishEventError = 'not_found' | 'invalid_status' | 'missing_required_fields' | 'no_slots';
-
-export async function publishEvent(
-  eventId: string,
-  ploId: string,
-): Promise<{ event: Event | null; error?: PublishEventError }> {
-  const eventRes = await query<Event>(
-    `select ${EVENT_SELECT}
-       from events
-      where id = $1
-        and plo_id = $2`,
-    [eventId, ploId],
-  );
-  const event = eventRes.rows[0];
-  if (!event) {
-    return { event: null, error: 'not_found' };
-  }
-
-  if (event.status !== 'draft') {
-    return { event: null, error: 'invalid_status' };
-  }
-
-  const requiredFields = [
-    event.venueName,
-    event.venueAddress,
-    event.city,
-    event.country,
-    event.venueCapacity,
-    event.posterImage,
-    event.ticketLink,
-  ];
-
-  const missing = requiredFields.some((value) => {
-    if (value === null || value === undefined) return true;
-    if (typeof value === 'number') return value <= 0;
-    if (typeof value === 'string') return value.trim().length === 0;
-    return false;
-  });
-
-  if (missing) {
-    return { event: null, error: 'missing_required_fields' };
-  }
-
-  const slotsRes = await query<{ count: number }>(
-    'select count(*)::int as count from event_slots where event_id = $1',
-    [eventId],
-  );
-  const slotCount = slotsRes.rows[0]?.count ?? 0;
-  if (slotCount === 0) {
-    return { event: null, error: 'no_slots' };
-  }
-
-  const updatedRes = await query<Event>(
-    `
-      update events
-         set status = 'published',
-             updated_at = now()
-       where id = $1
-         and plo_id = $2
-      returning ${EVENT_SELECT}
-    `,
-    [eventId, ploId],
-  );
-
-  return { event: updatedRes.rows[0] || null };
-}
 
 export interface EventUpdateFields {
   eventName: string | null;
