@@ -2,6 +2,7 @@ import * as repo from './repo';
 import crypto from 'crypto';
 import { sign } from '@src/utils/jwt';
 import { Roles, type Role } from '@src/common/constants/Roles';
+import { generateVerificationToken, sendVerificationEmail } from '@src/utils/email';
 
 function hashPassword(p: string) {
   return crypto.createHash('sha256').update(p).digest('hex');
@@ -42,12 +43,29 @@ export async function register(email: string, password: string, role: Role) {
   const user = await repo.findUserByEmailAndRole(email, role);
   if (user) return null;
   const passwordHash = hashPassword(password);
-  const created = await repo.createUser(email, passwordHash, role);
+  const verificationToken = generateVerificationToken();
+  const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const created = await repo.createUser(email, passwordHash, role, verificationToken, tokenExpiresAt);
+  
+  await sendVerificationEmail(email, verificationToken);
+  
   return {
     id: created.id,
     email: created.email,
     role: created.role,
     ploStatus: created.plo_status ?? null,
+  };
+}
+
+export async function verifyEmail(token: string) {
+  const user = await repo.findUserByVerificationToken(token);
+  if (!user) return null;
+  await repo.verifyUserEmail(user.id);
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    ploStatus: user.plo_status ?? null,
   };
 }
 
@@ -59,6 +77,9 @@ export async function login(email: string, password: string, role: Role) {
   if (!user) return null;
   const passwordHash = hashPassword(password);
   if (user.password_hash !== passwordHash) return null;
+  if (!user.email_verified) {
+    return { error: 'email_not_verified' };
+  }
   const tokenPayload = {
     userId: user.id,
     role: user.role,
@@ -74,6 +95,20 @@ export async function login(email: string, password: string, role: Role) {
     },
     token,
   };
+}
+
+export async function resendVerificationEmail(email: string, role: Role) {
+  const user = await repo.findUserByEmailAndRole(email, role);
+  if (!user) return { error: 'user_not_found' };
+  if (user.email_verified) return { error: 'already_verified' };
+  
+  const verificationToken = generateVerificationToken();
+  const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  
+  await repo.updateVerificationToken(user.id, verificationToken, tokenExpiresAt);
+  await sendVerificationEmail(email, verificationToken);
+  
+  return { message: 'Verification email sent' };
 }
 
 

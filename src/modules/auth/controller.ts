@@ -27,9 +27,13 @@ export async function register(req: Request, res: Response) {
   if (!email || !password || !role) {
     return res.status(400).json({ error: 'invalid' });
   }
-  const u = await service.register(email, password, role);
-  if (!u) return res.status(409).json({ error: 'exists' });
-  res.status(201).json(u);
+  try {
+    const u = await service.register(email, password, role);
+    if (!u) return res.status(409).json({ error: 'exists' });
+    res.status(201).json(u);
+  } catch (error) {
+    return res.status(500).json({ error: 'registration_failed' });
+  }
 }
 
 export async function login(req: Request, res: Response) {
@@ -42,7 +46,46 @@ export async function login(req: Request, res: Response) {
   }
   const result = await service.login(email, password, role);
   if (!result) return res.status(401).json({ error: 'unauthorized' });
+  if ('error' in result && result.error === 'email_not_verified') {
+    return res.status(403).json({ error: 'email_not_verified' });
+  }
   res.json(result);
 }
+
+export async function verifyEmail(req: Request, res: Response) {
+  const token = parseString(req.query.token as unknown);
+  if (!token) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const result = await service.verifyEmail(token);
+  if (!result) {
+    return res.status(404).json({ error: 'token_invalid_or_expired' });
+  }
+  res.json({ message: 'Email verified successfully', user: result });
+}
+
+export async function resendVerificationEmail(req: Request, res: Response) {
+  const body = req.body as AuthRequestBody;
+  const email = parseString(body.email);
+  const role = parseRole(body.role);
+  if (!email || !role) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  try {
+    const result = await service.resendVerificationEmail(email, role);
+    if ('error' in result) {
+      if (result.error === 'user_not_found') {
+        return res.status(404).json({ error: 'user_not_found' });
+      }
+      if (result.error === 'already_verified') {
+        return res.status(400).json({ error: 'already_verified' });
+      }
+    }
+    res.json({ message: result.message });
+  } catch (error) {
+    return res.status(500).json({ error: 'email_send_failed' });
+  }
+}
+
 
 

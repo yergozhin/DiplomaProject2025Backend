@@ -4,6 +4,7 @@ export interface AuthUser {
   role: string;
   password_hash?: string;
   plo_status?: 'unverified' | 'verified' | null;
+  email_verified?: boolean;
 }
 
 
