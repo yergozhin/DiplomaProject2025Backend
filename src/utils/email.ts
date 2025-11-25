@@ -26,6 +26,10 @@ export function getVerificationLink(token: string): string {
   return `${FRONTEND_URL}/verify-email?token=${token}`;
 }
 
+export function getPasswordResetLink(token: string): string {
+  return `${FRONTEND_URL}/reset-password?token=${token}`;
+}
+
 export async function sendVerificationEmail(
   email: string,
   token: string,
@@ -56,6 +60,42 @@ export async function sendVerificationEmail(
       </div>
     `,
     text: `Please verify your email address by clicking the link below:\n\n${verificationLink}\n\nThis link will expire in 24 hours.`,
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
+export async function sendPasswordResetEmail(
+  email: string,
+  token: string,
+): Promise<void> {
+  if (!SMTP_USER || !SMTP_PASS) {
+    throw new Error('SMTP is not configured');
+  }
+
+  const resetLink = getPasswordResetLink(token);
+
+  const mailOptions = {
+    from: `"${APP_NAME}" <${SMTP_USER}>`,
+    to: email,
+    subject: 'Reset Your Password',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Password Reset Request</h2>
+        <p>You requested to reset your password. Click the link below to reset it:</p>
+        <p>
+          <a href="${resetLink}" 
+             style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+            Reset Password
+          </a>
+        </p>
+        <p>Or copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #666;">${resetLink}</p>
+        <p>This link will expire in 1 hour.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+      </div>
+    `,
+    text: `You requested to reset your password. Click the link below to reset it:\n\n${resetLink}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
   };
 
   await transporter.sendMail(mailOptions);

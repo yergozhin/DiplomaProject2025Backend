@@ -94,4 +94,58 @@ export async function updateVerificationToken(
   );
 }
 
+export async function findUserByPasswordResetToken(
+  token: string,
+): Promise<AuthUser | null> {
+  const r = await query<AuthUser>(
+    `
+      select
+        id,
+        email,
+        role,
+        password_hash,
+        plo_status,
+        email_verified
+      from users
+      where password_reset_token = $1
+        and password_reset_token_expires_at > now()
+      limit 1
+    `,
+    [token],
+  );
+  return r.rows[0] || null;
+}
+
+export async function updatePasswordResetToken(
+  userId: string,
+  token: string,
+  expiresAt: Date,
+): Promise<void> {
+  await query(
+    `
+      update users
+      set password_reset_token = $2,
+          password_reset_token_expires_at = $3
+      where id = $1
+    `,
+    [userId, token, expiresAt],
+  );
+}
+
+export async function updatePassword(
+  userId: string,
+  passwordHash: string,
+): Promise<void> {
+  await query(
+    `
+      update users
+      set password_hash = $2,
+          password_reset_token = null,
+          password_reset_token_expires_at = null
+      where id = $1
+    `,
+    [userId, passwordHash],
+  );
+}
+
 

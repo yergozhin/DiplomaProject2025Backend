@@ -87,5 +87,39 @@ export async function resendVerificationEmail(req: Request, res: Response) {
   }
 }
 
+export async function requestPasswordReset(req: Request, res: Response) {
+  const body = req.body as AuthRequestBody;
+  const email = parseString(body.email);
+  const role = parseRole(body.role);
+  if (!email || !role) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  try {
+    const result = await service.requestPasswordReset(email, role);
+    if ('error' in result) {
+      if (result.error === 'user_not_found') {
+        return res.status(404).json({ error: 'user_not_found' });
+      }
+    }
+    res.json({ message: result.message });
+  } catch (error) {
+    return res.status(500).json({ error: 'email_send_failed' });
+  }
+}
+
+export async function resetPassword(req: Request, res: Response) {
+  const body = req.body as { token?: unknown; password?: unknown };
+  const token = parseString(body.token);
+  const password = parseString(body.password);
+  if (!token || !password) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const result = await service.resetPassword(token, password);
+  if (!result) {
+    return res.status(404).json({ error: 'token_invalid_or_expired' });
+  }
+  res.json({ message: 'Password reset successfully' });
+}
+
 
 

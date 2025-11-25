@@ -2,7 +2,7 @@ import * as repo from './repo';
 import crypto from 'crypto';
 import { sign } from '@src/utils/jwt';
 import { Roles, type Role } from '@src/common/constants/Roles';
-import { generateVerificationToken, sendVerificationEmail } from '@src/utils/email';
+import { generateVerificationToken, sendVerificationEmail, sendPasswordResetEmail } from '@src/utils/email';
 
 function hashPassword(p: string) {
   return crypto.createHash('sha256').update(p).digest('hex');
@@ -109,6 +109,34 @@ export async function resendVerificationEmail(email: string, role: Role) {
   await sendVerificationEmail(email, verificationToken);
   
   return { message: 'Verification email sent' };
+}
+
+export async function requestPasswordReset(email: string, role: Role) {
+  const user = await repo.findUserByEmailAndRole(email, role);
+  if (!user) return { error: 'user_not_found' };
+  
+  const resetToken = generateVerificationToken();
+  const tokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
+  
+  await repo.updatePasswordResetToken(user.id, resetToken, tokenExpiresAt);
+  await sendPasswordResetEmail(email, resetToken);
+  
+  return { message: 'Password reset email sent' };
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  const user = await repo.findUserByPasswordResetToken(token);
+  if (!user) return null;
+  
+  const passwordHash = hashPassword(newPassword);
+  await repo.updatePassword(user.id, passwordHash);
+  
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    ploStatus: user.plo_status ?? null,
+  };
 }
 
 
