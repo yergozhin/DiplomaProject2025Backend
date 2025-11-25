@@ -31,7 +31,7 @@ export async function register(req: Request, res: Response) {
     const u = await service.register(email, password, role);
     if (!u) return res.status(409).json({ error: 'exists' });
     res.status(201).json(u);
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: 'registration_failed' });
   }
 }
@@ -82,7 +82,7 @@ export async function resendVerificationEmail(req: Request, res: Response) {
       }
     }
     res.json({ message: result.message });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: 'email_send_failed' });
   }
 }
@@ -102,13 +102,13 @@ export async function requestPasswordReset(req: Request, res: Response) {
       }
     }
     res.json({ message: result.message });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: 'email_send_failed' });
   }
 }
 
 export async function resetPassword(req: Request, res: Response) {
-  const body = req.body as { token?: unknown; password?: unknown };
+  const body = req.body as { token?: unknown; password?: unknown; };
   const token = parseString(body.token);
   const password = parseString(body.password);
   if (!token || !password) {
