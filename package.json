@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
-    "@types/nodemailer": "^7.0.4",
+    "resend": "^4.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dayjs": "^1.11.19",
@@ -33,7 +33,6 @@
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
     "morgan": "^1.10.1",
-    "nodemailer": "^7.0.10",
     "pg": "^8.16.3"
   },
   "devDependencies": {

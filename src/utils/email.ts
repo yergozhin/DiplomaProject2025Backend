@@ -1,22 +1,12 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import crypto from 'crypto';
 
-const SMTP_HOST = process.env.SMTP_HOST ?? 'smtp.gmail.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? '587');
-const SMTP_USER = process.env.SMTP_USER ?? '';
-const SMTP_PASS = process.env.SMTP_PASS ?? '';
+const RESEND_API_KEY = process.env.RESEND_API_KEY ?? '';
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev';
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 const APP_NAME = process.env.APP_NAME ?? 'Diploma Project';
 
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_PORT === 465,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+const resend = new Resend(RESEND_API_KEY);
 
 export function generateVerificationToken(): string {
   return crypto.randomBytes(32).toString('hex');
@@ -34,14 +24,14 @@ export async function sendVerificationEmail(
   email: string,
   token: string,
 ): Promise<void> {
-  if (!SMTP_USER || !SMTP_PASS) {
-    throw new Error('SMTP is not configured');
+  if (!RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not configured');
   }
 
   const verificationLink = getVerificationLink(token);
 
-  const mailOptions = {
-    from: `"${APP_NAME}" <${SMTP_USER}>`,
+  const result = await resend.emails.send({
+    from: RESEND_FROM_EMAIL,
     to: email,
     subject: 'Verify Your Email Address',
     html: `
@@ -60,23 +50,25 @@ export async function sendVerificationEmail(
       </div>
     `,
     text: `Please verify your email address by clicking the link below:\n\n${verificationLink}\n\nThis link will expire in 24 hours.`,
-  };
+  });
 
-  await transporter.sendMail(mailOptions);
+  if (result.error) {
+    throw new Error(`Resend error: ${JSON.stringify(result.error)}`);
+  }
 }
 
 export async function sendPasswordResetEmail(
   email: string,
   token: string,
 ): Promise<void> {
-  if (!SMTP_USER || !SMTP_PASS) {
-    throw new Error('SMTP is not configured');
+  if (!RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not configured');
   }
 
   const resetLink = getPasswordResetLink(token);
 
-  const mailOptions = {
-    from: `"${APP_NAME}" <${SMTP_USER}>`,
+  const result = await resend.emails.send({
+    from: RESEND_FROM_EMAIL,
     to: email,
     subject: 'Reset Your Password',
     html: `
@@ -96,8 +88,10 @@ export async function sendPasswordResetEmail(
       </div>
     `,
     text: `You requested to reset your password. Click the link below to reset it:\n\n${resetLink}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
-  };
+  });
 
-  await transporter.sendMail(mailOptions);
+  if (result.error) {
+    throw new Error(`Resend error: ${JSON.stringify(result.error)}`);
+  }
 }
 
