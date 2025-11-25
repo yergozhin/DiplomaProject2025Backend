@@ -1,32 +1,45 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
-const SMTP_HOST = process.env.SMTP_HOST ?? 'smtp.gmail.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? '587');
-const SMTP_USER = process.env.SMTP_USER ?? '';
-const SMTP_PASS = process.env.SMTP_PASS ?? '';
-const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
-const APP_NAME = process.env.APP_NAME ?? 'Diploma Project';
+function getSmtpConfig() {
+  const SMTP_HOST = process.env.SMTP_HOST ?? 'smtp.gmail.com';
+  const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? '587');
+  const SMTP_USER = process.env.SMTP_USER ?? '';
+  const SMTP_PASS = process.env.SMTP_PASS ?? '';
+  const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+  const APP_NAME = process.env.APP_NAME ?? 'Diploma Project';
 
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_PORT === 465,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+  return { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, FRONTEND_URL, APP_NAME };
+}
+
+function createTransporter() {
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = getSmtpConfig();
+  
+  return nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false, // Some SMTP servers require this in production
+    },
+  });
+}
 
 export function generateVerificationToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
 export function getVerificationLink(token: string): string {
+  const { FRONTEND_URL } = getSmtpConfig();
   return `${FRONTEND_URL}/verify-email?token=${token}`;
 }
 
 export function getPasswordResetLink(token: string): string {
+  const { FRONTEND_URL } = getSmtpConfig();
   return `${FRONTEND_URL}/reset-password?token=${token}`;
 }
 
@@ -34,10 +47,20 @@ export async function sendVerificationEmail(
   email: string,
   token: string,
 ): Promise<void> {
+  const { SMTP_USER, SMTP_PASS, SMTP_HOST, SMTP_PORT, APP_NAME } = getSmtpConfig();
+  
   if (!SMTP_USER || !SMTP_PASS) {
-    throw new Error('SMTP is not configured');
+    console.error('SMTP configuration check:', {
+      SMTP_USER: SMTP_USER ? 'SET' : 'NOT SET',
+      SMTP_PASS: SMTP_PASS ? 'SET' : 'NOT SET',
+      SMTP_HOST,
+      SMTP_PORT,
+      NODE_ENV: process.env.NODE_ENV,
+    });
+    throw new Error('SMTP is not configured: SMTP_USER or SMTP_PASS is missing');
   }
 
+  const transporter = createTransporter();
   const verificationLink = getVerificationLink(token);
 
   const mailOptions = {
@@ -62,17 +85,38 @@ export async function sendVerificationEmail(
     text: `Please verify your email address by clicking the link below:\n\n${verificationLink}\n\nThis link will expire in 24 hours.`,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error: any) {
+    console.error('SMTP send error:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message,
+    });
+    throw error;
+  }
 }
 
 export async function sendPasswordResetEmail(
   email: string,
   token: string,
 ): Promise<void> {
+  const { SMTP_USER, SMTP_PASS, SMTP_HOST, SMTP_PORT, APP_NAME } = getSmtpConfig();
+  
   if (!SMTP_USER || !SMTP_PASS) {
-    throw new Error('SMTP is not configured');
+    console.error('SMTP configuration check:', {
+      SMTP_USER: SMTP_USER ? 'SET' : 'NOT SET',
+      SMTP_PASS: SMTP_PASS ? 'SET' : 'NOT SET',
+      SMTP_HOST,
+      SMTP_PORT,
+      NODE_ENV: process.env.NODE_ENV,
+    });
+    throw new Error('SMTP is not configured: SMTP_USER or SMTP_PASS is missing');
   }
 
+  const transporter = createTransporter();
   const resetLink = getPasswordResetLink(token);
 
   const mailOptions = {
@@ -98,6 +142,17 @@ export async function sendPasswordResetEmail(
     text: `You requested to reset your password. Click the link below to reset it:\n\n${resetLink}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error: any) {
+    console.error('SMTP send error:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message,
+    });
+    throw error;
+  }
 }
 
