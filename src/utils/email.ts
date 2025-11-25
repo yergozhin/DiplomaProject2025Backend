@@ -1,6 +1,14 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
+interface SmtpError {
+  code?: string;
+  command?: string;
+  response?: string;
+  responseCode?: number;
+  message?: string;
+}
+
 function getSmtpConfig() {
   const SMTP_HOST = process.env.SMTP_HOST ?? 'smtp.gmail.com';
   const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? '587');
@@ -87,13 +95,14 @@ export async function sendVerificationEmail(
 
   try {
     await transporter.sendMail(mailOptions);
-  } catch (error: any) {
+  } catch (error) {
+    const smtpError = error as SmtpError & Error;
     console.error('SMTP send error:', {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      message: error.message,
+      code: smtpError.code,
+      command: smtpError.command,
+      response: smtpError.response,
+      responseCode: smtpError.responseCode,
+      message: smtpError.message || String(error),
     });
     throw error;
   }
@@ -144,13 +153,14 @@ export async function sendPasswordResetEmail(
 
   try {
     await transporter.sendMail(mailOptions);
-  } catch (error: any) {
+  } catch (error) {
+    const smtpError = error as SmtpError & Error;
     console.error('SMTP send error:', {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      message: error.message,
+      code: smtpError.code,
+      command: smtpError.command,
+      response: smtpError.response,
+      responseCode: smtpError.responseCode,
+      message: smtpError.message || String(error),
     });
     throw error;
   }
