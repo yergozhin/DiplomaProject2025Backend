@@ -13,7 +13,7 @@
     "db:migrate": "ts-node ./src/db/migrate.ts"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
