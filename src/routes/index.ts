@@ -7,6 +7,9 @@ import EventRoutes from '@src/modules/events/routes';
 import OfferRoutes from '@src/modules/offers/routes';
 import AdminRoutes from '@src/modules/admin/routes';
 import PloRoutes from '@src/modules/plos/routes';
+import FighterRankingsRoutes from '@src/modules/fighter-rankings/routes';
+import FighterInjuriesRoutes from '@src/modules/fighter-injuries/routes';
+import MedicalClearancesRoutes from '@src/modules/medical-clearances/routes';
 
 import Paths from '@src/common/constants/Paths';
 import UserRoutes from './UserRoutes';
@@ -40,6 +43,9 @@ apiRouter.use(Paths.Events.Base, EventRoutes);
 apiRouter.use(Paths.Offers.Base, OfferRoutes);
 apiRouter.use(Paths.Admin.Base, AdminRoutes);
 apiRouter.use(Paths.Plos.Base, PloRoutes);
+apiRouter.use('/fighter-rankings', FighterRankingsRoutes);
+apiRouter.use('/fighter-injuries', FighterInjuriesRoutes);
+apiRouter.use('/medical-clearances', MedicalClearancesRoutes);
 
 apiRouter.get('/db-health', async (_req, res) => {
   const r = await query('select 1 as ok');
