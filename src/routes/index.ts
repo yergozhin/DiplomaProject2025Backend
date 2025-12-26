@@ -10,6 +10,12 @@ import PloRoutes from '@src/modules/plos/routes';
 import FighterRankingsRoutes from '@src/modules/fighter-rankings/routes';
 import FighterInjuriesRoutes from '@src/modules/fighter-injuries/routes';
 import MedicalClearancesRoutes from '@src/modules/medical-clearances/routes';
+import FightResultsRoutes from '@src/modules/fight-results/routes';
+import FightStatisticsRoutes from '@src/modules/fight-statistics/routes';
+import FightHistoryRoutes from '@src/modules/fight-history/routes';
+import FightContractsRoutes from '@src/modules/fight-contracts/routes';
+import EventCategoriesRoutes from '@src/modules/event-categories/routes';
+import EventSponsorsRoutes from '@src/modules/event-sponsors/routes';
 
 import Paths from '@src/common/constants/Paths';
 import UserRoutes from './UserRoutes';
@@ -46,6 +52,12 @@ apiRouter.use(Paths.Plos.Base, PloRoutes);
 apiRouter.use('/fighter-rankings', FighterRankingsRoutes);
 apiRouter.use('/fighter-injuries', FighterInjuriesRoutes);
 apiRouter.use('/medical-clearances', MedicalClearancesRoutes);
+apiRouter.use('/fight-results', FightResultsRoutes);
+apiRouter.use('/fight-statistics', FightStatisticsRoutes);
+apiRouter.use('/fight-history', FightHistoryRoutes);
+apiRouter.use('/fight-contracts', FightContractsRoutes);
+apiRouter.use('/event-categories', EventCategoriesRoutes);
+apiRouter.use('/event-sponsors', EventSponsorsRoutes);
 
 apiRouter.get('/db-health', async (_req, res) => {
   const r = await query('select 1 as ok');
