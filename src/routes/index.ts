@@ -16,6 +16,11 @@ import FightHistoryRoutes from '@src/modules/fight-history/routes';
 import FightContractsRoutes from '@src/modules/fight-contracts/routes';
 import EventCategoriesRoutes from '@src/modules/event-categories/routes';
 import EventSponsorsRoutes from '@src/modules/event-sponsors/routes';
+import EventLocationsRoutes from '@src/modules/event-locations/routes';
+import EventMetadataRoutes from '@src/modules/event-metadata/routes';
+import EventStatusHistoryRoutes from '@src/modules/event-status-history/routes';
+import PloEventStatisticsRoutes from '@src/modules/plo-event-statistics/routes';
+import OfferResponsesRoutes from '@src/modules/offer-responses/routes';
 
 import Paths from '@src/common/constants/Paths';
 import UserRoutes from './UserRoutes';
@@ -58,6 +63,11 @@ apiRouter.use('/fight-history', FightHistoryRoutes);
 apiRouter.use('/fight-contracts', FightContractsRoutes);
 apiRouter.use('/event-categories', EventCategoriesRoutes);
 apiRouter.use('/event-sponsors', EventSponsorsRoutes);
+apiRouter.use('/event-locations', EventLocationsRoutes);
+apiRouter.use('/event-metadata', EventMetadataRoutes);
+apiRouter.use('/event-status-history', EventStatusHistoryRoutes);
+apiRouter.use('/plo-event-statistics', PloEventStatisticsRoutes);
+apiRouter.use('/offer-responses', OfferResponsesRoutes);
 
 apiRouter.get('/db-health', async (_req, res) => {
   const r = await query('select 1 as ok');
