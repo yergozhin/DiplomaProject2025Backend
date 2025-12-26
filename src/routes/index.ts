@@ -21,6 +21,7 @@ import EventMetadataRoutes from '@src/modules/event-metadata/routes';
 import EventStatusHistoryRoutes from '@src/modules/event-status-history/routes';
 import PloEventStatisticsRoutes from '@src/modules/plo-event-statistics/routes';
 import OfferResponsesRoutes from '@src/modules/offer-responses/routes';
+import WeightClassesRoutes from '@src/modules/weight-classes/routes';
 
 import Paths from '@src/common/constants/Paths';
 import UserRoutes from './UserRoutes';
@@ -68,6 +69,7 @@ apiRouter.use('/event-metadata', EventMetadataRoutes);
 apiRouter.use('/event-status-history', EventStatusHistoryRoutes);
 apiRouter.use('/plo-event-statistics', PloEventStatisticsRoutes);
 apiRouter.use('/offer-responses', OfferResponsesRoutes);
+apiRouter.use('/weight-classes', WeightClassesRoutes);
 
 apiRouter.get('/db-health', async (_req, res) => {
   const r = await query('select 1 as ok');
