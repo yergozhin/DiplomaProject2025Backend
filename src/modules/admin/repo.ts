@@ -97,18 +97,12 @@ export async function updatePloStatus(
   try {
     await client.query('begin');
     
-    const r = await client.query<PloRow>(
-      `
-        update users
-           set plo_status = $2
-         where id = $1
-           and role = 'plo'
-        returning id, plo_status
-      `,
-      [ploId, status],
+    const r = await client.query<{ id: string }>(
+      `select id from users where id = $1 and role = 'plo'`,
+      [ploId],
     );
-    const row = r.rows[0];
-    if (!row) {
+    const user = r.rows[0];
+    if (!user) {
       await client.query('rollback');
       return null;
     }
@@ -122,7 +116,7 @@ export async function updatePloStatus(
     );
     
     await client.query('commit');
-    return { id: row.id, ploStatus: row.plo_status };
+    return { id: user.id, ploStatus: status };
   } catch (err) {
     await client.query('rollback');
     throw err;

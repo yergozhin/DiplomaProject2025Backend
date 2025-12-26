@@ -78,40 +78,6 @@ export async function updateProfile(
     await client.query('begin');
     
     await client.query(
-      `update users
-         set league_name = $2,
-             owner_first_name = $3,
-             owner_last_name = $4,
-             phone_number = $5,
-             website = $6,
-             country = $7,
-             city = $8,
-             address = $9,
-             description = $10,
-             logo = $11,
-             founded_date = $12,
-             social_media_links = $13,
-             updated_at = now()
-       where id = $1
-         and role = 'plo'`,
-      [
-        ploId,
-        fields.leagueName,
-        fields.ownerFirstName,
-        fields.ownerLastName,
-        fields.phoneNumber,
-        fields.website,
-        fields.country,
-        fields.city,
-        fields.address,
-        fields.description,
-        fields.logo,
-        fields.foundedDate,
-        fields.socialMediaLinks,
-      ],
-    );
-    
-    await client.query(
       `update plo_profiles
          set league_name = $2,
              owner_first_name = $3,

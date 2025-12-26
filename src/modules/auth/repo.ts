@@ -57,7 +57,7 @@ export async function createUser(
       `
         insert into users (email, password_hash, role, email_verification_token, email_verification_token_expires_at)
         values ($1, $2, $3, $4, $5)
-        returning id, email, role, plo_status
+        returning id, email, role
       `,
       [email, passwordHash, role, verificationToken, tokenExpiresAt],
     );
@@ -102,7 +102,17 @@ export async function createUser(
     }
     
     await client.query('commit');
-    return user;
+    
+    if (role === 'plo') {
+      const ploRes = await client.query<{ plo_status: 'unverified' | 'verified' }>(
+        `select plo_status from plo_profiles where user_id = $1`,
+        [user.id],
+      );
+      const ploStatus = ploRes.rows[0]?.plo_status as 'unverified' | 'verified' | null;
+      return { id: user.id, email: user.email, role: user.role, plo_status: ploStatus || null };
+    }
+    
+    return { id: user.id, email: user.email, role: user.role, plo_status: null };
   } catch (err) {
     await client.query('rollback');
     throw err;
