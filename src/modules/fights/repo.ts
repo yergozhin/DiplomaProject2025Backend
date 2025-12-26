@@ -14,7 +14,9 @@ export async function all(): Promise<Fight[]> {
 
 export async function create(fighterAId: string, fighterBId: string): Promise<Fight> {
   const r = await query<Fight>(
-    'insert into fights (fighter_a_id, fighter_b_id, status) values ($1, $2, $3) returning id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status',
+    `insert into fights (fighter_a_id, fighter_b_id, fighter_a_profile_id, fighter_b_profile_id, status) 
+     values ($1, $2, (select id from fighter_profiles where user_id = $1), (select id from fighter_profiles where user_id = $2), $3) 
+     returning id, fighter_a_id as "fighterAId", fighter_b_id as "fighterBId", status`,
     [fighterAId, fighterBId, 'requested'],
   );
   return r.rows[0];
@@ -45,10 +47,13 @@ export async function getRequestsTo(fighterId: string): Promise<FightRequestWith
       f.fighter_b_id as "fighterBId",
       u.id as "senderId",
       u.email as "senderEmail",
-      u.name as "senderName",
-      u.weight_class as "senderWeightClass"
+      coalesce(fp.first_name || ' ' || fp.last_name, fp.first_name, fp.last_name, u.name) as "senderName",
+      coalesce(wc.name, u.weight_class) as "senderWeightClass"
     from fights f
     join users u on f.fighter_a_id = u.id
+    left join fighter_profiles fp on u.id = fp.user_id
+    left join fighter_physical_attributes fpa on fp.id = fpa.fighter_id
+    left join weight_classes wc on fpa.weight_class_id = wc.id
     where f.fighter_b_id = $1 and f.status = $2
     order by f.id desc
   `, [fighterId, 'requested']);
@@ -80,15 +85,21 @@ export async function getAccepted(): Promise<FightWithFighters[]> {
       f.fighter_b_id as "fighterBId",
       ua.id as "fighterAUserId",
       ua.email as "fighterAEmail",
-      ua.name as "fighterAName",
-      ua.weight_class as "fighterAWeightClass",
+      coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
+      coalesce(wca.name, ua.weight_class) as "fighterAWeightClass",
       ub.id as "fighterBUserId",
       ub.email as "fighterBEmail",
-      ub.name as "fighterBName",
-      ub.weight_class as "fighterBWeightClass"
+      coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
+      coalesce(wcb.name, ub.weight_class) as "fighterBWeightClass"
     from fights f
     join users ua on f.fighter_a_id = ua.id
     join users ub on f.fighter_b_id = ub.id
+    left join fighter_profiles fpa on ua.id = fpa.user_id
+    left join fighter_profiles fpb on ub.id = fpb.user_id
+    left join fighter_physical_attributes fpaa on fpa.id = fpaa.fighter_id
+    left join fighter_physical_attributes fpab on fpb.id = fpab.fighter_id
+    left join weight_classes wca on fpaa.weight_class_id = wca.id
+    left join weight_classes wcb on fpab.weight_class_id = wcb.id
     where f.status = $1
     order by f.id desc
   `, ['accepted']);
@@ -104,15 +115,21 @@ export async function getAcceptedForFighter(fighterId: string): Promise<FightWit
       f.fighter_b_id as "fighterBId",
       ua.id as "fighterAUserId",
       ua.email as "fighterAEmail",
-      ua.name as "fighterAName",
-      ua.weight_class as "fighterAWeightClass",
+      coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
+      coalesce(wca.name, ua.weight_class) as "fighterAWeightClass",
       ub.id as "fighterBUserId",
       ub.email as "fighterBEmail",
-      ub.name as "fighterBName",
-      ub.weight_class as "fighterBWeightClass"
+      coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
+      coalesce(wcb.name, ub.weight_class) as "fighterBWeightClass"
     from fights f
     join users ua on f.fighter_a_id = ua.id
     join users ub on f.fighter_b_id = ub.id
+    left join fighter_profiles fpa on ua.id = fpa.user_id
+    left join fighter_profiles fpb on ub.id = fpb.user_id
+    left join fighter_physical_attributes fpaa on fpa.id = fpaa.fighter_id
+    left join fighter_physical_attributes fpab on fpb.id = fpab.fighter_id
+    left join weight_classes wca on fpaa.weight_class_id = wca.id
+    left join weight_classes wcb on fpab.weight_class_id = wcb.id
     where f.status = $1 and (f.fighter_a_id = $2 or f.fighter_b_id = $2)
     order by f.id desc
   `, ['accepted', fighterId]);
@@ -128,15 +145,21 @@ export async function getScheduledForFighter(fighterId: string): Promise<FightWi
       f.fighter_b_id as "fighterBId",
       ua.id as "fighterAUserId",
       ua.email as "fighterAEmail",
-      ua.name as "fighterAName",
-      ua.weight_class as "fighterAWeightClass",
+      coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
+      coalesce(wca.name, ua.weight_class) as "fighterAWeightClass",
       ub.id as "fighterBUserId",
       ub.email as "fighterBEmail",
-      ub.name as "fighterBName",
-      ub.weight_class as "fighterBWeightClass"
+      coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
+      coalesce(wcb.name, ub.weight_class) as "fighterBWeightClass"
     from fights f
     join users ua on f.fighter_a_id = ua.id
     join users ub on f.fighter_b_id = ub.id
+    left join fighter_profiles fpa on ua.id = fpa.user_id
+    left join fighter_profiles fpb on ub.id = fpb.user_id
+    left join fighter_physical_attributes fpaa on fpa.id = fpaa.fighter_id
+    left join fighter_physical_attributes fpab on fpb.id = fpab.fighter_id
+    left join weight_classes wca on fpaa.weight_class_id = wca.id
+    left join weight_classes wcb on fpab.weight_class_id = wcb.id
     where f.status = $1 and (f.fighter_a_id = $2 or f.fighter_b_id = $2)
     order by f.id desc
   `, ['scheduled', fighterId]);
@@ -152,15 +175,21 @@ export async function getAvailableFightsForPlo(ploId: string): Promise<FightWith
       f.fighter_b_id as "fighterBId",
       ua.id as "fighterAUserId",
       ua.email as "fighterAEmail",
-      ua.name as "fighterAName",
-      ua.weight_class as "fighterAWeightClass",
+      coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
+      coalesce(wca.name, ua.weight_class) as "fighterAWeightClass",
       ub.id as "fighterBUserId",
       ub.email as "fighterBEmail",
-      ub.name as "fighterBName",
-      ub.weight_class as "fighterBWeightClass"
+      coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
+      coalesce(wcb.name, ub.weight_class) as "fighterBWeightClass"
     from fights f
     join users ua on f.fighter_a_id = ua.id
     join users ub on f.fighter_b_id = ub.id
+    left join fighter_profiles fpa on ua.id = fpa.user_id
+    left join fighter_profiles fpb on ub.id = fpb.user_id
+    left join fighter_physical_attributes fpaa on fpa.id = fpaa.fighter_id
+    left join fighter_physical_attributes fpab on fpb.id = fpab.fighter_id
+    left join weight_classes wca on fpaa.weight_class_id = wca.id
+    left join weight_classes wcb on fpab.weight_class_id = wcb.id
     where f.status = 'accepted'
       and (
         not exists (

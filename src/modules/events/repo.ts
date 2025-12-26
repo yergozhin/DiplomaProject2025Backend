@@ -40,8 +40,8 @@ export async function getPublished(): Promise<Event[]> {
 
 export async function create(ploId: string, name: string): Promise<Event> {
   const r = await query<Event>(
-    `insert into events (plo_id, name, event_name, created_at, updated_at)
-        values ($1, $2, $2, now(), now())
+    `insert into events (plo_id, plo_profile_id, name, event_name, created_at, updated_at)
+        values ($1, (select id from plo_profiles where user_id = $1), $2, $2, now(), now())
       returning ${EVENT_SELECT}`,
     [ploId, name],
   );

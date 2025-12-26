@@ -62,11 +62,13 @@ export async function create(
       event_id,
       event_slot_id,
       fighter_id,
+      fighter_profile_id,
       plo_id,
+      plo_profile_id,
       amount,
       currency,
       status
-    ) values ($1, $2, $3, $4, $5, $6, $7, $8)
+    ) values ($1, $2, $3, $4, (select id from fighter_profiles where user_id = $4), $5, (select id from plo_profiles where user_id = $5), $6, $7, $8)
     returning
       id,
       fight_id as "fightId",

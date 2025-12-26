@@ -1,4 +1,4 @@
-import { query } from '@src/db/client';
+import pool, { query } from '@src/db/client';
 
 interface PloRow {
   id: string;
@@ -93,19 +93,42 @@ export async function updatePloStatus(
   ploId: string,
   status: 'unverified' | 'verified',
 ): Promise<{ id: string; ploStatus: 'unverified' | 'verified' } | null> {
-  const r = await query<PloRow>(
-    `
-      update users
-         set plo_status = $2
-       where id = $1
-         and role = 'plo'
-      returning id, plo_status
-    `,
-    [ploId, status],
-  );
-  const row = r.rows[0];
-  if (!row) return null;
-  return { id: row.id, ploStatus: row.plo_status };
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    
+    const r = await client.query<PloRow>(
+      `
+        update users
+           set plo_status = $2
+         where id = $1
+           and role = 'plo'
+        returning id, plo_status
+      `,
+      [ploId, status],
+    );
+    const row = r.rows[0];
+    if (!row) {
+      await client.query('rollback');
+      return null;
+    }
+    
+    await client.query(
+      `update plo_profiles
+         set plo_status = $2,
+             updated_at = now()
+       where user_id = $1`,
+      [ploId, status],
+    );
+    
+    await client.query('commit');
+    return { id: row.id, ploStatus: row.plo_status };
+  } catch (err) {
+    await client.query('rollback');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 

@@ -2,35 +2,44 @@ import pool, { query } from '@src/db/client';
 import type { Fighter, FighterVerification } from './model';
 
 const FIGHTER_COLUMNS = `
-  id,
-  email,
-  name,
-  weight_class as "weightClass",
-  first_name as "firstName",
-  last_name as "lastName",
-  nickname,
-  phone_number as "phoneNumber",
-  date_of_birth as "dateOfBirth",
-  gender,
-  current_weight_class as "currentWeightClass",
-  height,
-  reach,
-  country,
-  city,
-  status,
-  profile_picture as "profilePicture",
-  bio,
-  profile_created_at as "profileCreatedAt",
-  profile_updated_at as "profileUpdatedAt",
-  total_fights as "totalFights",
-  wins as "wins",
-  losses as "losses",
-  draws as "draws",
-  awards,
-  record_confirmed as "recordConfirmed",
-  record_confirmed_at as "recordConfirmedAt",
-  record_confirmed_by as "recordConfirmedBy",
-  record_admin_notes as "recordAdminNotes"
+  u.id,
+  u.email,
+  coalesce(fp.first_name || ' ' || fp.last_name, fp.first_name, fp.last_name, u.name) as name,
+  coalesce(wc.name, u.weight_class) as "weightClass",
+  fp.first_name as "firstName",
+  fp.last_name as "lastName",
+  fp.nickname,
+  fci.phone_number as "phoneNumber",
+  fpa.date_of_birth as "dateOfBirth",
+  fpa.gender,
+  coalesce(wc.name, u.current_weight_class) as "currentWeightClass",
+  fpa.height,
+  fpa.reach,
+  fci.country,
+  fci.city,
+  fp.status,
+  fp.profile_picture as "profilePicture",
+  fp.bio,
+  fp.profile_created_at as "profileCreatedAt",
+  fp.profile_updated_at as "profileUpdatedAt",
+  fr.total_fights as "totalFights",
+  fr.wins as "wins",
+  fr.losses as "losses",
+  fr.draws as "draws",
+  fr.awards,
+  fr.record_confirmed as "recordConfirmed",
+  fr.record_confirmed_at as "recordConfirmedAt",
+  fr.record_confirmed_by as "recordConfirmedBy",
+  fr.record_admin_notes as "recordAdminNotes"
+`;
+
+const FIGHTER_FROM_JOIN = `
+  from users u
+  left join fighter_profiles fp on u.id = fp.user_id
+  left join fighter_physical_attributes fpa on fp.id = fpa.fighter_id
+  left join fighter_contact_info fci on fp.id = fci.fighter_id
+  left join fighter_records fr on fp.id = fr.fighter_id
+  left join weight_classes wc on fpa.weight_class_id = wc.id
 `;
 
 const VERIFICATION_COLUMNS = `
@@ -103,7 +112,7 @@ export interface CreateVerificationFields {
 
 export async function all(): Promise<Fighter[]> {
   const r = await query<Fighter>(
-    `select ${FIGHTER_COLUMNS} from users where role=$1 order by first_name nulls last, last_name nulls last, name`,
+    `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.role=$1 order by fp.first_name nulls last, fp.last_name nulls last, u.name`,
     ['fighter'],
   );
   return r.rows;
@@ -111,54 +120,132 @@ export async function all(): Promise<Fighter[]> {
 
 export async function updateProfile(id: string, fields: FighterProfileFields): Promise<Fighter | null> {
   const fullName = buildFullName(fields.firstName, fields.lastName);
-  const r = await query<Fighter>(
-    `update users
-      set first_name=$2,
-          last_name=$3,
-          nickname=$4,
-          phone_number=$5,
-          date_of_birth=$6,
-          gender=$7,
-          current_weight_class=$8,
-          weight_class=$8,
-          height=$9,
-          reach=$10,
-          country=$11,
-          city=$12,
-          status=$13,
-          profile_picture=$14,
-          bio=$15,
-          profile_updated_at=now(),
-          profile_created_at=coalesce(profile_created_at, now()),
-          name=$16
-      where id=$1 and role=$17
-      returning ${FIGHTER_COLUMNS}`,
-    [
-      id,
-      fields.firstName,
-      fields.lastName,
-      fields.nickname,
-      fields.phoneNumber,
-      fields.dateOfBirth,
-      fields.gender,
-      fields.currentWeightClass,
-      fields.height,
-      fields.reach,
-      fields.country,
-      fields.city,
-      fields.status,
-      fields.profilePicture,
-      fields.bio,
-      fullName,
-      'fighter',
-    ],
-  );
-  return r.rows[0] || null;
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    
+    await client.query(
+      `update users
+        set first_name=$2,
+            last_name=$3,
+            nickname=$4,
+            phone_number=$5,
+            date_of_birth=$6,
+            gender=$7,
+            current_weight_class=$8,
+            weight_class=$8,
+            height=$9,
+            reach=$10,
+            country=$11,
+            city=$12,
+            status=$13,
+            profile_picture=$14,
+            bio=$15,
+            profile_updated_at=now(),
+            profile_created_at=coalesce(profile_created_at, now()),
+            name=$16
+        where id=$1 and role=$17`,
+      [
+        id,
+        fields.firstName,
+        fields.lastName,
+        fields.nickname,
+        fields.phoneNumber,
+        fields.dateOfBirth,
+        fields.gender,
+        fields.currentWeightClass,
+        fields.height,
+        fields.reach,
+        fields.country,
+        fields.city,
+        fields.status,
+        fields.profilePicture,
+        fields.bio,
+        fullName,
+        'fighter',
+      ],
+    );
+    
+    const weightClassRes = await client.query<{ id: string }>(
+      `select id from weight_classes where name = $1 limit 1`,
+      [fields.currentWeightClass],
+    );
+    const weightClassId = weightClassRes.rows[0]?.id || null;
+    
+    await client.query(
+      `update fighter_profiles
+        set first_name=$2,
+            last_name=$3,
+            nickname=$4,
+            profile_picture=$5,
+            bio=$6,
+            status=$7,
+            profile_updated_at=now(),
+            profile_created_at=coalesce(profile_created_at, now())
+        where user_id=$1`,
+      [
+        id,
+        fields.firstName,
+        fields.lastName,
+        fields.nickname,
+        fields.profilePicture,
+        fields.bio,
+        fields.status,
+      ],
+    );
+    
+    await client.query(
+      `update fighter_physical_attributes
+        set date_of_birth=$2,
+            gender=$3,
+            height=$4,
+            reach=$5,
+            weight_class_id=$6,
+            updated_at=now()
+        where fighter_id=(select id from fighter_profiles where user_id=$1)`,
+      [
+        id,
+        fields.dateOfBirth,
+        fields.gender,
+        fields.height,
+        fields.reach,
+        weightClassId,
+      ],
+    );
+    
+    await client.query(
+      `update fighter_contact_info
+        set phone_number=$2,
+            country=$3,
+            city=$4,
+            updated_at=now()
+        where fighter_id=(select id from fighter_profiles where user_id=$1)`,
+      [
+        id,
+        fields.phoneNumber,
+        fields.country,
+        fields.city,
+      ],
+    );
+    
+    await client.query('commit');
+    
+    const r = await query<Fighter>(
+      `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role=$2`,
+      [id, 'fighter'],
+    );
+    return r.rows[0] || null;
+  } catch (err) {
+    await client.query('rollback');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function getById(id: string): Promise<Fighter | null> {
   const r = await query<Fighter>(
-    `select ${FIGHTER_COLUMNS} from users where id=$1 and role=$2`,
+    `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role=$2`,
     [id, 'fighter'],
   );
   return r.rows[0] || null;
@@ -167,7 +254,7 @@ export async function getById(id: string): Promise<Fighter | null> {
 export async function allExcept(excludeId: string): Promise<Fighter[]> {
   const r = await query<Fighter>(
     `select ${FIGHTER_COLUMNS}
-       from users u
+       ${FIGHTER_FROM_JOIN}
        where u.role = $1
          and u.id != $2
          and not exists (
@@ -175,7 +262,7 @@ export async function allExcept(excludeId: string): Promise<Fighter[]> {
            where f.status in ('requested', 'accepted', 'scheduled')
              and ((f.fighter_a_id = u.id and f.fighter_b_id = $2) or (f.fighter_a_id = $2 and f.fighter_b_id = u.id))
          )
-       order by u.first_name nulls last, u.last_name nulls last, u.name`,
+       order by fp.first_name nulls last, fp.last_name nulls last, u.name`,
     ['fighter', excludeId],
   );
   return r.rows;
@@ -187,34 +274,76 @@ export async function updateRecord(
   fields: FighterRecordFields,
 ): Promise<Fighter | null> {
   const adminUuid = isUuid(adminId) ? adminId : null;
-  const r = await query<Fighter>(
-    `update users
-      set total_fights=$3,
-          wins=$4,
-          losses=$5,
-          draws=$6,
-          awards=$7,
-          record_confirmed=$8,
-          record_admin_notes=$9,
-          record_confirmed_by=case when $8 and $2 is not null then $2 else null end,
-          record_confirmed_at=case when $8 then now() else null end,
-          profile_updated_at=now()
-      where id=$1 and role=$10
-      returning ${FIGHTER_COLUMNS}`,
-    [
-      fighterId,
-      adminUuid,
-      fields.totalFights,
-      fields.wins,
-      fields.losses,
-      fields.draws,
-      fields.awards,
-      fields.recordConfirmed,
-      fields.recordAdminNotes,
-      'fighter',
-    ],
-  );
-  return r.rows[0] || null;
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    
+    await client.query(
+      `update users
+        set total_fights=$3,
+            wins=$4,
+            losses=$5,
+            draws=$6,
+            awards=$7,
+            record_confirmed=$8,
+            record_admin_notes=$9,
+            record_confirmed_by=case when $8 and $2 is not null then $2 else null end,
+            record_confirmed_at=case when $8 then now() else null end,
+            profile_updated_at=now()
+        where id=$1 and role=$10`,
+      [
+        fighterId,
+        adminUuid,
+        fields.totalFights,
+        fields.wins,
+        fields.losses,
+        fields.draws,
+        fields.awards,
+        fields.recordConfirmed,
+        fields.recordAdminNotes,
+        'fighter',
+      ],
+    );
+    
+    await client.query(
+      `update fighter_records
+        set total_fights=$2,
+            wins=$3,
+            losses=$4,
+            draws=$5,
+            awards=$6,
+            record_confirmed=$7,
+            record_admin_notes=$8,
+            record_confirmed_by=case when $7 and $9 is not null then $9 else null end,
+            record_confirmed_at=case when $7 then now() else null end,
+            updated_at=now()
+        where fighter_id=(select id from fighter_profiles where user_id=$1)`,
+      [
+        fighterId,
+        fields.totalFights,
+        fields.wins,
+        fields.losses,
+        fields.draws,
+        fields.awards,
+        fields.recordConfirmed,
+        fields.recordAdminNotes,
+        adminUuid,
+      ],
+    );
+    
+    await client.query('commit');
+    
+    const r = await query<Fighter>(
+      `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role=$2`,
+      [fighterId, 'fighter'],
+    );
+    return r.rows[0] || null;
+  } catch (err) {
+    await client.query('rollback');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function createVerification(
@@ -224,13 +353,14 @@ export async function createVerification(
   const r = await query<FighterVerification>(
     `insert into fighter_verifications (
         fighter_id,
+        fighter_profile_id,
         type,
         value,
         wins,
         losses,
         draws,
         awards
-      ) values ($1, $2, $3, $4, $5, $6, $7)
+      ) values ($1, (select id from fighter_profiles where user_id = $1), $2, $3, $4, $5, $6, $7)
       returning ${VERIFICATION_COLUMNS}`,
     [
       fighterId,
@@ -249,7 +379,7 @@ export async function listVerificationsByFighter(fighterId: string): Promise<Fig
   const r = await query<FighterVerification>(
     `select ${VERIFICATION_COLUMNS}
        from fighter_verifications
-       where fighter_id = $1
+       where fighter_id = $1 or fighter_profile_id = (select id from fighter_profiles where user_id = $1)
        order by created_at desc`,
     [fighterId],
   );
@@ -269,15 +399,15 @@ export async function listPendingVerifications(): Promise<FighterVerification[]>
 export async function listFightersWithPendingVerifications(): Promise<Fighter[]> {
   const r = await query<Fighter>(
     `select ${FIGHTER_COLUMNS}
-       from users u
+       ${FIGHTER_FROM_JOIN}
        where u.role = 'fighter'
          and exists (
            select 1
            from fighter_verifications fv
-           where fv.fighter_id = u.id
+           where (fv.fighter_id = u.id or fv.fighter_profile_id = fp.id)
              and fv.status = 'pending'
          )
-       order by u.first_name nulls last, u.last_name nulls last, u.name`,
+       order by fp.first_name nulls last, fp.last_name nulls last, u.name`,
   );
   return r.rows;
 }
@@ -354,8 +484,20 @@ export async function updateVerificationStatus(
         [existing.fighterId, newTotal, newWins, newLosses, newDraws, newAwards],
       );
 
+      await client.query(
+        `update fighter_records
+           set total_fights=$2,
+               wins=$3,
+               losses=$4,
+               draws=$5,
+               awards=$6,
+               updated_at=now()
+         where fighter_id=(select id from fighter_profiles where user_id=$1)`,
+        [existing.fighterId, newTotal, newWins, newLosses, newDraws, newAwards],
+      );
+
       const fighterUpdated = await client.query<Fighter>(
-        `select ${FIGHTER_COLUMNS} from users where id=$1`,
+        `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role='fighter'`,
         [existing.fighterId],
       );
       updatedFighter = fighterUpdated.rows[0] || null;
@@ -390,8 +532,8 @@ export async function getPendingVerificationDetails(
 ): Promise<{ fighter: Fighter | null; verifications: FighterVerification[] }> {
   const fighterRes = await query<Fighter>(
     `select ${FIGHTER_COLUMNS}
-       from users
-       where id = $1 and role = 'fighter'`,
+       ${FIGHTER_FROM_JOIN}
+       where u.id = $1 and u.role = 'fighter'`,
     [fighterId],
   );
   const fighter = fighterRes.rows[0] || null;
@@ -401,7 +543,7 @@ export async function getPendingVerificationDetails(
   const verificationsRes = await query<FighterVerification>(
     `select ${VERIFICATION_COLUMNS}
        from fighter_verifications
-       where fighter_id = $1
+       where fighter_id = $1 or fighter_profile_id = (select id from fighter_profiles where user_id = $1)
        order by created_at desc`,
     [fighterId],
   );
