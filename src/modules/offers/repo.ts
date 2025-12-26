@@ -25,17 +25,19 @@ interface EventSlotRow {
 
 const offerSelect = `
   select
-    id,
-    fight_id as "fightId",
-    event_id as "eventId",
-    event_slot_id as "eventSlotId",
-    fighter_id as "fighterId",
-    plo_id as "ploId",
-    amount,
-    currency,
-    status,
-    created_at as "createdAt"
-  from offers
+    o.id,
+    o.fight_id as "fightId",
+    o.event_id as "eventId",
+    o.event_slot_id as "eventSlotId",
+    fp.user_id as "fighterId",
+    pp.user_id as "ploId",
+    o.amount,
+    o.currency,
+    o.status,
+    o.created_at as "createdAt"
+  from offers o
+  left join fighter_profiles fp on o.fighter_profile_id = fp.id
+  left join plo_profiles pp on o.plo_profile_id = pp.id
 `;
 
 export async function all(): Promise<Offer[]> {
@@ -61,21 +63,19 @@ export async function create(
       fight_id,
       event_id,
       event_slot_id,
-      fighter_id,
       fighter_profile_id,
-      plo_id,
       plo_profile_id,
       amount,
       currency,
       status
-    ) values ($1, $2, $3, $4, (select id from fighter_profiles where user_id = $4), $5, (select id from plo_profiles where user_id = $5), $6, $7, $8)
+    ) values ($1, $2, $3, (select id from fighter_profiles where user_id = $4), (select id from plo_profiles where user_id = $5), $6, $7, $8)
     returning
       id,
       fight_id as "fightId",
       event_id as "eventId",
       event_slot_id as "eventSlotId",
-      fighter_id as "fighterId",
-      plo_id as "ploId",
+      $4 as "fighterId",
+      $5 as "ploId",
       amount,
       currency,
       status,
@@ -110,7 +110,10 @@ export async function getFightById(id: string): Promise<FightRow | null> {
 
 export async function getEventById(id: string): Promise<EventRow | null> {
   const sql = `
-    select id, plo_id as "ploId" from events where id = $1
+    select e.id, pp.user_id as "ploId" 
+    from events e
+    left join plo_profiles pp on e.plo_profile_id = pp.id
+    where e.id = $1
   `;
   const r = await query<EventRow>(sql, [id]);
   return r.rows[0] || null;
@@ -130,7 +133,7 @@ export async function findExistingOffer(
 ): Promise<Offer | null> {
   const sql = `
     ${offerSelect}
-    where fight_id = $1 and plo_id = $2
+    where o.fight_id = $1 and pp.user_id = $2
     limit 1
   `;
   const r = await query<Offer>(sql, [fightId, ploId]);
@@ -145,7 +148,7 @@ export async function getOffersForFightEventSlotPlo(
 ): Promise<Offer[]> {
   const sql = `
     ${offerSelect}
-    where fight_id = $1 and event_id = $2 and event_slot_id = $3 and plo_id = $4
+    where o.fight_id = $1 and o.event_id = $2 and o.event_slot_id = $3 and pp.user_id = $4
   `;
   const r = await query<Offer>(sql, [fightId, eventId, eventSlotId, ploId]);
   return r.rows;
@@ -164,7 +167,7 @@ export async function deleteByFightAndPlo(
   fightId: string,
   ploId: string,
 ): Promise<void> {
-  await query('delete from offers where fight_id = $1 and plo_id = $2', [fightId, ploId]);
+  await query('delete from offers where fight_id = $1 and plo_profile_id = (select id from plo_profiles where user_id = $2)', [fightId, ploId]);
 }
 
 export async function getAvailableByFighterId(
@@ -176,8 +179,8 @@ export async function getAvailableByFighterId(
       o.fight_id as "fightId",
       o.event_id as "eventId",
       o.event_slot_id as "eventSlotId",
-      o.fighter_id as "fighterId",
-      o.plo_id as "ploId",
+      fp_join.user_id as "fighterId",
+      pp_join.user_id as "ploId",
       o.amount,
       o.currency,
       o.status,
@@ -197,19 +200,21 @@ export async function getAvailableByFighterId(
     from offers o
     join events e on o.event_id = e.id
     join event_slots es on o.event_slot_id = es.id
-    join users u on o.plo_id = u.id
+    join plo_profiles pp_join on o.plo_profile_id = pp_join.id
+    join users u on pp_join.user_id = u.id
     join fights f on o.fight_id = f.id
+    join fighter_profiles fp_join on o.fighter_profile_id = fp_join.id
     join offers oa on oa.fight_id = f.id
       and oa.event_id = o.event_id
       and oa.event_slot_id = o.event_slot_id
-      and oa.plo_id = o.plo_id
-      and oa.fighter_id = f.fighter_a_id
+      and oa.plo_profile_id = o.plo_profile_id
+      and oa.fighter_profile_id = (select id from fighter_profiles where user_id = f.fighter_a_id)
     join offers ob on ob.fight_id = f.id
       and ob.event_id = o.event_id
       and ob.event_slot_id = o.event_slot_id
-      and ob.plo_id = o.plo_id
-      and ob.fighter_id = f.fighter_b_id
-    where o.fighter_id = $1 
+      and ob.plo_profile_id = o.plo_profile_id
+      and ob.fighter_profile_id = (select id from fighter_profiles where user_id = f.fighter_b_id)
+    where fp_join.user_id = $1 
       and o.status = 'pending'
       and not (oa.status = 'rejected' or ob.status = 'rejected')
       and not (oa.status = 'accepted' and ob.status = 'accepted')
@@ -225,18 +230,21 @@ export async function updateStatus(
   status: 'accepted' | 'rejected',
 ): Promise<Offer | null> {
   const sql = `
-    update offers set status = $1 where id = $2 and fighter_id = $3
+    update offers o
+    set status = $1
+    from fighter_profiles fp
+    where o.id = $2 and o.fighter_profile_id = fp.id and fp.user_id = $3
     returning
-      id,
-      fight_id as "fightId",
-      event_id as "eventId",
-      event_slot_id as "eventSlotId",
-      fighter_id as "fighterId",
-      plo_id as "ploId",
-      amount,
-      currency,
-      status,
-      created_at as "createdAt"
+      o.id,
+      o.fight_id as "fightId",
+      o.event_id as "eventId",
+      o.event_slot_id as "eventSlotId",
+      fp.user_id as "fighterId",
+      (select pp.user_id from plo_profiles pp where pp.id = o.plo_profile_id) as "ploId",
+      o.amount,
+      o.currency,
+      o.status,
+      o.created_at as "createdAt"
   `;
   const r = await query<Offer>(sql, [status, id, fighterId]);
   return r.rows[0] || null;
@@ -250,7 +258,7 @@ export async function getOffersForFightEventSlot(
 ): Promise<Offer[]> {
   const sql = `
     ${offerSelect}
-    where fight_id = $1 and event_id = $2 and event_slot_id = $3 and plo_id = $4
+    where o.fight_id = $1 and o.event_id = $2 and o.event_slot_id = $3 and pp.user_id = $4
   `;
   const r = await query<Offer>(sql, [fightId, eventId, eventSlotId, ploId]);
   return r.rows;
@@ -290,8 +298,8 @@ export async function getAvailableOffersForFightByFighter(
       o.fight_id as "fightId",
       o.event_id as "eventId",
       o.event_slot_id as "eventSlotId",
-      o.fighter_id as "fighterId",
-      o.plo_id as "ploId",
+      fp_join.user_id as "fighterId",
+      pp_join.user_id as "ploId",
       o.amount,
       o.currency,
       o.status,
@@ -306,20 +314,22 @@ export async function getAvailableOffersForFightByFighter(
     from offers o
     join events e on o.event_id = e.id
     join event_slots es on o.event_slot_id = es.id
-    join users u on o.plo_id = u.id
+    join plo_profiles pp_join on o.plo_profile_id = pp_join.id
+    join users u on pp_join.user_id = u.id
     join fights f on o.fight_id = f.id
+    join fighter_profiles fp_join on o.fighter_profile_id = fp_join.id
     join offers oa on oa.fight_id = f.id
       and oa.event_id = o.event_id
       and oa.event_slot_id = o.event_slot_id
-      and oa.plo_id = o.plo_id
-      and oa.fighter_id = f.fighter_a_id
+      and oa.plo_profile_id = o.plo_profile_id
+      and oa.fighter_profile_id = (select id from fighter_profiles where user_id = f.fighter_a_id)
     join offers ob on ob.fight_id = f.id
       and ob.event_id = o.event_id
       and ob.event_slot_id = o.event_slot_id
-      and ob.plo_id = o.plo_id
-      and ob.fighter_id = f.fighter_b_id
+      and ob.plo_profile_id = o.plo_profile_id
+      and ob.fighter_profile_id = (select id from fighter_profiles where user_id = f.fighter_b_id)
     where o.fight_id = $1 
-      and o.fighter_id = $2
+      and fp_join.user_id = $2
       and not (oa.status = 'rejected' or ob.status = 'rejected')
       and not (oa.status = 'accepted' and ob.status = 'accepted')
     order by o.created_at desc
