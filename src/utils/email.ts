@@ -30,30 +30,35 @@ export async function sendVerificationEmail(
 
   const verificationLink = getVerificationLink(token);
 
-  const result = await resend.emails.send({
-    from: RESEND_FROM_EMAIL,
-    to: email,
-    subject: 'Verify Your Email Address',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>Welcome to ${APP_NAME}!</h2>
-        <p>Please verify your email address by clicking the link below:</p>
-        <p>
-          <a href="${verificationLink}" 
-             style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
-            Verify Email Address
-          </a>
-        </p>
-        <p>Or copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; color: #666;">${verificationLink}</p>
-        <p>This link will expire in 24 hours.</p>
-      </div>
-    `,
-    text: `Please verify your email address by clicking the link below:\n\n${verificationLink}\n\nThis link will expire in 24 hours.`,
-  });
+  try {
+    const result = await resend.emails.send({
+      from: RESEND_FROM_EMAIL,
+      to: email,
+      subject: 'Verify Your Email Address',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Welcome to ${APP_NAME}!</h2>
+          <p>Please verify your email address by clicking the link below:</p>
+          <p>
+            <a href="${verificationLink}" 
+               style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+              Verify Email Address
+            </a>
+          </p>
+          <p>Or copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #666;">${verificationLink}</p>
+          <p>This link will expire in 24 hours.</p>
+        </div>
+      `,
+      text: `Please verify your email address by clicking the link below:\n\n${verificationLink}\n\nThis link will expire in 24 hours.`,
+    });
 
-  if (result.error) {
-    throw new Error(`Resend error: ${JSON.stringify(result.error)}`);
+    if (result.error) {
+      throw new Error(`Resend error: ${JSON.stringify(result.error)}`);
+    }
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    throw new Error(`Failed to send verification email: ${errorMessage}`);
   }
 }
 
@@ -67,31 +72,36 @@ export async function sendPasswordResetEmail(
 
   const resetLink = getPasswordResetLink(token);
 
-  const result = await resend.emails.send({
-    from: RESEND_FROM_EMAIL,
-    to: email,
-    subject: 'Reset Your Password',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>Password Reset Request</h2>
-        <p>You requested to reset your password. Click the link below to reset it:</p>
-        <p>
-          <a href="${resetLink}" 
-             style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
-            Reset Password
-          </a>
-        </p>
-        <p>Or copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; color: #666;">${resetLink}</p>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-      </div>
-    `,
-    text: `You requested to reset your password. Click the link below to reset it:\n\n${resetLink}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
-  });
+  try {
+    const result = await resend.emails.send({
+      from: RESEND_FROM_EMAIL,
+      to: email,
+      subject: 'Reset Your Password',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Password Reset Request</h2>
+          <p>You requested to reset your password. Click the link below to reset it:</p>
+          <p>
+            <a href="${resetLink}" 
+               style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+              Reset Password
+            </a>
+          </p>
+          <p>Or copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #666;">${resetLink}</p>
+          <p>This link will expire in 1 hour.</p>
+          <p>If you didn't request this, please ignore this email.</p>
+        </div>
+      `,
+      text: `You requested to reset your password. Click the link below to reset it:\n\n${resetLink}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
+    });
 
-  if (result.error) {
-    throw new Error(`Resend error: ${JSON.stringify(result.error)}`);
+    if (result.error) {
+      throw new Error(`Resend error: ${JSON.stringify(result.error)}`);
+    }
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    throw new Error(`Failed to send password reset email: ${errorMessage}`);
   }
 }
 
