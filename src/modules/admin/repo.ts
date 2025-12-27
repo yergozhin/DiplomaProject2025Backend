@@ -44,27 +44,29 @@ export async function listPlos(): Promise<{
   const r = await query<PloRow>(
     `
       select
-        id,
-        email,
-        plo_status,
-        name,
-        league_name,
-        owner_first_name,
-        owner_last_name,
-        phone_number,
-        website,
-        country,
-        city,
-        address,
-        description,
-        logo,
-        founded_date,
-        social_media_links,
-        created_at,
-        updated_at
-        from users
-       where role = 'plo'
-       order by email
+        u.id,
+        u.email,
+        pp.plo_status,
+        u.name,
+        pp.league_name,
+        pp.owner_first_name,
+        pp.owner_last_name,
+        pci.phone_number,
+        pci.website,
+        pci.country,
+        pci.city,
+        pci.address,
+        pp.description,
+        pp.logo,
+        pp.founded_date,
+        pp.social_media_links,
+        pp.created_at,
+        pp.updated_at
+      from users u
+      left join plo_profiles pp on u.id = pp.user_id
+      left join plo_contact_info pci on pp.id = pci.plo_id
+      where u.role = 'plo'
+      order by u.email
     `,
   );
   return r.rows.map((row) => ({

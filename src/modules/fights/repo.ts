@@ -48,7 +48,7 @@ export async function getRequestsTo(fighterId: string): Promise<FightRequestWith
       u.id as "senderId",
       u.email as "senderEmail",
       coalesce(fp.first_name || ' ' || fp.last_name, fp.first_name, fp.last_name, u.name) as "senderName",
-      coalesce(wc.name, u.weight_class) as "senderWeightClass"
+      wc.name as "senderWeightClass"
     from fights f
     join users u on f.fighter_a_id = u.id
     left join fighter_profiles fp on u.id = fp.user_id
@@ -86,11 +86,11 @@ export async function getAccepted(): Promise<FightWithFighters[]> {
       ua.id as "fighterAUserId",
       ua.email as "fighterAEmail",
       coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
-      coalesce(wca.name, ua.weight_class) as "fighterAWeightClass",
+      wca.name as "fighterAWeightClass",
       ub.id as "fighterBUserId",
       ub.email as "fighterBEmail",
       coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
-      coalesce(wcb.name, ub.weight_class) as "fighterBWeightClass"
+      wcb.name as "fighterBWeightClass"
     from fights f
     join users ua on f.fighter_a_id = ua.id
     join users ub on f.fighter_b_id = ub.id
@@ -116,11 +116,11 @@ export async function getAcceptedForFighter(fighterId: string): Promise<FightWit
       ua.id as "fighterAUserId",
       ua.email as "fighterAEmail",
       coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
-      coalesce(wca.name, ua.weight_class) as "fighterAWeightClass",
+      wca.name as "fighterAWeightClass",
       ub.id as "fighterBUserId",
       ub.email as "fighterBEmail",
       coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
-      coalesce(wcb.name, ub.weight_class) as "fighterBWeightClass"
+      wcb.name as "fighterBWeightClass"
     from fights f
     join users ua on f.fighter_a_id = ua.id
     join users ub on f.fighter_b_id = ub.id
@@ -146,11 +146,11 @@ export async function getScheduledForFighter(fighterId: string): Promise<FightWi
       ua.id as "fighterAUserId",
       ua.email as "fighterAEmail",
       coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
-      coalesce(wca.name, ua.weight_class) as "fighterAWeightClass",
+      wca.name as "fighterAWeightClass",
       ub.id as "fighterBUserId",
       ub.email as "fighterBEmail",
       coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
-      coalesce(wcb.name, ub.weight_class) as "fighterBWeightClass"
+      wcb.name as "fighterBWeightClass"
     from fights f
     join users ua on f.fighter_a_id = ua.id
     join users ub on f.fighter_b_id = ub.id
@@ -176,11 +176,11 @@ export async function getAvailableFightsForPlo(ploId: string): Promise<FightWith
       ua.id as "fighterAUserId",
       ua.email as "fighterAEmail",
       coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
-      coalesce(wca.name, ua.weight_class) as "fighterAWeightClass",
+      wca.name as "fighterAWeightClass",
       ub.id as "fighterBUserId",
       ub.email as "fighterBEmail",
       coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
-      coalesce(wcb.name, ub.weight_class) as "fighterBWeightClass"
+      wcb.name as "fighterBWeightClass"
     from fights f
     join users ua on f.fighter_a_id = ua.id
     join users ub on f.fighter_b_id = ub.id
@@ -193,12 +193,15 @@ export async function getAvailableFightsForPlo(ploId: string): Promise<FightWith
     where f.status = 'accepted'
       and (
         not exists (
-          select 1 from offers o where o.fight_id = f.id and o.plo_id = $1
+          select 1 from offers o 
+          join plo_profiles pp on o.plo_profile_id = pp.id
+          where o.fight_id = f.id and pp.user_id = $1
         )
         or not exists (
           select 1 from offers o 
+          join plo_profiles pp on o.plo_profile_id = pp.id
           where o.fight_id = f.id 
-            and o.plo_id = $1 
+            and pp.user_id = $1 
             and o.status in ('pending', 'accepted')
         )
       )

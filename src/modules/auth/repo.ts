@@ -14,7 +14,7 @@ export async function findUserByEmailAndRole(
           u.email,
           u.role,
           u.password_hash,
-          coalesce(pp.plo_status, u.plo_status) as plo_status,
+          pp.plo_status,
           u.email_verified
         from users u
         left join plo_profiles pp on u.id = pp.user_id
@@ -32,7 +32,7 @@ export async function findUserByEmailAndRole(
         email,
         role,
         password_hash,
-        plo_status,
+        null as plo_status,
         email_verified
       from users
       where email = $1 and role = $2
@@ -131,7 +131,7 @@ export async function findUserByVerificationToken(
         u.email,
         u.role,
         u.password_hash,
-        coalesce(pp.plo_status, u.plo_status) as plo_status,
+        pp.plo_status,
         u.email_verified
       from users u
       left join plo_profiles pp on u.id = pp.user_id
@@ -184,7 +184,7 @@ export async function findUserByPasswordResetToken(
         u.email,
         u.role,
         u.password_hash,
-        coalesce(pp.plo_status, u.plo_status) as plo_status,
+        pp.plo_status,
         u.email_verified
       from users u
       left join plo_profiles pp on u.id = pp.user_id
