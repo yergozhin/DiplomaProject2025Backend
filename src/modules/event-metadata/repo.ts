@@ -18,7 +18,7 @@ export async function getByEventId(eventId: string): Promise<EventMetadata | nul
      where event_id = $1`,
     [eventId],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getById(id: string): Promise<EventMetadata | null> {
@@ -28,7 +28,7 @@ export async function getById(id: string): Promise<EventMetadata | null> {
      where id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateMetadataFields): Promise<EventMetadata | null> {
@@ -58,7 +58,7 @@ export async function update(id: string, fields: UpdateMetadataFields): Promise<
      returning id, event_id as "eventId", poster_image as "posterImage", ticket_link as "ticketLink", updated_at as "updatedAt"`,
     values,
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

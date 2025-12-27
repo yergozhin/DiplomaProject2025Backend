@@ -6,7 +6,7 @@ export async function create(fields: CreateResponseFields): Promise<OfferRespons
     `insert into offer_responses (offer_id, fighter_id, amount, currency, status)
      values ($1, $2, $3, $4, $5)
      returning id, offer_id as "offerId", fighter_id as "fighterId", amount, currency, status, responded_at as "respondedAt"`,
-    [fields.offerId, fields.fighterId, fields.amount, fields.currency || 'USD', fields.status || 'pending'],
+    [fields.offerId, fields.fighterId, fields.amount, fields.currency ?? 'USD', fields.status ?? 'pending'],
   );
   const response = r.rows[0];
   const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
@@ -16,7 +16,7 @@ export async function create(fields: CreateResponseFields): Promise<OfferRespons
     [response.fighterId],
   );
   const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
   return { ...response, fighterName };
 }
 
@@ -36,7 +36,7 @@ export async function getByOfferId(offerId: string): Promise<OfferResponse[]> {
       [response.fighterId],
     );
     const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
     return { ...response, fighterName };
   }));
   return responses;
@@ -58,7 +58,7 @@ export async function getByFighterId(fighterId: string): Promise<OfferResponse[]
       [response.fighterId],
     );
     const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
     return { ...response, fighterName };
   }));
   return responses;
@@ -80,7 +80,7 @@ export async function getById(id: string): Promise<OfferResponse | null> {
     [response.fighterId],
   );
   const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
   return { ...response, fighterName };
 }
 
@@ -126,7 +126,7 @@ export async function update(id: string, fields: UpdateResponseFields): Promise<
     [response.fighterId],
   );
   const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
   return { ...response, fighterName };
 }
 

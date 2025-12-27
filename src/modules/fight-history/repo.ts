@@ -15,7 +15,7 @@ export async function create(fields: CreateHistoryFields): Promise<FightHistory>
       `select email from users where id = $1`,
       [history.changedBy],
     );
-    changedByName = userRes.rows[0]?.email || null;
+    changedByName = userRes.rows[0]?.email ?? null;
   }
   return { ...history, changedByName };
 }
@@ -35,7 +35,7 @@ export async function getByFightId(fightId: string): Promise<FightHistory[]> {
         `select email from users where id = $1`,
         [history.changedBy],
       );
-      changedByName = userRes.rows[0]?.email || null;
+      changedByName = userRes.rows[0]?.email ?? null;
     }
     return { ...history, changedByName };
   }));
@@ -57,7 +57,7 @@ export async function getById(id: string): Promise<FightHistory | null> {
       `select email from users where id = $1`,
       [history.changedBy],
     );
-    changedByName = userRes.rows[0]?.email || null;
+    changedByName = userRes.rows[0]?.email ?? null;
   }
   return { ...history, changedByName };
 }

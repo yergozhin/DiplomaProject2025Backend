@@ -29,7 +29,7 @@ export async function getById(id: string): Promise<PloEventStatistics | null> {
      where id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateStatisticsFields): Promise<PloEventStatistics | null> {
@@ -66,7 +66,7 @@ export async function update(id: string, fields: UpdateStatisticsFields): Promis
      returning id, plo_id as "ploId", total_events as "totalEvents", completed_events as "completedEvents", total_fights_organized as "totalFightsOrganized", statistics_date as "statisticsDate"`,
     values,
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

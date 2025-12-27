@@ -24,7 +24,7 @@ export async function register(req: Request, res: Response) {
   const email = parseString(body.email);
   const password = parseString(body.password);
   const role = parseRole(body.role);
-  if (!email || !password || !role) {
+  if (email == null || password == null || role == null) {
     return res.status(400).json({ error: 'invalid' });
   }
   try {
@@ -45,7 +45,7 @@ export async function login(req: Request, res: Response) {
   const email = parseString(body.email);
   const password = parseString(body.password);
   const role = parseRole(body.role);
-  if (!email || !password || !role) {
+  if (email == null || password == null || role == null) {
     return res.status(400).json({ error: 'invalid' });
   }
   const result = await service.login(email, password, role);
@@ -72,7 +72,7 @@ export async function resendVerificationEmail(req: Request, res: Response) {
   const body = req.body as AuthRequestBody;
   const email = parseString(body.email);
   const role = parseRole(body.role);
-  if (!email || !role) {
+  if (email == null || role == null) {
     return res.status(400).json({ error: 'invalid' });
   }
   try {
@@ -95,7 +95,7 @@ export async function requestPasswordReset(req: Request, res: Response) {
   const body = req.body as AuthRequestBody;
   const email = parseString(body.email);
   const role = parseRole(body.role);
-  if (!email || !role) {
+  if (email == null || role == null) {
     return res.status(400).json({ error: 'invalid' });
   }
   try {
@@ -115,7 +115,7 @@ export async function resetPassword(req: Request, res: Response) {
   const body = req.body as { token?: unknown; password?: unknown; };
   const token = parseString(body.token);
   const password = parseString(body.password);
-  if (!token || !password) {
+  if (token == null || password == null) {
     return res.status(400).json({ error: 'invalid' });
   }
   const result = await service.resetPassword(token, password);

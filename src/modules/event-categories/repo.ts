@@ -27,7 +27,7 @@ export async function getById(id: string): Promise<EventCategory | null> {
      where id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateCategoryFields): Promise<EventCategory | null> {
@@ -56,7 +56,7 @@ export async function update(id: string, fields: UpdateCategoryFields): Promise<
      returning id, name, description`,
     values,
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {
@@ -76,7 +76,7 @@ export async function assignToEvent(eventId: string, categoryId: string): Promis
     `select name from event_categories where id = $1`,
     [categoryId],
   );
-  return { ...assignment, categoryName: categoryRes.rows[0]?.name || null };
+  return { ...assignment, categoryName: categoryRes.rows[0]?.name ?? null };
 }
 
 export async function removeFromEvent(eventId: string, categoryId: string): Promise<void> {

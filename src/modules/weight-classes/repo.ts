@@ -27,7 +27,7 @@ export async function getById(id: string): Promise<WeightClass | null> {
      where id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getByName(name: string): Promise<WeightClass | null> {
@@ -37,7 +37,7 @@ export async function getByName(name: string): Promise<WeightClass | null> {
      where name = $1`,
     [name],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateWeightClassFields): Promise<WeightClass | null> {
@@ -74,7 +74,7 @@ export async function update(id: string, fields: UpdateWeightClassFields): Promi
      returning id, name, min_weight_kg as "minWeightKg", max_weight_kg as "maxWeightKg", description, created_at as "createdAt"`,
     values,
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

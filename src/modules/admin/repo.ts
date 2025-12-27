@@ -119,7 +119,7 @@ export async function updatePloStatus(
     
     await client.query('commit');
     return { id: user.id, ploStatus: status };
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query('rollback');
     throw err;
   } finally {

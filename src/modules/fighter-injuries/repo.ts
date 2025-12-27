@@ -29,7 +29,7 @@ export async function getById(id: string): Promise<FighterInjury | null> {
      where id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateInjuryFields): Promise<FighterInjury | null> {
@@ -71,7 +71,7 @@ export async function update(id: string, fields: UpdateInjuryFields): Promise<Fi
      returning id, fighter_id as "fighterId", injury_type as "injuryType", injury_description as "injuryDescription", injury_date as "injuryDate", recovery_status as "recoveryStatus", medical_notes as "medicalNotes", updated_at as "updatedAt"`,
     values,
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

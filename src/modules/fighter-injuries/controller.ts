@@ -5,17 +5,34 @@ import type { CreateInjuryFields, UpdateInjuryFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
   try {
+    const body = req.body as {
+      fighterId?: unknown;
+      injuryType?: unknown;
+      injuryDescription?: unknown;
+      injuryDate?: unknown;
+      recoveryStatus?: unknown;
+      medicalNotes?: unknown;
+    };
+    const fighterId = typeof body.fighterId === 'string' ? body.fighterId : null;
+    const injuryType = typeof body.injuryType === 'string' ? body.injuryType : null;
+    const injuryDescription = typeof body.injuryDescription === 'string' ? body.injuryDescription : null;
+    const injuryDate = typeof body.injuryDate === 'string' ? body.injuryDate : null;
+    const recoveryStatus = typeof body.recoveryStatus === 'string' && ['recovering', 'cleared', 'ongoing'].includes(body.recoveryStatus) ? body.recoveryStatus as 'recovering' | 'cleared' | 'ongoing' : null;
+    const medicalNotes = typeof body.medicalNotes === 'string' ? body.medicalNotes : null;
+    if (!fighterId || !injuryType) {
+      return res.status(400).json({ error: 'invalid' });
+    }
     const fields: CreateInjuryFields = {
-      fighterId: req.body.fighterId,
-      injuryType: req.body.injuryType,
-      injuryDescription: req.body.injuryDescription,
-      injuryDate: req.body.injuryDate,
-      recoveryStatus: req.body.recoveryStatus,
-      medicalNotes: req.body.medicalNotes,
+      fighterId,
+      injuryType,
+      injuryDescription,
+      injuryDate,
+      recoveryStatus,
+      medicalNotes,
     };
     const injury = await s.create(fields);
     res.status(201).json(injury);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to create injury record' });
   }
 }
@@ -25,7 +42,7 @@ export async function getByFighter(req: Request, res: Response) {
     const fighterId = req.params.fighterId;
     const injuries = await s.getByFighterId(fighterId);
     res.json(injuries);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to get injuries' });
   }
 }
@@ -38,7 +55,7 @@ export async function getById(req: Request, res: Response) {
       return res.status(404).json({ error: 'Injury not found' });
     }
     res.json(injury);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to get injury' });
   }
 }
@@ -46,19 +63,31 @@ export async function getById(req: Request, res: Response) {
 export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
+    const body = req.body as {
+      injuryType?: unknown;
+      injuryDescription?: unknown;
+      injuryDate?: unknown;
+      recoveryStatus?: unknown;
+      medicalNotes?: unknown;
+    };
+    const injuryType = typeof body.injuryType === 'string' ? body.injuryType : undefined;
+    const injuryDescription = typeof body.injuryDescription === 'string' ? body.injuryDescription : null;
+    const injuryDate = typeof body.injuryDate === 'string' ? body.injuryDate : null;
+    const recoveryStatus = typeof body.recoveryStatus === 'string' && ['recovering', 'cleared', 'ongoing'].includes(body.recoveryStatus) ? body.recoveryStatus as 'recovering' | 'cleared' | 'ongoing' : null;
+    const medicalNotes = typeof body.medicalNotes === 'string' ? body.medicalNotes : null;
     const fields: UpdateInjuryFields = {
-      injuryType: req.body.injuryType,
-      injuryDescription: req.body.injuryDescription,
-      injuryDate: req.body.injuryDate,
-      recoveryStatus: req.body.recoveryStatus,
-      medicalNotes: req.body.medicalNotes,
+      injuryType,
+      injuryDescription,
+      injuryDate,
+      recoveryStatus,
+      medicalNotes,
     };
     const injury = await s.update(id, fields);
     if (!injury) {
       return res.status(404).json({ error: 'Injury not found' });
     }
     res.json(injury);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to update injury' });
   }
 }
@@ -68,8 +97,7 @@ export async function deleteById(req: AuthRequest, res: Response) {
     const id = req.params.id;
     await s.deleteById(id);
     res.status(204).send();
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to delete injury' });
   }
 }
-

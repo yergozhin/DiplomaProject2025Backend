@@ -37,7 +37,7 @@ export async function getById(id: string): Promise<EventSponsor | null> {
      where id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateSponsorFields): Promise<EventSponsor | null> {
@@ -74,7 +74,7 @@ export async function update(id: string, fields: UpdateSponsorFields): Promise<E
      returning id, event_id as "eventId", sponsor_name as "sponsorName", sponsor_logo as "sponsorLogo", sponsorship_level as "sponsorshipLevel", sponsorship_amount as "sponsorshipAmount"`,
     values,
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

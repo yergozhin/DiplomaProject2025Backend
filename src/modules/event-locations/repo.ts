@@ -18,7 +18,7 @@ export async function getByEventId(eventId: string): Promise<EventLocation | nul
      where event_id = $1`,
     [eventId],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getById(id: string): Promise<EventLocation | null> {
@@ -28,7 +28,7 @@ export async function getById(id: string): Promise<EventLocation | null> {
      where id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateLocationFields): Promise<EventLocation | null> {
@@ -70,7 +70,7 @@ export async function update(id: string, fields: UpdateLocationFields): Promise<
      returning id, event_id as "eventId", venue_name as "venueName", venue_address as "venueAddress", city, country, venue_capacity as "venueCapacity", updated_at as "updatedAt"`,
     values,
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

@@ -6,7 +6,7 @@ export async function create(fields: CreateContractFields): Promise<FightContrac
     `insert into fight_contracts (fight_id, fighter_id, contract_amount, currency, contract_terms)
      values ($1, $2, $3, $4, $5)
      returning id, fight_id as "fightId", fighter_id as "fighterId", contract_amount as "contractAmount", currency, contract_signed as "contractSigned", contract_signed_at as "contractSignedAt", contract_terms as "contractTerms", created_at as "createdAt", updated_at as "updatedAt"`,
-    [fields.fightId, fields.fighterId, fields.contractAmount, fields.currency || 'USD', fields.contractTerms ?? null],
+    [fields.fightId, fields.fighterId, fields.contractAmount, fields.currency ?? 'USD', fields.contractTerms ?? null],
   );
   const contract = r.rows[0];
   const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
@@ -16,7 +16,7 @@ export async function create(fields: CreateContractFields): Promise<FightContrac
     [contract.fighterId],
   );
   const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
   return { ...contract, fighterName };
 }
 
@@ -36,7 +36,7 @@ export async function getByFightId(fightId: string): Promise<FightContract[]> {
       [contract.fighterId],
     );
     const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
     return { ...contract, fighterName };
   }));
   return contracts;
@@ -58,7 +58,7 @@ export async function getByFighterId(fighterId: string): Promise<FightContract[]
       [contract.fighterId],
     );
     const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
     return { ...contract, fighterName };
   }));
   return contracts;
@@ -80,7 +80,7 @@ export async function getById(id: string): Promise<FightContract | null> {
     [contract.fighterId],
   );
   const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
   return { ...contract, fighterName };
 }
 
@@ -133,7 +133,7 @@ export async function update(id: string, fields: UpdateContractFields): Promise<
     [contract.fighterId],
   );
   const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
   return { ...contract, fighterName };
 }
 

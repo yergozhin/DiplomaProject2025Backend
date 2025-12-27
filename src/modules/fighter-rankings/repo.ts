@@ -13,7 +13,7 @@ export async function create(fields: CreateRankingFields): Promise<FighterRankin
     `select name from weight_classes where id = $1`,
     [ranking.weightClassId],
   );
-  return { ...ranking, weightClassName: weightClassRes.rows[0]?.name || null };
+  return { ...ranking, weightClassName: weightClassRes.rows[0]?.name ?? null };
 }
 
 export async function getByFighterId(fighterId: string): Promise<FighterRanking[]> {
@@ -69,7 +69,7 @@ export async function getById(id: string): Promise<FighterRanking | null> {
      where fr.id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateRankingFields): Promise<FighterRanking | null> {
@@ -108,7 +108,7 @@ export async function update(id: string, fields: UpdateRankingFields): Promise<F
     `select name from weight_classes where id = $1`,
     [ranking.weightClassId],
   );
-  return { ...ranking, weightClassName: weightClassRes.rows[0]?.name || null };
+  return { ...ranking, weightClassName: weightClassRes.rows[0]?.name ?? null };
 }
 
 export async function deleteById(id: string): Promise<void> {

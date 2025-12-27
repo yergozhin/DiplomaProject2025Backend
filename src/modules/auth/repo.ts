@@ -23,7 +23,7 @@ export async function findUserByEmailAndRole(
       `,
       [email, role],
     );
-    return r.rows[0] || null;
+    return r.rows[0] ?? null;
   }
   const r = await query<AuthUser>(
     `
@@ -40,7 +40,7 @@ export async function findUserByEmailAndRole(
     `,
     [email, role],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function createUser(
@@ -109,11 +109,11 @@ export async function createUser(
         [user.id],
       );
       const ploStatus = ploRes.rows[0]?.plo_status as 'unverified' | 'verified' | null;
-      return { id: user.id, email: user.email, role: user.role, plo_status: ploStatus || null };
+      return { id: user.id, email: user.email, role: user.role, plo_status: ploStatus ?? null };
     }
     
     return { id: user.id, email: user.email, role: user.role, plo_status: null };
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query('rollback');
     throw err;
   } finally {
@@ -142,7 +142,7 @@ export async function findUserByVerificationToken(
     `,
     [token],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function verifyUserEmail(userId: string): Promise<void> {
@@ -194,7 +194,7 @@ export async function findUserByPasswordResetToken(
     `,
     [token],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function updatePasswordResetToken(

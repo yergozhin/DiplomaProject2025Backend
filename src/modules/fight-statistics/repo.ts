@@ -16,7 +16,7 @@ export async function create(fields: CreateStatisticFields): Promise<FightStatis
     [stat.fighterId],
   );
   const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
   return { ...stat, fighterName };
 }
 
@@ -44,7 +44,7 @@ export async function getByFightId(fightId: string): Promise<FightStatistic[]> {
       [stat.fighterId],
     );
     const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
     return { ...stat, fighterName };
   }));
   return stats;
@@ -75,7 +75,7 @@ export async function getByFighterId(fighterId: string): Promise<FightStatistic[
       [stat.fighterId],
     );
     const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
     return { ...stat, fighterName };
   }));
   return stats;
@@ -106,7 +106,7 @@ export async function getById(id: string): Promise<FightStatistic | null> {
     [stat.fighterId],
   );
   const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
   return { ...stat, fighterName };
 }
 
@@ -161,7 +161,7 @@ export async function update(id: string, fields: UpdateStatisticFields): Promise
     [stat.fighterId],
   );
   const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname || `${fighter.first_name || ''} ${fighter.last_name || ''}`.trim() || null) : null;
+  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
   return { ...stat, fighterName };
 }
 

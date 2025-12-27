@@ -37,14 +37,14 @@ function parseSlots(value: unknown): string[] | null {
 }
 
 function parseOptionalString(value: unknown) {
-  if (value === null || value === undefined) return null;
+  if (value == null) return null;
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
 
 function parseOptionalInt(value: unknown) {
-  if (value === null || value === undefined || value === '') return null;
+  if (value == null || value === '') return null;
   if (typeof value !== 'number') return null;
   if (!Number.isFinite(value)) return null;
   const int = Math.round(value);
@@ -69,7 +69,7 @@ export async function create(req: AuthRequest, res: Response) {
   const body = req.body as EventCreateBody;
   const name = parseName(body.name);
   const slots = parseSlots(body.slots);
-  if (!name || !slots) {
+  if (name == null || slots == null) {
     return res.status(400).json({ error: 'invalid' });
   }
   const event = await s.createEvent(req.user.userId, name, slots);

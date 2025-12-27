@@ -65,7 +65,7 @@ export async function publishEvent(
   ];
 
   const missing = requiredFields.some((value) => {
-    if (value === null || value === undefined) return true;
+    if (value == null) return true;
     if (typeof value === 'number') return value <= 0;
     if (typeof value === 'string') return value.trim().length === 0;
     return false;

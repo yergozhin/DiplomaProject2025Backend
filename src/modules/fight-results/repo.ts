@@ -19,7 +19,7 @@ export async function create(fields: CreateResultFields): Promise<FightResult> {
     );
     const winner = winnerRes.rows[0];
     if (winner) {
-      winnerName = winner.nickname || `${winner.first_name || ''} ${winner.last_name || ''}`.trim() || null;
+      winnerName = winner.nickname ?? `${winner.first_name ?? ''} ${winner.last_name ?? ''}`.trim() ?? null;
     }
   }
   return { ...result, winnerName };
@@ -51,7 +51,7 @@ export async function getByFightId(fightId: string): Promise<FightResult | null>
     );
     const winner = winnerRes.rows[0];
     if (winner) {
-      winnerName = winner.nickname || `${winner.first_name || ''} ${winner.last_name || ''}`.trim() || null;
+      winnerName = winner.nickname ?? `${winner.first_name ?? ''} ${winner.last_name ?? ''}`.trim() ?? null;
     }
   }
   return { ...result, winnerName };
@@ -83,7 +83,7 @@ export async function getById(id: string): Promise<FightResult | null> {
     );
     const winner = winnerRes.rows[0];
     if (winner) {
-      winnerName = winner.nickname || `${winner.first_name || ''} ${winner.last_name || ''}`.trim() || null;
+      winnerName = winner.nickname ?? `${winner.first_name ?? ''} ${winner.last_name ?? ''}`.trim() ?? null;
     }
   }
   return { ...result, winnerName };
@@ -139,7 +139,7 @@ export async function update(id: string, fields: UpdateResultFields): Promise<Fi
     );
     const winner = winnerRes.rows[0];
     if (winner) {
-      winnerName = winner.nickname || `${winner.first_name || ''} ${winner.last_name || ''}`.trim() || null;
+      winnerName = winner.nickname ?? `${winner.first_name ?? ''} ${winner.last_name ?? ''}`.trim() ?? null;
     }
   }
   return { ...result, winnerName };

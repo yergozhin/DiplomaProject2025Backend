@@ -51,7 +51,7 @@ export async function getProfile(ploId: string): Promise<PloProfile | null> {
     `,
     [ploId],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export interface PloProfileUpdate {
@@ -133,8 +133,8 @@ export async function updateProfile(
       `,
       [ploId],
     );
-    return r.rows[0] || null;
-  } catch (err) {
+    return r.rows[0] ?? null;
+  } catch (err: unknown) {
     await client.query('rollback');
     throw err;
   } finally {

@@ -29,7 +29,7 @@ export async function getById(id: string): Promise<MedicalClearance | null> {
      where id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateClearanceFields): Promise<MedicalClearance | null> {
@@ -70,7 +70,7 @@ export async function update(id: string, fields: UpdateClearanceFields): Promise
      returning id, fighter_id as "fighterId", clearance_date as "clearanceDate", expiration_date as "expirationDate", cleared_by as "clearedBy", clearance_type as "clearanceType", notes`,
     values,
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

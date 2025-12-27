@@ -50,7 +50,7 @@ function parseRequiredString(value: unknown): string | null {
 }
 
 function parseOptionalString(value: unknown): { valid: boolean; value: string | null } {
-  if (value === undefined || value === null) return { valid: true, value: null };
+  if (value == null) return { valid: true, value: null };
   if (typeof value !== 'string') return { valid: false, value: null };
   const trimmed = value.trim();
   if (trimmed.length === 0) return { valid: true, value: null };
@@ -66,7 +66,7 @@ function parseOptionalDate(value: unknown): { valid: boolean; value: string | nu
 }
 
 function parseOptionalInt(value: unknown): { valid: boolean; value: number | null } {
-  if (value === undefined || value === null || value === '') return { valid: true, value: null };
+  if (value == null || value === '') return { valid: true, value: null };
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) return { valid: false, value: null };
     const int = Math.round(value);

@@ -127,7 +127,7 @@ export async function updateProfile(id: string, fields: FighterProfileFields): P
       `select id from weight_classes where name = $1 limit 1`,
       [fields.currentWeightClass],
     );
-    const weightClassId = weightClassRes.rows[0]?.id || null;
+    const weightClassId = weightClassRes.rows[0]?.id ?? null;
     
     await client.query(
       `update fighter_profiles
@@ -191,8 +191,8 @@ export async function updateProfile(id: string, fields: FighterProfileFields): P
       `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role=$2`,
       [id, 'fighter'],
     );
-    return r.rows[0] || null;
-  } catch (err) {
+    return r.rows[0] ?? null;
+  } catch (err: unknown) {
     await client.query('rollback');
     throw err;
   } finally {
@@ -205,7 +205,7 @@ export async function getById(id: string): Promise<Fighter | null> {
     `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role=$2`,
     [id, 'fighter'],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function allExcept(excludeId: string): Promise<Fighter[]> {
@@ -269,8 +269,8 @@ export async function updateRecord(
       `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role=$2`,
       [fighterId, 'fighter'],
     );
-    return r.rows[0] || null;
-  } catch (err) {
+    return r.rows[0] ?? null;
+  } catch (err: unknown) {
     await client.query('rollback');
     throw err;
   } finally {
@@ -421,7 +421,7 @@ export async function updateVerificationStatus(
         `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role='fighter'`,
         [existing.fighterId],
       );
-      updatedFighter = fighterUpdated.rows[0] || null;
+      updatedFighter = fighterUpdated.rows[0] ?? null;
     }
 
     const updatedVerificationRes = await client.query<FighterVerification>(
@@ -438,10 +438,10 @@ export async function updateVerificationStatus(
 
     await client.query('commit');
     return {
-      verification: updatedVerificationRes.rows[0] || null,
+      verification: updatedVerificationRes.rows[0] ?? null,
       fighter: updatedFighter,
     };
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query('rollback');
     throw err;
   } finally {
@@ -458,7 +458,7 @@ export async function getPendingVerificationDetails(
        where u.id = $1 and u.role = 'fighter'`,
     [fighterId],
   );
-  const fighter = fighterRes.rows[0] || null;
+  const fighter = fighterRes.rows[0] ?? null;
   if (!fighter) {
     return { fighter: null, verifications: [] };
   }
