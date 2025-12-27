@@ -31,7 +31,11 @@ export async function register(req: Request, res: Response) {
     const u = await service.register(email, password, role);
     if (!u) return res.status(409).json({ error: 'exists' });
     res.status(201).json(u);
-  } catch {
+  } catch (err: any) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'exists' });
+    }
+    console.error('Registration error:', err);
     return res.status(500).json({ error: 'registration_failed' });
   }
 }

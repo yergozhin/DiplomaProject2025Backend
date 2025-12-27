@@ -97,12 +97,14 @@ export async function create(
 export async function getFightById(id: string): Promise<FightRow | null> {
   const sql = `
     select
-      id,
-      fighter_a_id as "fighterAId",
-      fighter_b_id as "fighterBId",
-      status
-    from fights
-    where id = $1
+      f.id,
+      fpa.user_id as "fighterAId",
+      fpb.user_id as "fighterBId",
+      f.status
+    from fights f
+    join fighter_profiles fpa on f.fighter_a_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_id = fpb.id
+    where f.id = $1
   `;
   const r = await query<FightRow>(sql, [id]);
   return r.rows[0] || null;
@@ -188,8 +190,8 @@ export async function getAvailableByFighterId(
       e.name as "eventName",
       es.start_time as "slotStartTime",
       u.email as "ploEmail",
-      f.fighter_a_id as "fighterAId",
-      f.fighter_b_id as "fighterBId",
+      fpa.user_id as "fighterAId",
+      fpb.user_id as "fighterBId",
       oa.status as "fighterAStatus",
       ob.status as "fighterBStatus",
       case 
@@ -203,17 +205,19 @@ export async function getAvailableByFighterId(
     join plo_profiles pp_join on o.plo_profile_id = pp_join.id
     join users u on pp_join.user_id = u.id
     join fights f on o.fight_id = f.id
+    join fighter_profiles fpa on f.fighter_a_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_id = fpb.id
     join fighter_profiles fp_join on o.fighter_profile_id = fp_join.id
     join offers oa on oa.fight_id = f.id
       and oa.event_id = o.event_id
       and oa.event_slot_id = o.event_slot_id
       and oa.plo_profile_id = o.plo_profile_id
-      and oa.fighter_profile_id = (select id from fighter_profiles where user_id = f.fighter_a_id)
+      and oa.fighter_profile_id = f.fighter_a_id
     join offers ob on ob.fight_id = f.id
       and ob.event_id = o.event_id
       and ob.event_slot_id = o.event_slot_id
       and ob.plo_profile_id = o.plo_profile_id
-      and ob.fighter_profile_id = (select id from fighter_profiles where user_id = f.fighter_b_id)
+      and ob.fighter_profile_id = f.fighter_b_id
     where fp_join.user_id = $1 
       and o.status = 'pending'
       and not (oa.status = 'rejected' or ob.status = 'rejected')
@@ -307,8 +311,8 @@ export async function getAvailableOffersForFightByFighter(
       e.name as "eventName",
       es.start_time as "slotStartTime",
       u.email as "ploEmail",
-      f.fighter_a_id as "fighterAId",
-      f.fighter_b_id as "fighterBId",
+      fpa.user_id as "fighterAId",
+      fpb.user_id as "fighterBId",
       oa.status as "fighterAStatus",
       ob.status as "fighterBStatus"
     from offers o
@@ -317,17 +321,19 @@ export async function getAvailableOffersForFightByFighter(
     join plo_profiles pp_join on o.plo_profile_id = pp_join.id
     join users u on pp_join.user_id = u.id
     join fights f on o.fight_id = f.id
+    join fighter_profiles fpa on f.fighter_a_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_id = fpb.id
     join fighter_profiles fp_join on o.fighter_profile_id = fp_join.id
     join offers oa on oa.fight_id = f.id
       and oa.event_id = o.event_id
       and oa.event_slot_id = o.event_slot_id
       and oa.plo_profile_id = o.plo_profile_id
-      and oa.fighter_profile_id = (select id from fighter_profiles where user_id = f.fighter_a_id)
+      and oa.fighter_profile_id = f.fighter_a_id
     join offers ob on ob.fight_id = f.id
       and ob.event_id = o.event_id
       and ob.event_slot_id = o.event_slot_id
       and ob.plo_profile_id = o.plo_profile_id
-      and ob.fighter_profile_id = (select id from fighter_profiles where user_id = f.fighter_b_id)
+      and ob.fighter_profile_id = f.fighter_b_id
     where o.fight_id = $1 
       and fp_join.user_id = $2
       and not (oa.status = 'rejected' or ob.status = 'rejected')

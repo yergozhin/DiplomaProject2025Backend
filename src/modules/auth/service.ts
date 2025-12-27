@@ -47,7 +47,11 @@ export async function register(email: string, password: string, role: Role) {
   const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const created = await repo.createUser(email, passwordHash, role, verificationToken, tokenExpiresAt);
   
-  await sendVerificationEmail(email, verificationToken);
+  try {
+    await sendVerificationEmail(email, verificationToken);
+  } catch (emailError) {
+    console.error('Failed to send verification email:', emailError);
+  }
   
   return {
     id: created.id,
@@ -106,7 +110,12 @@ export async function resendVerificationEmail(email: string, role: Role) {
   const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
   
   await repo.updateVerificationToken(user.id, verificationToken, tokenExpiresAt);
-  await sendVerificationEmail(email, verificationToken);
+  try {
+    await sendVerificationEmail(email, verificationToken);
+  } catch (emailError) {
+    console.error('Failed to send verification email:', emailError);
+    throw emailError;
+  }
   
   return { message: 'Verification email sent' };
 }
