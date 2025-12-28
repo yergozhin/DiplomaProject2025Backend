@@ -128,7 +128,12 @@ export async function requestPasswordReset(email: string, role: Role) {
   const tokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
   
   await repo.updatePasswordResetToken(user.id, resetToken, tokenExpiresAt);
-  await sendPasswordResetEmail(email, resetToken);
+  try {
+    await sendPasswordResetEmail(email, resetToken);
+  } catch (emailError) {
+    console.error('Failed to send password reset email:', emailError);
+    throw emailError;
+  }
   
   return { message: 'Password reset email sent' };
 }
