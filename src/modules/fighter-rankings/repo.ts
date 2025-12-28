@@ -3,9 +3,14 @@ import type { FighterRanking, CreateRankingFields, UpdateRankingFields } from '.
 
 export async function create(fields: CreateRankingFields): Promise<FighterRanking> {
   const r = await query<FighterRanking>(
-    `insert into fighter_rankings (fighter_id, weight_class_id, ranking_position, ranking_points, ranking_date)
-     values ($1, $2, $3, $4, $5)
-     returning id, fighter_id as "fighterId", weight_class_id as "weightClassId", ranking_position as "rankingPosition", ranking_points as "rankingPoints", ranking_date as "rankingDate"`,
+    `with inserted as (
+      insert into fighter_rankings (fighter_id, weight_class_id, ranking_position, ranking_points, ranking_date)
+      values ((select id from fighter_profiles where user_id = $1), $2, $3, $4, $5)
+      returning id, fighter_id, weight_class_id, ranking_position, ranking_points, ranking_date
+    )
+    select i.id, fp.user_id as "fighterId", i.weight_class_id as "weightClassId", i.ranking_position as "rankingPosition", i.ranking_points as "rankingPoints", i.ranking_date as "rankingDate"
+    from inserted i
+    join fighter_profiles fp on i.fighter_id = fp.id`,
     [fields.fighterId, fields.weightClassId, fields.rankingPosition, fields.rankingPoints, fields.rankingDate],
   );
   const ranking = r.rows[0];
@@ -20,15 +25,16 @@ export async function getByFighterId(fighterId: string): Promise<FighterRanking[
   const r = await query<FighterRanking>(
     `select 
       fr.id,
-      fr.fighter_id as "fighterId",
+      fp.user_id as "fighterId",
       fr.weight_class_id as "weightClassId",
       wc.name as "weightClassName",
       fr.ranking_position as "rankingPosition",
       fr.ranking_points as "rankingPoints",
       fr.ranking_date as "rankingDate"
      from fighter_rankings fr
+     join fighter_profiles fp on fr.fighter_id = fp.id
      left join weight_classes wc on fr.weight_class_id = wc.id
-     where fr.fighter_id = $1
+     where fp.user_id = $1
      order by fr.ranking_date desc, fr.ranking_position nulls last`,
     [fighterId],
   );
@@ -39,13 +45,14 @@ export async function getByWeightClass(weightClassId: string): Promise<FighterRa
   const r = await query<FighterRanking>(
     `select 
       fr.id,
-      fr.fighter_id as "fighterId",
+      fp.user_id as "fighterId",
       fr.weight_class_id as "weightClassId",
       wc.name as "weightClassName",
       fr.ranking_position as "rankingPosition",
       fr.ranking_points as "rankingPoints",
       fr.ranking_date as "rankingDate"
      from fighter_rankings fr
+     join fighter_profiles fp on fr.fighter_id = fp.id
      left join weight_classes wc on fr.weight_class_id = wc.id
      where fr.weight_class_id = $1
      order by fr.ranking_position nulls last, fr.ranking_points desc`,
@@ -58,13 +65,14 @@ export async function getById(id: string): Promise<FighterRanking | null> {
   const r = await query<FighterRanking>(
     `select 
       fr.id,
-      fr.fighter_id as "fighterId",
+      fp.user_id as "fighterId",
       fr.weight_class_id as "weightClassId",
       wc.name as "weightClassName",
       fr.ranking_position as "rankingPosition",
       fr.ranking_points as "rankingPoints",
       fr.ranking_date as "rankingDate"
      from fighter_rankings fr
+     join fighter_profiles fp on fr.fighter_id = fp.id
      left join weight_classes wc on fr.weight_class_id = wc.id
      where fr.id = $1`,
     [id],
@@ -96,10 +104,11 @@ export async function update(id: string, fields: UpdateRankingFields): Promise<F
 
   values.push(id);
   const r = await query<FighterRanking>(
-    `update fighter_rankings
+    `update fighter_rankings fr
      set ${updates.join(', ')}
-     where id = $${paramCount}
-     returning id, fighter_id as "fighterId", weight_class_id as "weightClassId", ranking_position as "rankingPosition", ranking_points as "rankingPoints", ranking_date as "rankingDate"`,
+     from fighter_profiles fp
+     where fr.id = $${paramCount} and fr.fighter_id = fp.id
+     returning fr.id, fp.user_id as "fighterId", fr.weight_class_id as "weightClassId", fr.ranking_position as "rankingPosition", fr.ranking_points as "rankingPoints", fr.ranking_date as "rankingDate"`,
     values,
   );
   const ranking = r.rows[0];

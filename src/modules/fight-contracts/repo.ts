@@ -3,85 +3,59 @@ import type { FightContract, CreateContractFields, UpdateContractFields } from '
 
 export async function create(fields: CreateContractFields): Promise<FightContract> {
   const r = await query<FightContract & { fighter_name: string | null }>(
-    `insert into fight_contracts (fight_id, fighter_id, contract_amount, currency, contract_terms)
-     values ($1, $2, $3, $4, $5)
-     returning id, fight_id as "fightId", fighter_id as "fighterId", contract_amount as "contractAmount", currency, contract_signed as "contractSigned", contract_signed_at as "contractSignedAt", contract_terms as "contractTerms", created_at as "createdAt", updated_at as "updatedAt"`,
+    `with inserted as (
+      insert into fight_contracts (fight_id, fighter_id, contract_amount, currency, contract_terms)
+      values ($1, (select id from fighter_profiles where user_id = $2), $3, $4, $5)
+      returning id, fight_id, fighter_id, contract_amount, currency, contract_signed, contract_signed_at, contract_terms, created_at, updated_at
+    )
+    select i.id, i.fight_id as "fightId", fp.user_id as "fighterId", i.contract_amount as "contractAmount", i.currency, i.contract_signed as "contractSigned", i.contract_signed_at as "contractSignedAt", i.contract_terms as "contractTerms", i.created_at as "createdAt", i.updated_at as "updatedAt",
+           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+    from inserted i
+    join fighter_profiles fp on i.fighter_id = fp.id`,
     [fields.fightId, fields.fighterId, fields.contractAmount, fields.currency ?? 'USD', fields.contractTerms ?? null],
   );
   const contract = r.rows[0];
-  const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-    `select fp.first_name, fp.last_name, fp.nickname
-     from fighter_profiles fp
-     where fp.id = $1`,
-    [contract.fighterId],
-  );
-  const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-  return { ...contract, fighterName };
+  return { ...contract, fighterName: contract.fighter_name };
 }
 
 export async function getByFightId(fightId: string): Promise<FightContract[]> {
   const r = await query<FightContract & { fighter_name: string | null }>(
-    `select id, fight_id as "fightId", fighter_id as "fighterId", contract_amount as "contractAmount", currency, contract_signed as "contractSigned", contract_signed_at as "contractSignedAt", contract_terms as "contractTerms", created_at as "createdAt", updated_at as "updatedAt"
-     from fight_contracts
-     where fight_id = $1
-     order by created_at desc`,
+    `select fc.id, fc.fight_id as "fightId", fp.user_id as "fighterId", fc.contract_amount as "contractAmount", fc.currency, fc.contract_signed as "contractSigned", fc.contract_signed_at as "contractSignedAt", fc.contract_terms as "contractTerms", fc.created_at as "createdAt", fc.updated_at as "updatedAt",
+           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+     from fight_contracts fc
+     join fighter_profiles fp on fc.fighter_id = fp.id
+     where fc.fight_id = $1
+     order by fc.created_at desc`,
     [fightId],
   );
-  const contracts = await Promise.all(r.rows.map(async (contract) => {
-    const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-      `select fp.first_name, fp.last_name, fp.nickname
-       from fighter_profiles fp
-       where fp.id = $1`,
-      [contract.fighterId],
-    );
-    const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-    return { ...contract, fighterName };
-  }));
-  return contracts;
+  return r.rows.map(contract => ({ ...contract, fighterName: contract.fighter_name }));
 }
 
 export async function getByFighterId(fighterId: string): Promise<FightContract[]> {
   const r = await query<FightContract & { fighter_name: string | null }>(
-    `select id, fight_id as "fightId", fighter_id as "fighterId", contract_amount as "contractAmount", currency, contract_signed as "contractSigned", contract_signed_at as "contractSignedAt", contract_terms as "contractTerms", created_at as "createdAt", updated_at as "updatedAt"
-     from fight_contracts
-     where fighter_id = $1
-     order by created_at desc`,
+    `select fc.id, fc.fight_id as "fightId", fp.user_id as "fighterId", fc.contract_amount as "contractAmount", fc.currency, fc.contract_signed as "contractSigned", fc.contract_signed_at as "contractSignedAt", fc.contract_terms as "contractTerms", fc.created_at as "createdAt", fc.updated_at as "updatedAt",
+           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+     from fight_contracts fc
+     join fighter_profiles fp on fc.fighter_id = fp.id
+     where fp.user_id = $1
+     order by fc.created_at desc`,
     [fighterId],
   );
-  const contracts = await Promise.all(r.rows.map(async (contract) => {
-    const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-      `select fp.first_name, fp.last_name, fp.nickname
-       from fighter_profiles fp
-       where fp.id = $1`,
-      [contract.fighterId],
-    );
-    const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-    return { ...contract, fighterName };
-  }));
-  return contracts;
+  return r.rows.map(contract => ({ ...contract, fighterName: contract.fighter_name }));
 }
 
 export async function getById(id: string): Promise<FightContract | null> {
   const r = await query<FightContract & { fighter_name: string | null }>(
-    `select id, fight_id as "fightId", fighter_id as "fighterId", contract_amount as "contractAmount", currency, contract_signed as "contractSigned", contract_signed_at as "contractSignedAt", contract_terms as "contractTerms", created_at as "createdAt", updated_at as "updatedAt"
-     from fight_contracts
-     where id = $1`,
+    `select fc.id, fc.fight_id as "fightId", fp.user_id as "fighterId", fc.contract_amount as "contractAmount", fc.currency, fc.contract_signed as "contractSigned", fc.contract_signed_at as "contractSignedAt", fc.contract_terms as "contractTerms", fc.created_at as "createdAt", fc.updated_at as "updatedAt",
+           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+     from fight_contracts fc
+     join fighter_profiles fp on fc.fighter_id = fp.id
+     where fc.id = $1`,
     [id],
   );
   const contract = r.rows[0];
   if (!contract) return null;
-  const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-    `select fp.first_name, fp.last_name, fp.nickname
-     from fighter_profiles fp
-     where fp.id = $1`,
-    [contract.fighterId],
-  );
-  const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-  return { ...contract, fighterName };
+  return { ...contract, fighterName: contract.fighter_name };
 }
 
 export async function update(id: string, fields: UpdateContractFields): Promise<FightContract | null> {
@@ -118,23 +92,17 @@ export async function update(id: string, fields: UpdateContractFields): Promise<
   updates.push(`updated_at = now()`);
   values.push(id);
   const r = await query<FightContract & { fighter_name: string | null }>(
-    `update fight_contracts
+    `update fight_contracts fc
      set ${updates.join(', ')}
-     where id = $${paramCount}
-     returning id, fight_id as "fightId", fighter_id as "fighterId", contract_amount as "contractAmount", currency, contract_signed as "contractSigned", contract_signed_at as "contractSignedAt", contract_terms as "contractTerms", created_at as "createdAt", updated_at as "updatedAt"`,
+     from fighter_profiles fp
+     where fc.id = $${paramCount} and fc.fighter_id = fp.id
+     returning fc.id, fc.fight_id as "fightId", fp.user_id as "fighterId", fc.contract_amount as "contractAmount", fc.currency, fc.contract_signed as "contractSigned", fc.contract_signed_at as "contractSignedAt", fc.contract_terms as "contractTerms", fc.created_at as "createdAt", fc.updated_at as "updatedAt",
+            (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name`,
     values,
   );
   const contract = r.rows[0];
   if (!contract) return null;
-  const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-    `select fp.first_name, fp.last_name, fp.nickname
-     from fighter_profiles fp
-     where fp.id = $1`,
-    [contract.fighterId],
-  );
-  const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-  return { ...contract, fighterName };
+  return { ...contract, fighterName: contract.fighter_name };
 }
 
 export async function deleteById(id: string): Promise<void> {

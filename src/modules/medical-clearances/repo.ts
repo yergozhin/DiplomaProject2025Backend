@@ -3,9 +3,14 @@ import type { MedicalClearance, CreateClearanceFields, UpdateClearanceFields } f
 
 export async function create(fields: CreateClearanceFields): Promise<MedicalClearance> {
   const r = await query<MedicalClearance>(
-    `insert into medical_clearances (fighter_id, clearance_date, expiration_date, cleared_by, clearance_type, notes)
-     values ($1, $2, $3, $4, $5, $6)
-     returning id, fighter_id as "fighterId", clearance_date as "clearanceDate", expiration_date as "expirationDate", cleared_by as "clearedBy", clearance_type as "clearanceType", notes`,
+    `with inserted as (
+      insert into medical_clearances (fighter_id, clearance_date, expiration_date, cleared_by, clearance_type, notes)
+      values ((select id from fighter_profiles where user_id = $1), $2, $3, $4, $5, $6)
+      returning id, fighter_id, clearance_date, expiration_date, cleared_by, clearance_type, notes
+    )
+    select i.id, fp.user_id as "fighterId", i.clearance_date as "clearanceDate", i.expiration_date as "expirationDate", i.cleared_by as "clearedBy", i.clearance_type as "clearanceType", i.notes
+    from inserted i
+    join fighter_profiles fp on i.fighter_id = fp.id`,
     [fields.fighterId, fields.clearanceDate, fields.expirationDate ?? null, fields.clearedBy ?? null, fields.clearanceType ?? null, fields.notes ?? null],
   );
   return r.rows[0];
@@ -13,10 +18,11 @@ export async function create(fields: CreateClearanceFields): Promise<MedicalClea
 
 export async function getByFighterId(fighterId: string): Promise<MedicalClearance[]> {
   const r = await query<MedicalClearance>(
-    `select id, fighter_id as "fighterId", clearance_date as "clearanceDate", expiration_date as "expirationDate", cleared_by as "clearedBy", clearance_type as "clearanceType", notes
-     from medical_clearances
-     where fighter_id = $1
-     order by clearance_date desc`,
+    `select mc.id, fp.user_id as "fighterId", mc.clearance_date as "clearanceDate", mc.expiration_date as "expirationDate", mc.cleared_by as "clearedBy", mc.clearance_type as "clearanceType", mc.notes
+     from medical_clearances mc
+     join fighter_profiles fp on mc.fighter_id = fp.id
+     where fp.user_id = $1
+     order by mc.clearance_date desc`,
     [fighterId],
   );
   return r.rows;
@@ -24,9 +30,10 @@ export async function getByFighterId(fighterId: string): Promise<MedicalClearanc
 
 export async function getById(id: string): Promise<MedicalClearance | null> {
   const r = await query<MedicalClearance>(
-    `select id, fighter_id as "fighterId", clearance_date as "clearanceDate", expiration_date as "expirationDate", cleared_by as "clearedBy", clearance_type as "clearanceType", notes
-     from medical_clearances
-     where id = $1`,
+    `select mc.id, fp.user_id as "fighterId", mc.clearance_date as "clearanceDate", mc.expiration_date as "expirationDate", mc.cleared_by as "clearedBy", mc.clearance_type as "clearanceType", mc.notes
+     from medical_clearances mc
+     join fighter_profiles fp on mc.fighter_id = fp.id
+     where mc.id = $1`,
     [id],
   );
   return r.rows[0] ?? null;
@@ -64,10 +71,11 @@ export async function update(id: string, fields: UpdateClearanceFields): Promise
 
   values.push(id);
   const r = await query<MedicalClearance>(
-    `update medical_clearances
+    `update medical_clearances mc
      set ${updates.join(', ')}
-     where id = $${paramCount}
-     returning id, fighter_id as "fighterId", clearance_date as "clearanceDate", expiration_date as "expirationDate", cleared_by as "clearedBy", clearance_type as "clearanceType", notes`,
+     from fighter_profiles fp
+     where mc.id = $${paramCount} and mc.fighter_id = fp.id
+     returning mc.id, fp.user_id as "fighterId", mc.clearance_date as "clearanceDate", mc.expiration_date as "expirationDate", mc.cleared_by as "clearedBy", mc.clearance_type as "clearanceType", mc.notes`,
     values,
   );
   return r.rows[0] ?? null;

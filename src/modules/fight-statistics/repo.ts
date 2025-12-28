@@ -3,21 +3,19 @@ import type { FightStatistic, CreateStatisticFields, UpdateStatisticFields } fro
 
 export async function create(fields: CreateStatisticFields): Promise<FightStatistic> {
   const r = await query<FightStatistic & { fighter_name: string | null }>(
-    `insert into fight_statistics (fight_id, fighter_id, strikes_landed, strikes_attempted, takedowns_landed, takedowns_attempted, submission_attempts, control_time_seconds)
-     values ($1, $2, $3, $4, $5, $6, $7, $8)
-     returning id, fight_id as "fightId", fighter_id as "fighterId", strikes_landed as "strikesLanded", strikes_attempted as "strikesAttempted", takedowns_landed as "takedownsLanded", takedowns_attempted as "takedownsAttempted", submission_attempts as "submissionAttempts", control_time_seconds as "controlTimeSeconds"`,
+    `with inserted as (
+      insert into fight_statistics (fight_id, fighter_id, strikes_landed, strikes_attempted, takedowns_landed, takedowns_attempted, submission_attempts, control_time_seconds)
+      values ($1, (select id from fighter_profiles where user_id = $2), $3, $4, $5, $6, $7, $8)
+      returning id, fight_id, fighter_id, strikes_landed, strikes_attempted, takedowns_landed, takedowns_attempted, submission_attempts, control_time_seconds
+    )
+    select i.id, i.fight_id as "fightId", fp.user_id as "fighterId", i.strikes_landed as "strikesLanded", i.strikes_attempted as "strikesAttempted", i.takedowns_landed as "takedownsLanded", i.takedowns_attempted as "takedownsAttempted", i.submission_attempts as "submissionAttempts", i.control_time_seconds as "controlTimeSeconds",
+           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+    from inserted i
+    join fighter_profiles fp on i.fighter_id = fp.id`,
     [fields.fightId, fields.fighterId, fields.strikesLanded ?? 0, fields.strikesAttempted ?? 0, fields.takedownsLanded ?? 0, fields.takedownsAttempted ?? 0, fields.submissionAttempts ?? 0, fields.controlTimeSeconds ?? 0],
   );
   const stat = r.rows[0];
-  const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-    `select fp.first_name, fp.last_name, fp.nickname
-     from fighter_profiles fp
-     where fp.id = $1`,
-    [stat.fighterId],
-  );
-  const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-  return { ...stat, fighterName };
+  return { ...stat, fighterName: stat.fighter_name };
 }
 
 export async function getByFightId(fightId: string): Promise<FightStatistic[]> {
@@ -25,29 +23,20 @@ export async function getByFightId(fightId: string): Promise<FightStatistic[]> {
     `select 
       fs.id,
       fs.fight_id as "fightId",
-      fs.fighter_id as "fighterId",
+      fp.user_id as "fighterId",
       fs.strikes_landed as "strikesLanded",
       fs.strikes_attempted as "strikesAttempted",
       fs.takedowns_landed as "takedownsLanded",
       fs.takedowns_attempted as "takedownsAttempted",
       fs.submission_attempts as "submissionAttempts",
-      fs.control_time_seconds as "controlTimeSeconds"
+      fs.control_time_seconds as "controlTimeSeconds",
+      (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
      from fight_statistics fs
+     join fighter_profiles fp on fs.fighter_id = fp.id
      where fs.fight_id = $1`,
     [fightId],
   );
-  const stats = await Promise.all(r.rows.map(async (stat) => {
-    const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-      `select fp.first_name, fp.last_name, fp.nickname
-       from fighter_profiles fp
-       where fp.id = $1`,
-      [stat.fighterId],
-    );
-    const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-    return { ...stat, fighterName };
-  }));
-  return stats;
+  return r.rows.map(stat => ({ ...stat, fighterName: stat.fighter_name }));
 }
 
 export async function getByFighterId(fighterId: string): Promise<FightStatistic[]> {
@@ -55,30 +44,21 @@ export async function getByFighterId(fighterId: string): Promise<FightStatistic[
     `select 
       fs.id,
       fs.fight_id as "fightId",
-      fs.fighter_id as "fighterId",
+      fp.user_id as "fighterId",
       fs.strikes_landed as "strikesLanded",
       fs.strikes_attempted as "strikesAttempted",
       fs.takedowns_landed as "takedownsLanded",
       fs.takedowns_attempted as "takedownsAttempted",
       fs.submission_attempts as "submissionAttempts",
-      fs.control_time_seconds as "controlTimeSeconds"
+      fs.control_time_seconds as "controlTimeSeconds",
+      (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
      from fight_statistics fs
-     where fs.fighter_id = $1
+     join fighter_profiles fp on fs.fighter_id = fp.id
+     where fp.user_id = $1
      order by fs.fight_id desc`,
     [fighterId],
   );
-  const stats = await Promise.all(r.rows.map(async (stat) => {
-    const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-      `select fp.first_name, fp.last_name, fp.nickname
-       from fighter_profiles fp
-       where fp.id = $1`,
-      [stat.fighterId],
-    );
-    const fighter = fighterRes.rows[0];
-    const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-    return { ...stat, fighterName };
-  }));
-  return stats;
+  return r.rows.map(stat => ({ ...stat, fighterName: stat.fighter_name }));
 }
 
 export async function getById(id: string): Promise<FightStatistic | null> {
@@ -86,28 +66,22 @@ export async function getById(id: string): Promise<FightStatistic | null> {
     `select 
       fs.id,
       fs.fight_id as "fightId",
-      fs.fighter_id as "fighterId",
+      fp.user_id as "fighterId",
       fs.strikes_landed as "strikesLanded",
       fs.strikes_attempted as "strikesAttempted",
       fs.takedowns_landed as "takedownsLanded",
       fs.takedowns_attempted as "takedownsAttempted",
       fs.submission_attempts as "submissionAttempts",
-      fs.control_time_seconds as "controlTimeSeconds"
+      fs.control_time_seconds as "controlTimeSeconds",
+      (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
      from fight_statistics fs
+     join fighter_profiles fp on fs.fighter_id = fp.id
      where fs.id = $1`,
     [id],
   );
   const stat = r.rows[0];
   if (!stat) return null;
-  const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-    `select fp.first_name, fp.last_name, fp.nickname
-     from fighter_profiles fp
-     where fp.id = $1`,
-    [stat.fighterId],
-  );
-  const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-  return { ...stat, fighterName };
+  return { ...stat, fighterName: stat.fighter_name };
 }
 
 export async function update(id: string, fields: UpdateStatisticFields): Promise<FightStatistic | null> {
@@ -146,23 +120,17 @@ export async function update(id: string, fields: UpdateStatisticFields): Promise
 
   values.push(id);
   const r = await query<FightStatistic & { fighter_name: string | null }>(
-    `update fight_statistics
+    `update fight_statistics fs
      set ${updates.join(', ')}
-     where id = $${paramCount}
-     returning id, fight_id as "fightId", fighter_id as "fighterId", strikes_landed as "strikesLanded", strikes_attempted as "strikesAttempted", takedowns_landed as "takedownsLanded", takedowns_attempted as "takedownsAttempted", submission_attempts as "submissionAttempts", control_time_seconds as "controlTimeSeconds"`,
+     from fighter_profiles fp
+     where fs.id = $${paramCount} and fs.fighter_id = fp.id
+     returning fs.id, fs.fight_id as "fightId", fp.user_id as "fighterId", fs.strikes_landed as "strikesLanded", fs.strikes_attempted as "strikesAttempted", fs.takedowns_landed as "takedownsLanded", fs.takedowns_attempted as "takedownsAttempted", fs.submission_attempts as "submissionAttempts", fs.control_time_seconds as "controlTimeSeconds",
+            (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name`,
     values,
   );
   const stat = r.rows[0];
   if (!stat) return null;
-  const fighterRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
-    `select fp.first_name, fp.last_name, fp.nickname
-     from fighter_profiles fp
-     where fp.id = $1`,
-    [stat.fighterId],
-  );
-  const fighter = fighterRes.rows[0];
-  const fighterName = fighter ? (fighter.nickname ?? `${fighter.first_name ?? ''} ${fighter.last_name ?? ''}`.trim() ?? null) : null;
-  return { ...stat, fighterName };
+  return { ...stat, fighterName: stat.fighter_name };
 }
 
 export async function deleteById(id: string): Promise<void> {
