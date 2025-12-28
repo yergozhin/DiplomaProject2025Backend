@@ -3,9 +3,14 @@ import type { PloEventStatistics, CreateStatisticsFields, UpdateStatisticsFields
 
 export async function create(fields: CreateStatisticsFields): Promise<PloEventStatistics> {
   const r = await query<PloEventStatistics>(
-    `insert into plo_event_statistics (plo_id, total_events, completed_events, total_fights_organized, statistics_date)
-     values ($1, $2, $3, $4, $5)
-     returning id, plo_id as "ploId", total_events as "totalEvents", completed_events as "completedEvents", total_fights_organized as "totalFightsOrganized", statistics_date as "statisticsDate"`,
+    `with inserted as (
+      insert into plo_event_statistics (plo_id, total_events, completed_events, total_fights_organized, statistics_date)
+      values ((select id from plo_profiles where user_id = $1), $2, $3, $4, $5)
+      returning id, plo_id, total_events, completed_events, total_fights_organized, statistics_date
+    )
+    select i.id, pp.user_id as "ploId", i.total_events as "totalEvents", i.completed_events as "completedEvents", i.total_fights_organized as "totalFightsOrganized", i.statistics_date as "statisticsDate"
+    from inserted i
+    join plo_profiles pp on i.plo_id = pp.id`,
     [fields.ploId, fields.totalEvents ?? 0, fields.completedEvents ?? 0, fields.totalFightsOrganized ?? 0, fields.statisticsDate],
   );
   return r.rows[0];
@@ -13,10 +18,11 @@ export async function create(fields: CreateStatisticsFields): Promise<PloEventSt
 
 export async function getByPloId(ploId: string): Promise<PloEventStatistics[]> {
   const r = await query<PloEventStatistics>(
-    `select id, plo_id as "ploId", total_events as "totalEvents", completed_events as "completedEvents", total_fights_organized as "totalFightsOrganized", statistics_date as "statisticsDate"
-     from plo_event_statistics
-     where plo_id = $1
-     order by statistics_date desc`,
+    `select pes.id, pp.user_id as "ploId", pes.total_events as "totalEvents", pes.completed_events as "completedEvents", pes.total_fights_organized as "totalFightsOrganized", pes.statistics_date as "statisticsDate"
+     from plo_event_statistics pes
+     join plo_profiles pp on pes.plo_id = pp.id
+     where pp.user_id = $1
+     order by pes.statistics_date desc`,
     [ploId],
   );
   return r.rows;
@@ -24,9 +30,10 @@ export async function getByPloId(ploId: string): Promise<PloEventStatistics[]> {
 
 export async function getById(id: string): Promise<PloEventStatistics | null> {
   const r = await query<PloEventStatistics>(
-    `select id, plo_id as "ploId", total_events as "totalEvents", completed_events as "completedEvents", total_fights_organized as "totalFightsOrganized", statistics_date as "statisticsDate"
-     from plo_event_statistics
-     where id = $1`,
+    `select pes.id, pp.user_id as "ploId", pes.total_events as "totalEvents", pes.completed_events as "completedEvents", pes.total_fights_organized as "totalFightsOrganized", pes.statistics_date as "statisticsDate"
+     from plo_event_statistics pes
+     join plo_profiles pp on pes.plo_id = pp.id
+     where pes.id = $1`,
     [id],
   );
   return r.rows[0] ?? null;
@@ -60,10 +67,11 @@ export async function update(id: string, fields: UpdateStatisticsFields): Promis
 
   values.push(id);
   const r = await query<PloEventStatistics>(
-    `update plo_event_statistics
+    `update plo_event_statistics pes
      set ${updates.join(', ')}
-     where id = $${paramCount}
-     returning id, plo_id as "ploId", total_events as "totalEvents", completed_events as "completedEvents", total_fights_organized as "totalFightsOrganized", statistics_date as "statisticsDate"`,
+     from plo_profiles pp
+     where pes.id = $${paramCount} and pes.plo_id = pp.id
+     returning pes.id, pp.user_id as "ploId", pes.total_events as "totalEvents", pes.completed_events as "completedEvents", pes.total_fights_organized as "totalFightsOrganized", pes.statistics_date as "statisticsDate"`,
     values,
   );
   return r.rows[0] ?? null;

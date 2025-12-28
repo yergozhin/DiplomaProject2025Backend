@@ -214,13 +214,13 @@ export async function allExcept(excludeId: string): Promise<Fighter[]> {
        ${FIGHTER_FROM_JOIN}
        where u.role = $1
          and u.id != $2
-         and not exists (
-           select 1 from fights f
-           join fighter_profiles fpa on f.fighter_a_id = fpa.id
-           join fighter_profiles fpb on f.fighter_b_id = fpb.id
-           where f.status in ('requested', 'accepted', 'scheduled')
-             and ((fpa.user_id = u.id and fpb.user_id = $2) or (fpa.user_id = $2 and fpb.user_id = u.id))
-         )
+        and not exists (
+          select 1 from fights f
+          join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+          join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
+          where f.status in ('requested', 'accepted', 'scheduled')
+            and ((fpa.user_id = u.id and fpb.user_id = $2) or (fpa.user_id = $2 and fpb.user_id = u.id))
+        )
        order by fp.first_name nulls last, fp.last_name nulls last, u.name`,
     ['fighter', excludeId],
   );

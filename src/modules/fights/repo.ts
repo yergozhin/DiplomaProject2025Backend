@@ -13,8 +13,8 @@ export async function all(): Promise<Fight[]> {
       fpb.user_id as "fighterBId", 
       f.status 
     from fights f
-    join fighter_profiles fpa on f.fighter_a_id = fpa.id
-    join fighter_profiles fpb on f.fighter_b_id = fpb.id
+    join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
     order by f.id desc`,
   );
   return r.rows;
@@ -22,7 +22,7 @@ export async function all(): Promise<Fight[]> {
 
 export async function create(fighterAId: string, fighterBId: string): Promise<Fight> {
   const r = await query<Fight>(
-    `insert into fights (fighter_a_id, fighter_b_id, status) 
+    `insert into fights (fighter_a_profile_id, fighter_b_profile_id, status) 
      values (
        (select id from fighter_profiles where user_id = $1),
        (select id from fighter_profiles where user_id = $2),
@@ -46,8 +46,8 @@ export async function findExisting(fighterAId: string, fighterBId: string): Prom
        fpb.user_id as "fighterBId", 
        f.status 
      from fights f
-     join fighter_profiles fpa on f.fighter_a_id = fpa.id
-     join fighter_profiles fpb on f.fighter_b_id = fpb.id
+     join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+     join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
      where (
        (fpa.user_id = $1 and fpb.user_id = $2)
        or (fpa.user_id = $2 and fpb.user_id = $1)
@@ -78,8 +78,8 @@ export async function getRequestsTo(fighterId: string): Promise<FightRequestWith
       coalesce(fp.first_name || ' ' || fp.last_name, fp.first_name, fp.last_name, u.name) as "senderName",
       wc.name as "senderWeightClass"
     from fights f
-    join fighter_profiles fpa on f.fighter_a_id = fpa.id
-    join fighter_profiles fpb on f.fighter_b_id = fpb.id
+    join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
     join users u on fpa.user_id = u.id
     left join fighter_profiles fp on fpa.id = fp.id
     left join fighter_physical_attributes fpa_attr on fp.id = fpa_attr.fighter_id
@@ -98,8 +98,8 @@ export async function getById(id: string): Promise<Fight | null> {
       fpb.user_id as "fighterBId", 
       f.status 
     from fights f
-    join fighter_profiles fpa on f.fighter_a_id = fpa.id
-    join fighter_profiles fpb on f.fighter_b_id = fpb.id
+    join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
     where f.id = $1`,
     [id],
   );
@@ -112,8 +112,8 @@ export async function accept(id: string): Promise<Fight | null> {
      set status=$1
      from fighter_profiles fpa, fighter_profiles fpb
      where f.id = $2 
-       and f.fighter_a_id = fpa.id
-       and f.fighter_b_id = fpb.id
+       and f.fighter_a_profile_id = fpa.id
+       and f.fighter_b_profile_id = fpb.id
      returning f.id, fpa.user_id as "fighterAId", fpb.user_id as "fighterBId", f.status`,
     ['accepted', id],
   );
@@ -136,8 +136,8 @@ export async function getAccepted(): Promise<FightWithFighters[]> {
       coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
       wcb.name as "fighterBWeightClass"
     from fights f
-    join fighter_profiles fpa on f.fighter_a_id = fpa.id
-    join fighter_profiles fpb on f.fighter_b_id = fpb.id
+    join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
     join users ua on fpa.user_id = ua.id
     join users ub on fpb.user_id = ub.id
     left join fighter_physical_attributes fpaa on fpa.id = fpaa.fighter_id
@@ -166,8 +166,8 @@ export async function getAcceptedForFighter(fighterId: string): Promise<FightWit
       coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
       wcb.name as "fighterBWeightClass"
     from fights f
-    join fighter_profiles fpa on f.fighter_a_id = fpa.id
-    join fighter_profiles fpb on f.fighter_b_id = fpb.id
+    join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
     join users ua on fpa.user_id = ua.id
     join users ub on fpb.user_id = ub.id
     left join fighter_physical_attributes fpaa on fpa.id = fpaa.fighter_id
@@ -196,8 +196,8 @@ export async function getScheduledForFighter(fighterId: string): Promise<FightWi
       coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
       wcb.name as "fighterBWeightClass"
     from fights f
-    join fighter_profiles fpa on f.fighter_a_id = fpa.id
-    join fighter_profiles fpb on f.fighter_b_id = fpb.id
+    join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
     join users ua on fpa.user_id = ua.id
     join users ub on fpb.user_id = ub.id
     left join fighter_physical_attributes fpaa on fpa.id = fpaa.fighter_id
@@ -226,8 +226,8 @@ export async function getAvailableFightsForPlo(ploId: string): Promise<FightWith
       coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
       wcb.name as "fighterBWeightClass"
     from fights f
-    join fighter_profiles fpa on f.fighter_a_id = fpa.id
-    join fighter_profiles fpb on f.fighter_b_id = fpb.id
+    join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
     join users ua on fpa.user_id = ua.id
     join users ub on fpb.user_id = ub.id
     left join fighter_physical_attributes fpaa on fpa.id = fpaa.fighter_id
