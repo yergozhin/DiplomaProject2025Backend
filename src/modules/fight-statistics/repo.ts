@@ -9,7 +9,7 @@ export async function create(fields: CreateStatisticFields): Promise<FightStatis
       returning id, fight_id, fighter_id, strikes_landed, strikes_attempted, takedowns_landed, takedowns_attempted, submission_attempts, control_time_seconds
     )
     select i.id, i.fight_id as "fightId", fp.user_id as "fighterId", i.strikes_landed as "strikesLanded", i.strikes_attempted as "strikesAttempted", i.takedowns_landed as "takedownsLanded", i.takedowns_attempted as "takedownsAttempted", i.submission_attempts as "submissionAttempts", i.control_time_seconds as "controlTimeSeconds",
-           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+           COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name
     from inserted i
     join fighter_profiles fp on i.fighter_id = fp.id`,
     [fields.fightId, fields.fighterId, fields.strikesLanded ?? 0, fields.strikesAttempted ?? 0, fields.takedownsLanded ?? 0, fields.takedownsAttempted ?? 0, fields.submissionAttempts ?? 0, fields.controlTimeSeconds ?? 0],
@@ -30,7 +30,7 @@ export async function getByFightId(fightId: string): Promise<FightStatistic[]> {
       fs.takedowns_attempted as "takedownsAttempted",
       fs.submission_attempts as "submissionAttempts",
       fs.control_time_seconds as "controlTimeSeconds",
-      (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+      COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name
      from fight_statistics fs
      join fighter_profiles fp on fs.fighter_id = fp.id
      where fs.fight_id = $1`,
@@ -51,7 +51,7 @@ export async function getByFighterId(fighterId: string): Promise<FightStatistic[
       fs.takedowns_attempted as "takedownsAttempted",
       fs.submission_attempts as "submissionAttempts",
       fs.control_time_seconds as "controlTimeSeconds",
-      (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+      COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name
      from fight_statistics fs
      join fighter_profiles fp on fs.fighter_id = fp.id
      where fp.user_id = $1
@@ -73,7 +73,7 @@ export async function getById(id: string): Promise<FightStatistic | null> {
       fs.takedowns_attempted as "takedownsAttempted",
       fs.submission_attempts as "submissionAttempts",
       fs.control_time_seconds as "controlTimeSeconds",
-      (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+      COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name
      from fight_statistics fs
      join fighter_profiles fp on fs.fighter_id = fp.id
      where fs.id = $1`,
@@ -125,7 +125,7 @@ export async function update(id: string, fields: UpdateStatisticFields): Promise
      from fighter_profiles fp
      where fs.id = $${paramCount} and fs.fighter_id = fp.id
      returning fs.id, fs.fight_id as "fightId", fp.user_id as "fighterId", fs.strikes_landed as "strikesLanded", fs.strikes_attempted as "strikesAttempted", fs.takedowns_landed as "takedownsLanded", fs.takedowns_attempted as "takedownsAttempted", fs.submission_attempts as "submissionAttempts", fs.control_time_seconds as "controlTimeSeconds",
-            (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name`,
+            COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name`,
     values,
   );
   const stat = r.rows[0];

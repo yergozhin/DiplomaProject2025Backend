@@ -10,6 +10,7 @@ r.get('/accepted/my', requireAuth, requireRole(Roles.Fighter), c.getAcceptedForF
 r.get('/scheduled', requireAuth, requireRole(Roles.Fighter), c.getScheduled);
 r.get('/available-for-plo', requireAuth, requireRole(Roles.PLO), c.getAvailableFightsForPlo);
 r.get('/requests', requireAuth, requireRole(Roles.Fighter), c.getRequestsTo);
+r.get('/:id', requireAuth, requireAnyRole(Roles.Fighter, Roles.PLO, Roles.Admin), c.getById);
 r.post('/request', requireAuth, requireRole(Roles.Fighter), c.sendRequest);
 r.put('/:id/accept', requireAuth, requireRole(Roles.Fighter), c.acceptFight);
 export default r;

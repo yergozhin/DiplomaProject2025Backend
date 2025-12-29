@@ -61,4 +61,8 @@ export function getAvailableFightsForPlo(ploId: string) {
   return repo.getAvailableFightsForPlo(ploId);
 }
 
+export function getByIdWithFighters(id: string) {
+  return repo.getByIdWithFighters(id);
+}
+
 

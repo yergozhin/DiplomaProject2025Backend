@@ -73,4 +73,12 @@ export async function getAvailableFightsForPlo(req: AuthRequest, res: Response) 
   res.json(r);
 }
 
+export async function getById(req: AuthRequest, res: Response) {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: 'invalid' });
+  const fight = await s.getByIdWithFighters(id);
+  if (!fight) return res.status(404).json({ error: 'fight_not_found' });
+  res.json(fight);
+}
+
 

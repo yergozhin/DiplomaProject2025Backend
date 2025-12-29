@@ -9,7 +9,7 @@ export async function create(fields: CreateContractFields): Promise<FightContrac
       returning id, fight_id, fighter_id, contract_amount, currency, contract_signed, contract_signed_at, contract_terms, created_at, updated_at
     )
     select i.id, i.fight_id as "fightId", fp.user_id as "fighterId", i.contract_amount as "contractAmount", i.currency, i.contract_signed as "contractSigned", i.contract_signed_at as "contractSignedAt", i.contract_terms as "contractTerms", i.created_at as "createdAt", i.updated_at as "updatedAt",
-           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+           COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name
     from inserted i
     join fighter_profiles fp on i.fighter_id = fp.id`,
     [fields.fightId, fields.fighterId, fields.contractAmount, fields.currency ?? 'USD', fields.contractTerms ?? null],
@@ -21,7 +21,7 @@ export async function create(fields: CreateContractFields): Promise<FightContrac
 export async function getByFightId(fightId: string): Promise<FightContract[]> {
   const r = await query<FightContract & { fighter_name: string | null }>(
     `select fc.id, fc.fight_id as "fightId", fp.user_id as "fighterId", fc.contract_amount as "contractAmount", fc.currency, fc.contract_signed as "contractSigned", fc.contract_signed_at as "contractSignedAt", fc.contract_terms as "contractTerms", fc.created_at as "createdAt", fc.updated_at as "updatedAt",
-           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+           COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name
      from fight_contracts fc
      join fighter_profiles fp on fc.fighter_id = fp.id
      where fc.fight_id = $1
@@ -34,7 +34,7 @@ export async function getByFightId(fightId: string): Promise<FightContract[]> {
 export async function getByFighterId(fighterId: string): Promise<FightContract[]> {
   const r = await query<FightContract & { fighter_name: string | null }>(
     `select fc.id, fc.fight_id as "fightId", fp.user_id as "fighterId", fc.contract_amount as "contractAmount", fc.currency, fc.contract_signed as "contractSigned", fc.contract_signed_at as "contractSignedAt", fc.contract_terms as "contractTerms", fc.created_at as "createdAt", fc.updated_at as "updatedAt",
-           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+           COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name
      from fight_contracts fc
      join fighter_profiles fp on fc.fighter_id = fp.id
      where fp.user_id = $1
@@ -47,7 +47,7 @@ export async function getByFighterId(fighterId: string): Promise<FightContract[]
 export async function getById(id: string): Promise<FightContract | null> {
   const r = await query<FightContract & { fighter_name: string | null }>(
     `select fc.id, fc.fight_id as "fightId", fp.user_id as "fighterId", fc.contract_amount as "contractAmount", fc.currency, fc.contract_signed as "contractSigned", fc.contract_signed_at as "contractSignedAt", fc.contract_terms as "contractTerms", fc.created_at as "createdAt", fc.updated_at as "updatedAt",
-           (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name
+           COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name
      from fight_contracts fc
      join fighter_profiles fp on fc.fighter_id = fp.id
      where fc.id = $1`,
@@ -97,7 +97,7 @@ export async function update(id: string, fields: UpdateContractFields): Promise<
      from fighter_profiles fp
      where fc.id = $${paramCount} and fc.fighter_id = fp.id
      returning fc.id, fc.fight_id as "fightId", fp.user_id as "fighterId", fc.contract_amount as "contractAmount", fc.currency, fc.contract_signed as "contractSigned", fc.contract_signed_at as "contractSignedAt", fc.contract_terms as "contractTerms", fc.created_at as "createdAt", fc.updated_at as "updatedAt",
-            (fp.nickname ?? (fp.first_name || ' ' || fp.last_name) ?? null) as fighter_name`,
+            COALESCE(fp.nickname, fp.first_name || ' ' || fp.last_name) as fighter_name`,
     values,
   );
   const contract = r.rows[0];

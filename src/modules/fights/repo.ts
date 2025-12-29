@@ -254,4 +254,33 @@ export async function getAvailableFightsForPlo(ploId: string): Promise<FightWith
   return r.rows;
 }
 
+export async function getByIdWithFighters(id: string): Promise<FightWithFighters | null> {
+  const r = await query<FightWithFighters>(`
+    select 
+      f.id,
+      f.status,
+      fpa.user_id as "fighterAId",
+      fpb.user_id as "fighterBId",
+      ua.id as "fighterAUserId",
+      ua.email as "fighterAEmail",
+      coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
+      wca.name as "fighterAWeightClass",
+      ub.id as "fighterBUserId",
+      ub.email as "fighterBEmail",
+      coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
+      wcb.name as "fighterBWeightClass"
+    from fights f
+    join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
+    join users ua on fpa.user_id = ua.id
+    join users ub on fpb.user_id = ub.id
+    left join fighter_physical_attributes fpaa on fpa.id = fpaa.fighter_id
+    left join fighter_physical_attributes fpab on fpb.id = fpab.fighter_id
+    left join weight_classes wca on fpaa.weight_class_id = wca.id
+    left join weight_classes wcb on fpab.weight_class_id = wcb.id
+    where f.id = $1
+  `, [id]);
+  return r.rows[0] ?? null;
+}
+
 
