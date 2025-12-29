@@ -159,7 +159,7 @@ export async function getOffersForFightEventSlotPlo(
 export async function getById(id: string): Promise<Offer | null> {
   const sql = `
     ${offerSelect}
-    where id = $1
+    where o.id = $1
   `;
   const r = await query<Offer>(sql, [id]);
   return r.rows[0] ?? null;
