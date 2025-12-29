@@ -6,6 +6,8 @@ import * as c from './controller';
 const r = Router();
 r.get('/plos', requireAuth, requireRole(Roles.Admin), c.listPlos);
 r.patch('/plos/:ploId/status', requireAuth, requireRole(Roles.Admin), c.updatePloStatus);
+r.get('/users', requireAuth, requireRole(Roles.Admin), c.listUsers);
+r.post('/users/:userId/verify-email', requireAuth, requireRole(Roles.Admin), c.verifyUserEmail);
 export default r;
 
 

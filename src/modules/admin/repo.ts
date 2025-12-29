@@ -127,4 +127,73 @@ export async function updatePloStatus(
   }
 }
 
+interface UserRow {
+  id: string;
+  email: string;
+  role: 'fighter' | 'plo' | 'spectator';
+  email_verified: boolean;
+  name: string | null;
+  created_at: string | null;
+}
+
+export async function listUsers(): Promise<{
+  id: string;
+  email: string;
+  role: 'fighter' | 'plo' | 'spectator';
+  emailVerified: boolean;
+  name: string | null;
+  createdAt: string | null;
+}[]> {
+  const r = await query<UserRow>(
+    `
+      select
+        u.id,
+        u.email,
+        u.role,
+        u.email_verified,
+        coalesce(
+          fp.first_name || ' ' || fp.last_name,
+          fp.first_name,
+          fp.last_name,
+          pp.league_name,
+          u.email
+        ) as name,
+        u.created_at
+      from users u
+      left join fighter_profiles fp on u.id = fp.user_id and u.role = 'fighter'
+      left join plo_profiles pp on u.id = pp.user_id and u.role = 'plo'
+      where u.role in ('fighter', 'plo', 'spectator')
+      order by u.email
+    `,
+  );
+  return r.rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    role: row.role,
+    emailVerified: row.email_verified,
+    name: row.name,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function verifyUserEmail(userId: string): Promise<{ id: string; emailVerified: boolean } | null> {
+  const r = await query<{ id: string; email_verified: boolean }>(
+    `
+      update users
+      set email_verified = true,
+          email_verification_token = null,
+          email_verification_token_expires_at = null,
+          updated_at = now()
+      where id = $1
+      returning id, email_verified
+    `,
+    [userId],
+  );
+  if (r.rows.length === 0) return null;
+  return {
+    id: r.rows[0].id,
+    emailVerified: r.rows[0].email_verified,
+  };
+}
+
 

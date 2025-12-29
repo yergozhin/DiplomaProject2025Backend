@@ -33,4 +33,21 @@ export async function updatePloStatus(req: AuthRequest, res: Response) {
   res.json(result);
 }
 
+export async function listUsers(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const users = await s.getUsers();
+  res.json(users);
+}
+
+export async function verifyUserEmail(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const { userId } = req.params;
+  if (typeof userId !== 'string' || userId.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const result = await s.verifyEmail(userId);
+  if (!result) return res.status(404).json({ error: 'not_found' });
+  res.json(result);
+}
+
 
