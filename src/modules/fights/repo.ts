@@ -21,21 +21,51 @@ export async function all(): Promise<Fight[]> {
 }
 
 export async function create(fighterAId: string, fighterBId: string): Promise<Fight> {
-  const r = await query<Fight>(
-    `insert into fights (fighter_a_profile_id, fighter_b_profile_id, status) 
-     values (
-       (select id from fighter_profiles where user_id = $1),
-       (select id from fighter_profiles where user_id = $2),
-       $3
-     ) 
+  const fighterAProfile = await query<{ id: string }>(
+    `select id from fighter_profiles where user_id = $1`,
+    [fighterAId],
+  );
+  const fighterBProfile = await query<{ id: string }>(
+    `select id from fighter_profiles where user_id = $1`,
+    [fighterBId],
+  );
+  
+  let fighterAProfileId: string;
+  let fighterBProfileId: string;
+  
+  if (!fighterAProfile.rows[0]) {
+    const insertA = await query<{ id: string }>(
+      `insert into fighter_profiles (user_id) values ($1) returning id`,
+      [fighterAId],
+    );
+    fighterAProfileId = insertA.rows[0].id;
+  } else {
+    fighterAProfileId = fighterAProfile.rows[0].id;
+  }
+  
+  if (!fighterBProfile.rows[0]) {
+    const insertB = await query<{ id: string }>(
+      `insert into fighter_profiles (user_id) values ($1) returning id`,
+      [fighterBId],
+    );
+    fighterBProfileId = insertB.rows[0].id;
+  } else {
+    fighterBProfileId = fighterBProfile.rows[0].id;
+  }
+  
+  const r = await query<Fight & { fighterAId: string; fighterBId: string }>(
+    `insert into fights (fighter_a_id, fighter_b_id, fighter_a_profile_id, fighter_b_profile_id, status) 
+     values ($1::uuid, $2::uuid, $3::uuid, $4::uuid, $5)
      returning 
        id, 
-       $1 as "fighterAId", 
-       $2 as "fighterBId", 
        status`,
-    [fighterAId, fighterBId, 'requested'],
+    [fighterAId, fighterBId, fighterAProfileId, fighterBProfileId, 'requested'],
   );
-  return r.rows[0];
+  return {
+    ...r.rows[0],
+    fighterAId,
+    fighterBId,
+  };
 }
 
 export async function findExisting(fighterAId: string, fighterBId: string): Promise<Fight | null> {
@@ -116,6 +146,20 @@ export async function accept(id: string): Promise<Fight | null> {
        and f.fighter_b_profile_id = fpb.id
      returning f.id, fpa.user_id as "fighterAId", fpb.user_id as "fighterBId", f.status`,
     ['accepted', id],
+  );
+  return r.rows[0] ?? null;
+}
+
+export async function reject(id: string): Promise<Fight | null> {
+  const r = await query<Fight>(
+    `update fights f
+     set status=$1
+     from fighter_profiles fpa, fighter_profiles fpb
+     where f.id = $2 
+       and f.fighter_a_profile_id = fpa.id
+       and f.fighter_b_profile_id = fpb.id
+     returning f.id, fpa.user_id as "fighterAId", fpb.user_id as "fighterBId", f.status`,
+    ['deleted', id],
   );
   return r.rows[0] ?? null;
 }

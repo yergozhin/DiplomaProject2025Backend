@@ -1,4 +1,5 @@
 import * as repo from './repo';
+import * as historyRepo from '../fight-history/repo';
 
 export function list() {
   return repo.all();
@@ -74,6 +75,14 @@ export async function updateOfferStatus(fighterId: string, offerId: string, stat
     const offers = await repo.getOffersForFightEventSlot(offer.fightId, offer.eventId, offer.eventSlotId, offer.ploId);
     if (offers.length === 2 && offers.every(o => o.status === 'accepted')) {
       await repo.updateFightStatus(offer.fightId, 'scheduled');
+      // Create history entry for 'scheduled' status
+      // Use the PLO ID as the changer since they created the offers
+      await historyRepo.create({
+        fightId: offer.fightId,
+        status: 'scheduled',
+        changedBy: offer.ploId,
+        changeReason: `Both fighters accepted offers for event slot`,
+      });
       await repo.updateEventSlotFight(offer.eventSlotId, offer.fightId);
       await repo.rejectPendingOffersForEventSlot(offer.eventSlotId, offer.fightId);
     }

@@ -50,6 +50,20 @@ export async function acceptFight(req: AuthRequest, res: Response) {
   res.json(result);
 }
 
+export async function rejectFight(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: 'invalid' });
+  const result = await s.rejectFight(id, req.user.userId);
+  if ('error' in result) {
+    if (result.error === 'fight_not_found') return res.status(404).json({ error: 'fight_not_found' });
+    if (result.error === 'invalid_status') return res.status(400).json({ error: 'invalid_status' });
+    if (result.error === 'not_receiver') return res.status(403).json({ error: 'forbidden' });
+    return res.status(400).json({ error: result.error });
+  }
+  res.json(result);
+}
+
 export async function getAccepted(_req: AuthRequest, res: Response) {
   const r = await s.getAccepted();
   res.json(r);

@@ -13,6 +13,7 @@ r.get('/requests', requireAuth, requireRole(Roles.Fighter), c.getRequestsTo);
 r.get('/:id', requireAuth, requireAnyRole(Roles.Fighter, Roles.PLO, Roles.Admin), c.getById);
 r.post('/request', requireAuth, requireRole(Roles.Fighter), c.sendRequest);
 r.put('/:id/accept', requireAuth, requireRole(Roles.Fighter), c.acceptFight);
+r.put('/:id/reject', requireAuth, requireRole(Roles.Fighter), c.rejectFight);
 export default r;
 
 
