@@ -1,5 +1,6 @@
 alter table offers drop constraint if exists offers_event_id_fkey;
-drop table if exists offers;
+drop table if exists offer_responses cascade;
+drop table if exists offers cascade;
 
 create table if not exists offers (
   id uuid primary key default uuid_generate_v4(),
