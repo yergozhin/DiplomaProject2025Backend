@@ -6,6 +6,12 @@ export interface FighterRanking {
   rankingPosition: number | null;
   rankingPoints: number;
   rankingDate: string;
+  fighterName?: string;
+  fighterEmail?: string;
+  wins?: number;
+  losses?: number;
+  draws?: number;
+  totalFights?: number;
 }
 
 export interface CreateRankingFields {

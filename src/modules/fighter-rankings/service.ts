@@ -21,6 +21,10 @@ export function update(id: string, fields: UpdateRankingFields) {
   return repo.update(id, fields);
 }
 
+export function getAllLatest() {
+  return repo.getAllLatest();
+}
+
 export function deleteById(id: string) {
   return repo.deleteById(id);
 }

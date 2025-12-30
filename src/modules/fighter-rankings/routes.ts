@@ -5,6 +5,7 @@ import * as c from './controller';
 
 const r = Router();
 r.post('/', requireAuth, requireRole(Roles.Admin), c.create);
+r.get('/all', c.getAllLatest);
 r.get('/fighter/:fighterId', c.getByFighter);
 r.get('/weight-class/:weightClassId', c.getByWeightClass);
 r.get('/:id', c.getById);

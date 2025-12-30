@@ -93,6 +93,15 @@ export async function update(req: AuthRequest, res: Response) {
   }
 }
 
+export async function getAllLatest(req: Request, res: Response) {
+  try {
+    const rankings = await s.getAllLatest();
+    res.json(rankings);
+  } catch {
+    res.status(500).json({ error: 'Failed to get rankings' });
+  }
+}
+
 export async function deleteById(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
