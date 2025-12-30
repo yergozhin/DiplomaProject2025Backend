@@ -12,13 +12,15 @@ export async function create(req: AuthRequest, res: Response) {
       clearedBy?: unknown;
       clearanceType?: unknown;
       notes?: unknown;
+      status?: unknown;
     };
     const fighterId = typeof body.fighterId === 'string' ? body.fighterId : null;
     const clearanceDate = typeof body.clearanceDate === 'string' ? body.clearanceDate : null;
-    const expirationDate = typeof body.expirationDate === 'string' ? body.expirationDate : null;
-    const clearedBy = typeof body.clearedBy === 'string' ? body.clearedBy : null;
+    const expirationDate = typeof body.expirationDate === 'string' && body.expirationDate.trim() !== '' ? body.expirationDate : null;
+    const clearedBy = typeof body.clearedBy === 'string' && body.clearedBy.trim() !== '' ? body.clearedBy : null;
     const clearanceType = typeof body.clearanceType === 'string' && ['pre-fight', 'post-fight', 'annual', 'emergency'].includes(body.clearanceType) ? body.clearanceType as 'pre-fight' | 'post-fight' | 'annual' | 'emergency' : null;
-    const notes = typeof body.notes === 'string' ? body.notes : null;
+    const notes = typeof body.notes === 'string' && body.notes.trim() !== '' ? body.notes : null;
+    const status = typeof body.status === 'string' && ['pending', 'approved', 'rejected'].includes(body.status) ? body.status as 'pending' | 'approved' | 'rejected' : 'pending';
     if (!fighterId || !clearanceDate) {
       return res.status(400).json({ error: 'invalid' });
     }
@@ -29,6 +31,7 @@ export async function create(req: AuthRequest, res: Response) {
       clearedBy,
       clearanceType,
       notes,
+      status,
     };
     const clearance = await s.create(fields);
     res.status(201).json(clearance);
@@ -69,19 +72,28 @@ export async function update(req: AuthRequest, res: Response) {
       clearedBy?: unknown;
       clearanceType?: unknown;
       notes?: unknown;
+      status?: unknown;
     };
-    const clearanceDate = typeof body.clearanceDate === 'string' ? body.clearanceDate : undefined;
-    const expirationDate = typeof body.expirationDate === 'string' ? body.expirationDate : null;
-    const clearedBy = typeof body.clearedBy === 'string' ? body.clearedBy : null;
-    const clearanceType = typeof body.clearanceType === 'string' && ['pre-fight', 'post-fight', 'annual', 'emergency'].includes(body.clearanceType) ? body.clearanceType as 'pre-fight' | 'post-fight' | 'annual' | 'emergency' : null;
-    const notes = typeof body.notes === 'string' ? body.notes : null;
-    const fields: UpdateClearanceFields = {
-      clearanceDate,
-      expirationDate,
-      clearedBy,
-      clearanceType,
-      notes,
-    };
+    const fields: UpdateClearanceFields = {};
+    
+    if (body.clearanceDate !== undefined) {
+      fields.clearanceDate = typeof body.clearanceDate === 'string' ? body.clearanceDate : undefined;
+    }
+    if (body.expirationDate !== undefined) {
+      fields.expirationDate = typeof body.expirationDate === 'string' && body.expirationDate.trim() !== '' ? body.expirationDate : null;
+    }
+    if (body.clearedBy !== undefined) {
+      fields.clearedBy = typeof body.clearedBy === 'string' && body.clearedBy.trim() !== '' ? body.clearedBy : null;
+    }
+    if (body.clearanceType !== undefined) {
+      fields.clearanceType = typeof body.clearanceType === 'string' && ['pre-fight', 'post-fight', 'annual', 'emergency'].includes(body.clearanceType) ? body.clearanceType as 'pre-fight' | 'post-fight' | 'annual' | 'emergency' : null;
+    }
+    if (body.notes !== undefined) {
+      fields.notes = typeof body.notes === 'string' && body.notes.trim() !== '' ? body.notes : null;
+    }
+    if (body.status !== undefined) {
+      fields.status = typeof body.status === 'string' && ['pending', 'approved', 'rejected'].includes(body.status) ? body.status as 'pending' | 'approved' | 'rejected' : undefined;
+    }
     const clearance = await s.update(id, fields);
     if (!clearance) {
       return res.status(404).json({ error: 'Medical clearance not found' });

@@ -6,6 +6,7 @@ export interface MedicalClearance {
   clearedBy: string | null;
   clearanceType: 'pre-fight' | 'post-fight' | 'annual' | 'emergency' | null;
   notes: string | null;
+  status: 'pending' | 'approved' | 'rejected';
 }
 
 export interface CreateClearanceFields {
@@ -15,6 +16,7 @@ export interface CreateClearanceFields {
   clearedBy?: string | null;
   clearanceType?: 'pre-fight' | 'post-fight' | 'annual' | 'emergency' | null;
   notes?: string | null;
+  status?: 'pending' | 'approved' | 'rejected';
 }
 
 export interface UpdateClearanceFields {
@@ -23,5 +25,6 @@ export interface UpdateClearanceFields {
   clearedBy?: string | null;
   clearanceType?: 'pre-fight' | 'post-fight' | 'annual' | 'emergency' | null;
   notes?: string | null;
+  status?: 'pending' | 'approved' | 'rejected';
 }
 

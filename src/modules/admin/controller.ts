@@ -50,4 +50,10 @@ export async function verifyUserEmail(req: AuthRequest, res: Response) {
   res.json(result);
 }
 
+export async function listMedicalClearances(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const clearances = await s.getMedicalClearances();
+  res.json(clearances);
+}
+
 

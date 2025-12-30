@@ -279,18 +279,27 @@ export async function getAvailableFightsForPlo(ploId: string): Promise<FightWith
     left join weight_classes wca on fpaa.weight_class_id = wca.id
     left join weight_classes wcb on fpab.weight_class_id = wcb.id
     where f.status = 'accepted'
+      and not exists (
+        select 1 from offers o 
+        join plo_profiles pp on o.plo_profile_id = pp.id
+        where o.fight_id = f.id 
+          and pp.user_id = $1 
+          and o.status = 'pending'
+      )
       and (
         not exists (
           select 1 from offers o 
           join plo_profiles pp on o.plo_profile_id = pp.id
-          where o.fight_id = f.id and pp.user_id = $1
+          where o.fight_id = f.id 
+            and pp.user_id = $1 
+            and o.status = 'accepted'
         )
-        or not exists (
+        or exists (
           select 1 from offers o 
           join plo_profiles pp on o.plo_profile_id = pp.id
           where o.fight_id = f.id 
             and pp.user_id = $1 
-            and o.status in ('pending', 'accepted')
+            and o.status = 'rejected'
         )
       )
     order by f.id desc

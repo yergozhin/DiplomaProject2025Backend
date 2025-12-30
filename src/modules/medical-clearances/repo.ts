@@ -4,21 +4,21 @@ import type { MedicalClearance, CreateClearanceFields, UpdateClearanceFields } f
 export async function create(fields: CreateClearanceFields): Promise<MedicalClearance> {
   const r = await query<MedicalClearance>(
     `with inserted as (
-      insert into medical_clearances (fighter_id, clearance_date, expiration_date, cleared_by, clearance_type, notes)
-      values ((select id from fighter_profiles where user_id = $1), $2, $3, $4, $5, $6)
-      returning id, fighter_id, clearance_date, expiration_date, cleared_by, clearance_type, notes
+      insert into medical_clearances (fighter_id, clearance_date, expiration_date, cleared_by, clearance_type, notes, status)
+      values ((select id from fighter_profiles where user_id = $1), $2, $3, $4, $5, $6, $7)
+      returning id, fighter_id, clearance_date, expiration_date, cleared_by, clearance_type, notes, status
     )
-    select i.id, fp.user_id as "fighterId", i.clearance_date as "clearanceDate", i.expiration_date as "expirationDate", i.cleared_by as "clearedBy", i.clearance_type as "clearanceType", i.notes
+    select i.id, fp.user_id as "fighterId", i.clearance_date as "clearanceDate", i.expiration_date as "expirationDate", i.cleared_by as "clearedBy", i.clearance_type as "clearanceType", i.notes, i.status
     from inserted i
     join fighter_profiles fp on i.fighter_id = fp.id`,
-    [fields.fighterId, fields.clearanceDate, fields.expirationDate ?? null, fields.clearedBy ?? null, fields.clearanceType ?? null, fields.notes ?? null],
+    [fields.fighterId, fields.clearanceDate, fields.expirationDate ?? null, fields.clearedBy ?? null, fields.clearanceType ?? null, fields.notes ?? null, fields.status ?? 'pending'],
   );
   return r.rows[0];
 }
 
 export async function getByFighterId(fighterId: string): Promise<MedicalClearance[]> {
   const r = await query<MedicalClearance>(
-    `select mc.id, fp.user_id as "fighterId", mc.clearance_date as "clearanceDate", mc.expiration_date as "expirationDate", mc.cleared_by as "clearedBy", mc.clearance_type as "clearanceType", mc.notes
+    `select mc.id, fp.user_id as "fighterId", mc.clearance_date as "clearanceDate", mc.expiration_date as "expirationDate", mc.cleared_by as "clearedBy", mc.clearance_type as "clearanceType", mc.notes, mc.status
      from medical_clearances mc
      join fighter_profiles fp on mc.fighter_id = fp.id
      where fp.user_id = $1
@@ -30,7 +30,7 @@ export async function getByFighterId(fighterId: string): Promise<MedicalClearanc
 
 export async function getById(id: string): Promise<MedicalClearance | null> {
   const r = await query<MedicalClearance>(
-    `select mc.id, fp.user_id as "fighterId", mc.clearance_date as "clearanceDate", mc.expiration_date as "expirationDate", mc.cleared_by as "clearedBy", mc.clearance_type as "clearanceType", mc.notes
+    `select mc.id, fp.user_id as "fighterId", mc.clearance_date as "clearanceDate", mc.expiration_date as "expirationDate", mc.cleared_by as "clearedBy", mc.clearance_type as "clearanceType", mc.notes, mc.status
      from medical_clearances mc
      join fighter_profiles fp on mc.fighter_id = fp.id
      where mc.id = $1`,
@@ -64,6 +64,10 @@ export async function update(id: string, fields: UpdateClearanceFields): Promise
     updates.push(`notes = $${paramCount++}`);
     values.push(fields.notes);
   }
+  if (fields.status !== undefined) {
+    updates.push(`status = $${paramCount++}`);
+    values.push(fields.status);
+  }
 
   if (updates.length === 0) {
     return getById(id);
@@ -75,7 +79,7 @@ export async function update(id: string, fields: UpdateClearanceFields): Promise
      set ${updates.join(', ')}
      from fighter_profiles fp
      where mc.id = $${paramCount} and mc.fighter_id = fp.id
-     returning mc.id, fp.user_id as "fighterId", mc.clearance_date as "clearanceDate", mc.expiration_date as "expirationDate", mc.cleared_by as "clearedBy", mc.clearance_type as "clearanceType", mc.notes`,
+     returning mc.id, fp.user_id as "fighterId", mc.clearance_date as "clearanceDate", mc.expiration_date as "expirationDate", mc.cleared_by as "clearedBy", mc.clearance_type as "clearanceType", mc.notes, mc.status`,
     values,
   );
   return r.rows[0] ?? null;

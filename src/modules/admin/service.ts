@@ -15,3 +15,7 @@ export function getUsers() {
 export function verifyEmail(userId: string) {
   return repo.verifyUserEmail(userId);
 }
+
+export function getMedicalClearances() {
+  return repo.listMedicalClearances();
+}

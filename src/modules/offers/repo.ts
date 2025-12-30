@@ -21,6 +21,7 @@ interface EventSlotRow {
   id: string;
   eventId: string;
   fightId: string | null;
+  startTime: string | null;
 }
 
 const offerSelect = `
@@ -123,7 +124,7 @@ export async function getEventById(id: string): Promise<EventRow | null> {
 
 export async function getEventSlotById(id: string): Promise<EventSlotRow | null> {
   const sql = `
-    select id, event_id as "eventId", fight_id as "fightId" from event_slots where id = $1
+    select id, event_id as "eventId", fight_id as "fightId", start_time as "startTime" from event_slots where id = $1
   `;
   const r = await query<EventSlotRow>(sql, [id]);
   return r.rows[0] ?? null;

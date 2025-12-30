@@ -196,4 +196,51 @@ export async function verifyUserEmail(userId: string): Promise<{ id: string; ema
   };
 }
 
+interface MedicalClearanceRow {
+  id: string;
+  fighterId: string;
+  fighterEmail: string;
+  fighterName: string | null;
+  clearanceDate: string;
+  expirationDate: string | null;
+  clearedBy: string | null;
+  clearanceType: string | null;
+  notes: string | null;
+  status: string;
+}
+
+export async function listMedicalClearances(): Promise<{
+  id: string;
+  fighterId: string;
+  fighterEmail: string;
+  fighterName: string | null;
+  clearanceDate: string;
+  expirationDate: string | null;
+  clearedBy: string | null;
+  clearanceType: string | null;
+  notes: string | null;
+  status: string;
+}[]> {
+  const r = await query<MedicalClearanceRow>(
+    `
+      select
+        mc.id,
+        fp.user_id as "fighterId",
+        u.email as "fighterEmail",
+        coalesce(fp.first_name || ' ' || fp.last_name, fp.first_name, fp.last_name, u.name) as "fighterName",
+        mc.clearance_date as "clearanceDate",
+        mc.expiration_date as "expirationDate",
+        mc.cleared_by as "clearedBy",
+        mc.clearance_type as "clearanceType",
+        mc.notes,
+        mc.status
+      from medical_clearances mc
+      join fighter_profiles fp on mc.fighter_id = fp.id
+      join users u on fp.user_id = u.id
+      order by mc.clearance_date desc
+    `,
+  );
+  return r.rows;
+}
+
 
