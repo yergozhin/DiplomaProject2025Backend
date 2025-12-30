@@ -1,6 +1,7 @@
 import * as repo from './repo';
 import { EventSlot, Event } from './model';
 import type { EventUpdateFields } from './repo';
+import * as eventStatusHistoryRepo from '@src/modules/event-status-history/repo';
 
 export function list() {
   return repo.all();
@@ -12,6 +13,12 @@ export function listPublished() {
 
 export async function createEvent(ploId: string, name: string, slots: string[]) {
   const event = await repo.create(ploId, name);
+  await eventStatusHistoryRepo.create({
+    eventId: event.id,
+    status: 'draft',
+    changedBy: ploId,
+    changeReason: 'Event created',
+  });
   const createdSlots: EventSlot[] = [];
   for (const startTime of slots) {
     const slot = await repo.addSlot(event.id, startTime);
@@ -81,6 +88,14 @@ export async function publishEvent(
   }
 
   const updated = await repo.updateEventStatus(eventId, ploId, 'published');
+  if (updated) {
+    await eventStatusHistoryRepo.create({
+      eventId,
+      status: 'published',
+      changedBy: ploId,
+      changeReason: null,
+    });
+  }
   return { event: updated };
 }
 
