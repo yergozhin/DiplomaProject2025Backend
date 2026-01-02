@@ -22,11 +22,11 @@ export async function all(): Promise<Fight[]> {
 
 export async function create(fighterAId: string, fighterBId: string): Promise<Fight> {
   const fighterAProfile = await query<{ id: string }>(
-    `select id from fighter_profiles where user_id = $1`,
+    'select id from fighter_profiles where user_id = $1',
     [fighterAId],
   );
   const fighterBProfile = await query<{ id: string }>(
-    `select id from fighter_profiles where user_id = $1`,
+    'select id from fighter_profiles where user_id = $1',
     [fighterBId],
   );
   
@@ -35,7 +35,7 @@ export async function create(fighterAId: string, fighterBId: string): Promise<Fi
   
   if (!fighterAProfile.rows[0]) {
     const insertA = await query<{ id: string }>(
-      `insert into fighter_profiles (user_id) values ($1) returning id`,
+      'insert into fighter_profiles (user_id) values ($1) returning id',
       [fighterAId],
     );
     fighterAProfileId = insertA.rows[0].id;
@@ -45,7 +45,7 @@ export async function create(fighterAId: string, fighterBId: string): Promise<Fi
   
   if (!fighterBProfile.rows[0]) {
     const insertB = await query<{ id: string }>(
-      `insert into fighter_profiles (user_id) values ($1) returning id`,
+      'insert into fighter_profiles (user_id) values ($1) returning id',
       [fighterBId],
     );
     fighterBProfileId = insertB.rows[0].id;
@@ -53,7 +53,7 @@ export async function create(fighterAId: string, fighterBId: string): Promise<Fi
     fighterBProfileId = fighterBProfile.rows[0].id;
   }
   
-  const r = await query<Fight & { fighterAId: string; fighterBId: string }>(
+  const r = await query<Fight & { fighterAId: string, fighterBId: string }>(
     `insert into fights (fighter_a_id, fighter_b_id, fighter_a_profile_id, fighter_b_profile_id, status) 
      values ($1::uuid, $2::uuid, $3::uuid, $4::uuid, $5)
      returning 

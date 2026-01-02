@@ -27,7 +27,7 @@ export async function updateRecord(
   fighterId: string,
   adminId: string,
   fields: FighterRecordFields,
-): Promise<{ fighter: Fighter | null; error?: 'invalid_record' | 'not_found' }> {
+): Promise<{ fighter: Fighter | null, error?: 'invalid_record' | 'not_found' }> {
   if (fields.totalFights !== null) {
     const sum = (fields.wins ?? 0) + (fields.losses ?? 0) + (fields.draws ?? 0);
     if (sum > fields.totalFights) {

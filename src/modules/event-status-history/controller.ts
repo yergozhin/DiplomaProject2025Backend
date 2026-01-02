@@ -6,9 +6,9 @@ import type { CreateStatusHistoryFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      eventId?: unknown;
-      status?: unknown;
-      changeReason?: unknown;
+      eventId?: unknown,
+      status?: unknown,
+      changeReason?: unknown,
     };
     const eventId = typeof body.eventId === 'string' ? body.eventId : null;
     const status = typeof body.status === 'string' && ['draft', 'published', 'cancelled', 'rejected', 'completed'].includes(body.status) ? body.status as 'draft' | 'published' | 'cancelled' | 'rejected' | 'completed' : null;

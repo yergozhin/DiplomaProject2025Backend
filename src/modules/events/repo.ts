@@ -51,7 +51,7 @@ export async function create(ploId: string, name: string): Promise<Event> {
       returning id, name, $1 as "ploId", created_at as "createdAt", event_name as "eventName", event_description as "eventDescription", venue_name as "venueName", venue_address as "venueAddress", city, country, venue_capacity as "venueCapacity", poster_image as "posterImage", ticket_link as "ticketLink", status, updated_at as "updatedAt"`,
     [ploId, name],
   );
-  return r.rows[0];
+  return r.rows?.[0];
 }
 
 export async function addSlot(eventId: string, startTime: string): Promise<EventSlot> {
@@ -59,7 +59,7 @@ export async function addSlot(eventId: string, startTime: string): Promise<Event
     'insert into event_slots (event_id, start_time) values ($1, $2) returning id, event_id as "eventId", start_time as "startTime", fight_id as "fightId"',
     [eventId, startTime],
   );
-  return r.rows[0];
+  return r.rows?.[0];
 }
 
 export async function getByPloId(ploId: string): Promise<EventWithSlots[]> {
@@ -88,7 +88,7 @@ export async function getById(id: string): Promise<Event | null> {
       where e.id = $1`,
     [id],
   );
-  return r.rows[0] ?? null;
+  return r.rows?.[0] ?? null;
 }
 
 export async function getByIdAndPloId(id: string, ploId: string): Promise<Event | null> {
@@ -99,7 +99,7 @@ export async function getByIdAndPloId(id: string, ploId: string): Promise<Event 
         and pp.user_id = $2`,
     [id, ploId],
   );
-  return r.rows[0] ?? null;
+  return r.rows?.[0] ?? null;
 }
 
 export async function getSlotCount(eventId: string): Promise<number> {
@@ -128,7 +128,7 @@ export async function updateEventStatus(
     `,
     [eventId, ploId, status],
   );
-  return r.rows[0] ?? null;
+  return r.rows?.[0] ?? null;
 }
 
 export async function getAvailableSlots(eventId: string): Promise<EventSlot[]> {
@@ -190,7 +190,7 @@ export async function updateEvent(
       fields.ticketLink,
     ],
   );
-  return r.rows[0] ?? null;
+  return r.rows?.[0] ?? null;
 }
 
 export interface EventFight {
@@ -272,7 +272,7 @@ export async function updateEventStatusIfNeeded(eventId: string): Promise<Event 
         changeReason: 'Last fight date has passed',
       });
     }
-    return updated;
+    return updated ?? null;
   }
 
   return event;

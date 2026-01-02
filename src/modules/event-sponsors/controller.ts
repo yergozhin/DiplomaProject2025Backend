@@ -6,11 +6,11 @@ import type { CreateSponsorFields, UpdateSponsorFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      eventId?: unknown;
-      sponsorName?: unknown;
-      sponsorLogo?: unknown;
-      sponsorshipLevel?: unknown;
-      sponsorshipAmount?: unknown;
+      eventId?: unknown,
+      sponsorName?: unknown,
+      sponsorLogo?: unknown,
+      sponsorshipLevel?: unknown,
+      sponsorshipAmount?: unknown,
     };
     const eventId = typeof body.eventId === 'string' ? body.eventId : null;
     const sponsorName = typeof body.sponsorName === 'string' ? body.sponsorName : null;
@@ -61,10 +61,10 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      sponsorName?: unknown;
-      sponsorLogo?: unknown;
-      sponsorshipLevel?: unknown;
-      sponsorshipAmount?: unknown;
+      sponsorName?: unknown,
+      sponsorLogo?: unknown,
+      sponsorshipLevel?: unknown,
+      sponsorshipAmount?: unknown,
     };
     const sponsorName = typeof body.sponsorName === 'string' ? body.sponsorName : undefined;
     const sponsorLogo = typeof body.sponsorLogo === 'string' ? body.sponsorLogo : null;

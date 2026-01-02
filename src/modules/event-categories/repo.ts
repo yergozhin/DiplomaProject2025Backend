@@ -73,7 +73,7 @@ export async function assignToEvent(eventId: string, categoryId: string): Promis
   );
   const assignment = r.rows[0];
   const categoryRes = await query<{ name: string }>(
-    `select name from event_categories where id = $1`,
+    'select name from event_categories where id = $1',
     [categoryId],
   );
   return { ...assignment, categoryName: categoryRes.rows[0]?.name ?? null };

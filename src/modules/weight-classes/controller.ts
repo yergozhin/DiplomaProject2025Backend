@@ -6,10 +6,10 @@ import type { CreateWeightClassFields, UpdateWeightClassFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      name?: unknown;
-      minWeightKg?: unknown;
-      maxWeightKg?: unknown;
-      description?: unknown;
+      name?: unknown,
+      minWeightKg?: unknown,
+      maxWeightKg?: unknown,
+      description?: unknown,
     };
     const name = typeof body.name === 'string' ? body.name : null;
     const minWeightKg = typeof body.minWeightKg === 'number' ? body.minWeightKg : null;
@@ -70,10 +70,10 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      name?: unknown;
-      minWeightKg?: unknown;
-      maxWeightKg?: unknown;
-      description?: unknown;
+      name?: unknown,
+      minWeightKg?: unknown,
+      maxWeightKg?: unknown,
+      description?: unknown,
     };
     const name = typeof body.name === 'string' ? body.name : undefined;
     const minWeightKg = typeof body.minWeightKg === 'number' ? body.minWeightKg : null;

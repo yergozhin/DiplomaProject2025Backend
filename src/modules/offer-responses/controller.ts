@@ -6,11 +6,11 @@ import type { CreateResponseFields, UpdateResponseFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      offerId?: unknown;
-      fighterId?: unknown;
-      amount?: unknown;
-      currency?: unknown;
-      status?: unknown;
+      offerId?: unknown,
+      fighterId?: unknown,
+      amount?: unknown,
+      currency?: unknown,
+      status?: unknown,
     };
     const offerId = typeof body.offerId === 'string' ? body.offerId : null;
     const fighterId = typeof body.fighterId === 'string' ? body.fighterId : null;
@@ -71,9 +71,9 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      amount?: unknown;
-      currency?: unknown;
-      status?: unknown;
+      amount?: unknown,
+      currency?: unknown,
+      status?: unknown,
     };
     const amount = typeof body.amount === 'number' ? body.amount : undefined;
     const currency = typeof body.currency === 'string' ? body.currency : undefined;

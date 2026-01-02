@@ -124,7 +124,7 @@ export async function updateProfile(id: string, fields: FighterProfileFields): P
     await client.query('begin');
     
     const weightClassRes = await client.query<{ id: string }>(
-      `select id from weight_classes where name = $1 limit 1`,
+      'select id from weight_classes where name = $1 limit 1',
       [fields.currentWeightClass],
     );
     const weightClassId = weightClassRes.rows[0]?.id ?? null;
@@ -350,7 +350,7 @@ export async function updateVerificationStatus(
   adminId: string,
   status: Exclude<VerificationStatus, 'pending'>,
   adminNote: string | null,
-): Promise<{ verification: FighterVerification | null; fighter: Fighter | null }> {
+): Promise<{ verification: FighterVerification | null, fighter: Fighter | null }> {
   const client = await pool.connect();
   const adminUuid = isUuid(adminId) ? adminId : null;
   try {
@@ -373,11 +373,11 @@ export async function updateVerificationStatus(
 
     if (status === 'accepted') {
       const fighterRes = await client.query<{
-        total_fights: number | null;
-        wins: number | null;
-        losses: number | null;
-        draws: number | null;
-        awards: string | null;
+        total_fights: number | null,
+        wins: number | null,
+        losses: number | null,
+        draws: number | null,
+        awards: string | null,
       }>(
         `select total_fights, wins, losses, draws, awards
            from fighter_records
@@ -451,7 +451,7 @@ export async function updateVerificationStatus(
 
 export async function getPendingVerificationDetails(
   fighterId: string,
-): Promise<{ fighter: Fighter | null; verifications: FighterVerification[] }> {
+): Promise<{ fighter: Fighter | null, verifications: FighterVerification[] }> {
   const fighterRes = await query<Fighter>(
     `select ${FIGHTER_COLUMNS}
        ${FIGHTER_FROM_JOIN}

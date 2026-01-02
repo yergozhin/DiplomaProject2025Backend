@@ -6,9 +6,9 @@ import type { CreateHistoryFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      fightId?: unknown;
-      status?: unknown;
-      changeReason?: unknown;
+      fightId?: unknown,
+      status?: unknown,
+      changeReason?: unknown,
     };
     const fightId = typeof body.fightId === 'string' ? body.fightId : null;
     const status = typeof body.status === 'string' ? body.status : null;

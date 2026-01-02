@@ -69,7 +69,7 @@ export async function update(id: string, fields: UpdateInjuryFields): Promise<Fi
     return getById(id);
   }
 
-  updates.push(`updated_at = now()`);
+  updates.push('updated_at = now()');
   values.push(id);
   const r = await query<FighterInjury>(
     `update fighter_injuries fi

@@ -65,7 +65,7 @@ export async function createUser(
     
     if (role === 'fighter') {
       await client.query(
-        `insert into fighter_profiles (user_id) values ($1) on conflict (user_id) do nothing`,
+        'insert into fighter_profiles (user_id) values ($1) on conflict (user_id) do nothing',
         [user.id],
       );
       await client.query(
@@ -105,7 +105,7 @@ export async function createUser(
     
     if (role === 'plo') {
       const ploRes = await client.query<{ plo_status: 'unverified' | 'verified' }>(
-        `select plo_status from plo_profiles where user_id = $1`,
+        'select plo_status from plo_profiles where user_id = $1',
         [user.id],
       );
       const ploStatus = ploRes.rows[0]?.plo_status as 'unverified' | 'verified' | null;

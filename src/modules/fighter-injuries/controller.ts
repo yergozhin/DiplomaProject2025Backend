@@ -6,12 +6,12 @@ import type { CreateInjuryFields, UpdateInjuryFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      fighterId?: unknown;
-      injuryType?: unknown;
-      injuryDescription?: unknown;
-      injuryDate?: unknown;
-      recoveryStatus?: unknown;
-      medicalNotes?: unknown;
+      fighterId?: unknown,
+      injuryType?: unknown,
+      injuryDescription?: unknown,
+      injuryDate?: unknown,
+      recoveryStatus?: unknown,
+      medicalNotes?: unknown,
     };
     const fighterId = typeof body.fighterId === 'string' ? body.fighterId : null;
     const injuryType = typeof body.injuryType === 'string' ? body.injuryType : null;
@@ -64,11 +64,11 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      injuryType?: unknown;
-      injuryDescription?: unknown;
-      injuryDate?: unknown;
-      recoveryStatus?: unknown;
-      medicalNotes?: unknown;
+      injuryType?: unknown,
+      injuryDescription?: unknown,
+      injuryDate?: unknown,
+      recoveryStatus?: unknown,
+      medicalNotes?: unknown,
     };
     const injuryType = typeof body.injuryType === 'string' ? body.injuryType : undefined;
     const injuryDescription = typeof body.injuryDescription === 'string' ? body.injuryDescription : null;

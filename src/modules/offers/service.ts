@@ -131,7 +131,7 @@ export async function updateOfferStatus(fighterId: string, offerId: string, stat
           fightId: offer.fightId,
           status: 'scheduled',
           changedBy: offer.ploId,
-          changeReason: `Both fighters accepted offers for event slot`,
+          changeReason: 'Both fighters accepted offers for event slot',
         });
         await repo.updateEventSlotFight(offer.eventSlotId, offer.fightId);
         await repo.rejectPendingOffersForEventSlot(offer.eventSlotId, offer.fightId);

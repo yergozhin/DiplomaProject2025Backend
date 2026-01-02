@@ -112,7 +112,7 @@ export async function requestPasswordReset(req: Request, res: Response) {
 }
 
 export async function resetPassword(req: Request, res: Response) {
-  const body = req.body as { token?: unknown; password?: unknown; };
+  const body = req.body as { token?: unknown, password?: unknown };
   const token = parseString(body.token);
   const password = parseString(body.password);
   if (token == null || password == null) {

@@ -63,7 +63,7 @@ type PublishEventError = 'not_found' | 'invalid_status' | 'missing_required_fiel
 export async function publishEvent(
   eventId: string,
   ploId: string,
-): Promise<{ event: Event | null; error?: PublishEventError }> {
+): Promise<{ event: Event | null, error?: PublishEventError }> {
   const event = await repo.getByIdAndPloId(eventId, ploId);
   if (!event) {
     return { event: null, error: 'not_found' };

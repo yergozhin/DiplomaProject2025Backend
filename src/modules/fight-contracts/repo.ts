@@ -75,9 +75,9 @@ export async function update(id: string, fields: UpdateContractFields): Promise<
     updates.push(`contract_signed = $${paramCount++}`);
     values.push(fields.contractSigned);
     if (fields.contractSigned) {
-      updates.push(`contract_signed_at = now()`);
+      updates.push('contract_signed_at = now()');
     } else {
-      updates.push(`contract_signed_at = null`);
+      updates.push('contract_signed_at = null');
     }
   }
   if (fields.contractTerms !== undefined) {
@@ -89,7 +89,7 @@ export async function update(id: string, fields: UpdateContractFields): Promise<
     return getById(id);
   }
 
-  updates.push(`updated_at = now()`);
+  updates.push('updated_at = now()');
   values.push(id);
   const r = await query<FightContract & { fighter_name: string | null }>(
     `update fight_contracts fc

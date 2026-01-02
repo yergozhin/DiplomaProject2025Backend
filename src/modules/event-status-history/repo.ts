@@ -12,7 +12,7 @@ export async function create(fields: CreateStatusHistoryFields): Promise<EventSt
   let changedByName = null;
   if (history.changedBy) {
     const userRes = await query<{ email: string }>(
-      `select email from users where id = $1`,
+      'select email from users where id = $1',
       [history.changedBy],
     );
     changedByName = userRes.rows[0]?.email ?? null;
@@ -32,7 +32,7 @@ export async function getByEventId(eventId: string): Promise<EventStatusHistory[
     let changedByName = null;
     if (history.changedBy) {
       const userRes = await query<{ email: string }>(
-        `select email from users where id = $1`,
+        'select email from users where id = $1',
         [history.changedBy],
       );
       changedByName = userRes.rows[0]?.email ?? null;
@@ -54,7 +54,7 @@ export async function getById(id: string): Promise<EventStatusHistory | null> {
   let changedByName = null;
   if (history.changedBy) {
     const userRes = await query<{ email: string }>(
-      `select email from users where id = $1`,
+      'select email from users where id = $1',
       [history.changedBy],
     );
     changedByName = userRes.rows[0]?.email ?? null;

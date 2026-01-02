@@ -15,7 +15,7 @@ export async function create(fields: CreateRankingFields): Promise<FighterRankin
   );
   const ranking = r.rows[0];
   const weightClassRes = await query<{ name: string }>(
-    `select name from weight_classes where id = $1`,
+    'select name from weight_classes where id = $1',
     [ranking.weightClassId],
   );
   return { ...ranking, weightClassName: weightClassRes.rows[0]?.name ?? null };
@@ -205,7 +205,7 @@ export async function update(id: string, fields: UpdateRankingFields): Promise<F
   const ranking = r.rows[0];
   if (!ranking) return null;
   const weightClassRes = await query<{ name: string }>(
-    `select name from weight_classes where id = $1`,
+    'select name from weight_classes where id = $1',
     [ranking.weightClassId],
   );
   return { ...ranking, weightClassName: weightClassRes.rows[0]?.name ?? null };

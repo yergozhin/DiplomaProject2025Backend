@@ -11,7 +11,7 @@ export async function create(fields: CreateResultFields): Promise<FightResult> {
   const result = r.rows[0];
   let winnerName = null;
   if (result.winnerId) {
-    const winnerRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
+    const winnerRes = await query<{ first_name: string | null, last_name: string | null, nickname: string | null }>(
       `select fp.first_name, fp.last_name, fp.nickname
        from fighter_profiles fp
        where fp.id = $1`,
@@ -43,7 +43,7 @@ export async function getByFightId(fightId: string): Promise<FightResult | null>
   if (!result) return null;
   let winnerName = null;
   if (result.winnerId) {
-    const winnerRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
+    const winnerRes = await query<{ first_name: string | null, last_name: string | null, nickname: string | null }>(
       `select fp.first_name, fp.last_name, fp.nickname
        from fighter_profiles fp
        where fp.id = $1`,
@@ -75,7 +75,7 @@ export async function getById(id: string): Promise<FightResult | null> {
   if (!result) return null;
   let winnerName = null;
   if (result.winnerId) {
-    const winnerRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
+    const winnerRes = await query<{ first_name: string | null, last_name: string | null, nickname: string | null }>(
       `select fp.first_name, fp.last_name, fp.nickname
        from fighter_profiles fp
        where fp.id = $1`,
@@ -131,7 +131,7 @@ export async function update(id: string, fields: UpdateResultFields): Promise<Fi
   if (!result) return null;
   let winnerName = null;
   if (result.winnerId) {
-    const winnerRes = await query<{ first_name: string | null; last_name: string | null; nickname: string | null }>(
+    const winnerRes = await query<{ first_name: string | null, last_name: string | null, nickname: string | null }>(
       `select fp.first_name, fp.last_name, fp.nickname
        from fighter_profiles fp
        where fp.id = $1`,

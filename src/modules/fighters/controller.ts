@@ -49,7 +49,7 @@ function parseRequiredString(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-function parseOptionalString(value: unknown): { valid: boolean; value: string | null } {
+function parseOptionalString(value: unknown): { valid: boolean, value: string | null } {
   if (value == null) return { valid: true, value: null };
   if (typeof value !== 'string') return { valid: false, value: null };
   const trimmed = value.trim();
@@ -57,7 +57,7 @@ function parseOptionalString(value: unknown): { valid: boolean; value: string | 
   return { valid: true, value: trimmed };
 }
 
-function parseOptionalDate(value: unknown): { valid: boolean; value: string | null } {
+function parseOptionalDate(value: unknown): { valid: boolean, value: string | null } {
   const { valid, value: str } = parseOptionalString(value);
   if (!valid) return { valid: false, value: null };
   if (!str) return { valid: true, value: null };
@@ -65,7 +65,7 @@ function parseOptionalDate(value: unknown): { valid: boolean; value: string | nu
   return { valid: true, value: str };
 }
 
-function parseOptionalInt(value: unknown): { valid: boolean; value: number | null } {
+function parseOptionalInt(value: unknown): { valid: boolean, value: number | null } {
   if (value == null || value === '') return { valid: true, value: null };
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) return { valid: false, value: null };

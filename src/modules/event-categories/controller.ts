@@ -5,7 +5,7 @@ import type { CreateCategoryFields, UpdateCategoryFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
   try {
-    const body = req.body as { name?: unknown; description?: unknown };
+    const body = req.body as { name?: unknown, description?: unknown };
     const name = typeof body.name === 'string' ? body.name : null;
     const description = typeof body.description === 'string' ? body.description : null;
     if (!name) {
@@ -47,7 +47,7 @@ export async function getById(req: Request, res: Response) {
 export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
-    const body = req.body as { name?: unknown; description?: unknown };
+    const body = req.body as { name?: unknown, description?: unknown };
     const name = typeof body.name === 'string' ? body.name : null;
     const description = typeof body.description === 'string' ? body.description : null;
     if (!name) {

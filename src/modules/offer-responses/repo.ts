@@ -75,7 +75,7 @@ export async function update(id: string, fields: UpdateResponseFields): Promise<
     updates.push(`status = $${paramCount++}`);
     values.push(fields.status);
     if (fields.status !== 'pending') {
-      updates.push(`responded_at = now()`);
+      updates.push('responded_at = now()');
     }
   }
 

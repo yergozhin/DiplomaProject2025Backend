@@ -22,24 +22,24 @@ interface PloRow {
 }
 
 export async function listPlos(): Promise<{
-  id: string;
-  email: string;
-  status: 'unverified' | 'verified';
-  name: string | null;
-  leagueName: string | null;
-  ownerFirstName: string | null;
-  ownerLastName: string | null;
-  phoneNumber: string | null;
-  website: string | null;
-  country: string | null;
-  city: string | null;
-  address: string | null;
-  description: string | null;
-  logo: string | null;
-  foundedDate: string | null;
-  socialMediaLinks: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
+  id: string,
+  email: string,
+  status: 'unverified' | 'verified',
+  name: string | null,
+  leagueName: string | null,
+  ownerFirstName: string | null,
+  ownerLastName: string | null,
+  phoneNumber: string | null,
+  website: string | null,
+  country: string | null,
+  city: string | null,
+  address: string | null,
+  description: string | null,
+  logo: string | null,
+  foundedDate: string | null,
+  socialMediaLinks: string | null,
+  createdAt: string | null,
+  updatedAt: string | null,
 }[]> {
   const r = await query<PloRow>(
     `
@@ -94,13 +94,13 @@ export async function listPlos(): Promise<{
 export async function updatePloStatus(
   ploId: string,
   status: 'unverified' | 'verified',
-): Promise<{ id: string; ploStatus: 'unverified' | 'verified' } | null> {
+): Promise<{ id: string, ploStatus: 'unverified' | 'verified' } | null> {
   const client = await pool.connect();
   try {
     await client.query('begin');
     
     const r = await client.query<{ id: string }>(
-      `select id from users where id = $1 and role = 'plo'`,
+      'select id from users where id = $1 and role = \'plo\'',
       [ploId],
     );
     const user = r.rows[0];
@@ -137,12 +137,12 @@ interface UserRow {
 }
 
 export async function listUsers(): Promise<{
-  id: string;
-  email: string;
-  role: 'fighter' | 'plo' | 'spectator';
-  emailVerified: boolean;
-  name: string | null;
-  createdAt: string | null;
+  id: string,
+  email: string,
+  role: 'fighter' | 'plo' | 'spectator',
+  emailVerified: boolean,
+  name: string | null,
+  createdAt: string | null,
 }[]> {
   const r = await query<UserRow>(
     `
@@ -176,8 +176,8 @@ export async function listUsers(): Promise<{
   }));
 }
 
-export async function verifyUserEmail(userId: string): Promise<{ id: string; emailVerified: boolean } | null> {
-  const r = await query<{ id: string; email_verified: boolean }>(
+export async function verifyUserEmail(userId: string): Promise<{ id: string, emailVerified: boolean } | null> {
+  const r = await query<{ id: string, email_verified: boolean }>(
     `
       update users
       set email_verified = true,
@@ -210,16 +210,16 @@ interface MedicalClearanceRow {
 }
 
 export async function listMedicalClearances(): Promise<{
-  id: string;
-  fighterId: string;
-  fighterEmail: string;
-  fighterName: string | null;
-  clearanceDate: string;
-  expirationDate: string | null;
-  clearedBy: string | null;
-  clearanceType: string | null;
-  notes: string | null;
-  status: string;
+  id: string,
+  fighterId: string,
+  fighterEmail: string,
+  fighterName: string | null,
+  clearanceDate: string,
+  expirationDate: string | null,
+  clearedBy: string | null,
+  clearanceType: string | null,
+  notes: string | null,
+  status: string,
 }[]> {
   const r = await query<MedicalClearanceRow>(
     `

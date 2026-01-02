@@ -6,9 +6,9 @@ import type { CreateMetadataFields, UpdateMetadataFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      eventId?: unknown;
-      posterImage?: unknown;
-      ticketLink?: unknown;
+      eventId?: unknown,
+      posterImage?: unknown,
+      ticketLink?: unknown,
     };
     const eventId = typeof body.eventId === 'string' ? body.eventId : null;
     const posterImage = typeof body.posterImage === 'string' ? body.posterImage : null;
@@ -58,8 +58,8 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      posterImage?: unknown;
-      ticketLink?: unknown;
+      posterImage?: unknown,
+      ticketLink?: unknown,
     };
     const posterImage = typeof body.posterImage === 'string' ? body.posterImage : null;
     const ticketLink = typeof body.ticketLink === 'string' ? body.ticketLink : null;

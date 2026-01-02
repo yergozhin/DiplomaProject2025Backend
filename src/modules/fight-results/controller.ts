@@ -6,12 +6,12 @@ import type { CreateResultFields, UpdateResultFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      fightId?: unknown;
-      winnerId?: unknown;
-      resultType?: unknown;
-      roundEnded?: unknown;
-      timeEnded?: unknown;
-      judgeScores?: unknown;
+      fightId?: unknown,
+      winnerId?: unknown,
+      resultType?: unknown,
+      roundEnded?: unknown,
+      timeEnded?: unknown,
+      judgeScores?: unknown,
     };
     const fightId = typeof body.fightId === 'string' ? body.fightId : null;
     const winnerId = typeof body.winnerId === 'string' ? body.winnerId : null;
@@ -67,11 +67,11 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      winnerId?: unknown;
-      resultType?: unknown;
-      roundEnded?: unknown;
-      timeEnded?: unknown;
-      judgeScores?: unknown;
+      winnerId?: unknown,
+      resultType?: unknown,
+      roundEnded?: unknown,
+      timeEnded?: unknown,
+      judgeScores?: unknown,
     };
     const winnerId = typeof body.winnerId === 'string' ? body.winnerId : null;
     const resultType = typeof body.resultType === 'string' && ['knockout', 'technical_knockout', 'submission', 'decision', 'draw', 'no_contest', 'disqualification'].includes(body.resultType) ? body.resultType as 'knockout' | 'technical_knockout' | 'submission' | 'decision' | 'draw' | 'no_contest' | 'disqualification' : null;

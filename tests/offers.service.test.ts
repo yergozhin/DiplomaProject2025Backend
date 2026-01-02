@@ -50,7 +50,7 @@ describe('Offers Service', () => {
         1000,
         'USD',
         2000,
-        'USD'
+        'USD',
       );
       
       expect(result).toEqual({ error: 'fight_not_found' });
@@ -74,7 +74,7 @@ describe('Offers Service', () => {
         1000,
         'USD',
         2000,
-        'USD'
+        'USD',
       );
       
       expect(result).toEqual({ error: 'fight_not_accepted' });
@@ -98,7 +98,7 @@ describe('Offers Service', () => {
         1000,
         'USD',
         2000,
-        'USD'
+        'USD',
       );
       
       expect(result).toEqual({ error: 'event_not_found' });
@@ -125,7 +125,7 @@ describe('Offers Service', () => {
         1000,
         'USD',
         2000,
-        'USD'
+        'USD',
       );
       
       expect(result).toEqual({ error: 'event_not_owned' });
@@ -153,7 +153,7 @@ describe('Offers Service', () => {
         1000,
         'USD',
         2000,
-        'USD'
+        'USD',
       );
       
       expect(result).toEqual({ error: 'slot_not_found' });
@@ -185,7 +185,7 @@ describe('Offers Service', () => {
         1000,
         'USD',
         2000,
-        'USD'
+        'USD',
       );
       
       expect(result).toEqual({ error: 'slot_not_in_event' });
@@ -217,7 +217,7 @@ describe('Offers Service', () => {
         1000,
         'USD',
         2000,
-        'USD'
+        'USD',
       );
       
       expect(result).toEqual({ error: 'slot_already_assigned' });
@@ -252,7 +252,7 @@ describe('Offers Service', () => {
         1000,
         'USD',
         2000,
-        'USD'
+        'USD',
       );
       
       expect(result).toEqual({ error: 'offer_already_exists' });

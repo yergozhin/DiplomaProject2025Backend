@@ -6,12 +6,12 @@ import type { CreateLocationFields, UpdateLocationFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      eventId?: unknown;
-      venueName?: unknown;
-      venueAddress?: unknown;
-      city?: unknown;
-      country?: unknown;
-      venueCapacity?: unknown;
+      eventId?: unknown,
+      venueName?: unknown,
+      venueAddress?: unknown,
+      city?: unknown,
+      country?: unknown,
+      venueCapacity?: unknown,
     };
     const eventId = typeof body.eventId === 'string' ? body.eventId : null;
     const venueName = typeof body.venueName === 'string' ? body.venueName : null;
@@ -67,11 +67,11 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      venueName?: unknown;
-      venueAddress?: unknown;
-      city?: unknown;
-      country?: unknown;
-      venueCapacity?: unknown;
+      venueName?: unknown,
+      venueAddress?: unknown,
+      city?: unknown,
+      country?: unknown,
+      venueCapacity?: unknown,
     };
     const venueName = typeof body.venueName === 'string' ? body.venueName : null;
     const venueAddress = typeof body.venueAddress === 'string' ? body.venueAddress : null;

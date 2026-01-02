@@ -5,11 +5,11 @@ import * as eventsService from '@src/modules/events/service';
 
 async function recalculateFighterRecords(fighterProfileId: string) {
   const allFightsForFighterRes = await query<{
-    fight_id: string;
-    fighter_a_profile_id: string;
-    fighter_b_profile_id: string;
-    winner_id: string | null;
-    result_type: string | null;
+    fight_id: string,
+    fighter_a_profile_id: string,
+    fighter_b_profile_id: string,
+    winner_id: string | null,
+    result_type: string | null,
   }>(
     `select
       f.id as fight_id,
@@ -53,9 +53,9 @@ export async function create(fields: CreateResultFields) {
   const result = await repo.create(fields);
   if (result.fightId) {
     const fightRes = await query<{
-      fighter_a_profile_id: string;
-      fighter_b_profile_id: string;
-      event_id: string | null;
+      fighter_a_profile_id: string,
+      fighter_b_profile_id: string,
+      event_id: string | null,
     }>(
       `select f.fighter_a_profile_id, f.fighter_b_profile_id, es.event_id
        from fights f
@@ -91,9 +91,9 @@ export async function update(id: string, fields: UpdateResultFields) {
   const result = await repo.update(id, fields);
   if (result && result.fightId) {
     const fightRes = await query<{
-      fighter_a_profile_id: string;
-      fighter_b_profile_id: string;
-      event_id: string | null;
+      fighter_a_profile_id: string,
+      fighter_b_profile_id: string,
+      event_id: string | null,
     }>(
       `select f.fighter_a_profile_id, f.fighter_b_profile_id, es.event_id
        from fights f

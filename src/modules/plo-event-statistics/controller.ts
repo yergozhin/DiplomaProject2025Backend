@@ -6,11 +6,11 @@ import type { CreateStatisticsFields, UpdateStatisticsFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      ploId?: unknown;
-      totalEvents?: unknown;
-      completedEvents?: unknown;
-      totalFightsOrganized?: unknown;
-      statisticsDate?: unknown;
+      ploId?: unknown,
+      totalEvents?: unknown,
+      completedEvents?: unknown,
+      totalFightsOrganized?: unknown,
+      statisticsDate?: unknown,
     };
     const ploId = typeof body.ploId === 'string' ? body.ploId : null;
     const totalEvents = typeof body.totalEvents === 'number' ? body.totalEvents : 0;
@@ -61,10 +61,10 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      totalEvents?: unknown;
-      completedEvents?: unknown;
-      totalFightsOrganized?: unknown;
-      statisticsDate?: unknown;
+      totalEvents?: unknown,
+      completedEvents?: unknown,
+      totalFightsOrganized?: unknown,
+      statisticsDate?: unknown,
     };
     const totalEvents = typeof body.totalEvents === 'number' ? body.totalEvents : undefined;
     const completedEvents = typeof body.completedEvents === 'number' ? body.completedEvents : undefined;

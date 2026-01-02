@@ -6,11 +6,11 @@ import type { CreateRankingFields, UpdateRankingFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      fighterId?: unknown;
-      weightClassId?: unknown;
-      rankingPosition?: unknown;
-      rankingPoints?: unknown;
-      rankingDate?: unknown;
+      fighterId?: unknown,
+      weightClassId?: unknown,
+      rankingPosition?: unknown,
+      rankingPoints?: unknown,
+      rankingDate?: unknown,
     };
     const fighterId = typeof body.fighterId === 'string' ? body.fighterId : null;
     const weightClassId = typeof body.weightClassId === 'string' ? body.weightClassId : null;
@@ -71,9 +71,9 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      rankingPosition?: unknown;
-      rankingPoints?: unknown;
-      rankingDate?: unknown;
+      rankingPosition?: unknown,
+      rankingPoints?: unknown,
+      rankingDate?: unknown,
     };
     const rankingPosition = typeof body.rankingPosition === 'number' ? body.rankingPosition : null;
     const rankingPoints = typeof body.rankingPoints === 'number' ? body.rankingPoints : undefined;

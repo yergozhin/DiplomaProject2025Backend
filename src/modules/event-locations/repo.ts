@@ -61,7 +61,7 @@ export async function update(id: string, fields: UpdateLocationFields): Promise<
     return getById(id);
   }
 
-  updates.push(`updated_at = now()`);
+  updates.push('updated_at = now()');
   values.push(id);
   const r = await query<EventLocation>(
     `update event_locations

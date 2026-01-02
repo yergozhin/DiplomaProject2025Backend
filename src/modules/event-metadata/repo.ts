@@ -49,7 +49,7 @@ export async function update(id: string, fields: UpdateMetadataFields): Promise<
     return getById(id);
   }
 
-  updates.push(`updated_at = now()`);
+  updates.push('updated_at = now()');
   values.push(id);
   const r = await query<EventMetadata>(
     `update event_metadata

@@ -6,11 +6,11 @@ import type { CreateContractFields, UpdateContractFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      fightId?: unknown;
-      fighterId?: unknown;
-      contractAmount?: unknown;
-      currency?: unknown;
-      contractTerms?: unknown;
+      fightId?: unknown,
+      fighterId?: unknown,
+      contractAmount?: unknown,
+      currency?: unknown,
+      contractTerms?: unknown,
     };
     const fightId = typeof body.fightId === 'string' ? body.fightId : null;
     const fighterId = typeof body.fighterId === 'string' ? body.fighterId : null;
@@ -71,10 +71,10 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      contractAmount?: unknown;
-      currency?: unknown;
-      contractSigned?: unknown;
-      contractTerms?: unknown;
+      contractAmount?: unknown,
+      currency?: unknown,
+      contractSigned?: unknown,
+      contractTerms?: unknown,
     };
     const contractAmount = typeof body.contractAmount === 'number' ? body.contractAmount : undefined;
     const currency = typeof body.currency === 'string' ? body.currency : undefined;

@@ -23,6 +23,8 @@ export default defineConfig([
       '**/node_modules/*',
       '**/*.mjs',
       '**/*.js',
+      '**/tests/**',
+      'eslint.config.ts',
     ],
   },
   {
@@ -58,6 +60,7 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-unsafe-enum-comparison': 0,
       '@typescript-eslint/no-unnecessary-type-parameters': 0,
+      '@typescript-eslint/prefer-optional-chain': 'warn',
       '@stylistic/js/no-extra-semi': 'warn',
       'max-len': [
         'warn',

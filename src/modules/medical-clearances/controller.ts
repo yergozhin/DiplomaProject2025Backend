@@ -6,13 +6,13 @@ import type { CreateClearanceFields, UpdateClearanceFields } from './model';
 export async function create(req: AuthRequest, res: Response) {
   try {
     const body = req.body as {
-      fighterId?: unknown;
-      clearanceDate?: unknown;
-      expirationDate?: unknown;
-      clearedBy?: unknown;
-      clearanceType?: unknown;
-      notes?: unknown;
-      status?: unknown;
+      fighterId?: unknown,
+      clearanceDate?: unknown,
+      expirationDate?: unknown,
+      clearedBy?: unknown,
+      clearanceType?: unknown,
+      notes?: unknown,
+      status?: unknown,
     };
     const fighterId = typeof body.fighterId === 'string' ? body.fighterId : null;
     const clearanceDate = typeof body.clearanceDate === 'string' ? body.clearanceDate : null;
@@ -67,12 +67,12 @@ export async function update(req: AuthRequest, res: Response) {
   try {
     const id = req.params.id;
     const body = req.body as {
-      clearanceDate?: unknown;
-      expirationDate?: unknown;
-      clearedBy?: unknown;
-      clearanceType?: unknown;
-      notes?: unknown;
-      status?: unknown;
+      clearanceDate?: unknown,
+      expirationDate?: unknown,
+      clearedBy?: unknown,
+      clearanceType?: unknown,
+      notes?: unknown,
+      status?: unknown,
     };
     const fields: UpdateClearanceFields = {};
     
