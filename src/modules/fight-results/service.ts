@@ -1,6 +1,7 @@
 import * as repo from './repo';
 import type { FightResult, CreateResultFields, UpdateResultFields } from './model';
 import { query } from '@src/db/client';
+import * as eventsService from '@src/modules/events/service';
 
 async function recalculateFighterRecords(fighterProfileId: string) {
   const allFightsForFighterRes = await query<{
@@ -67,7 +68,6 @@ export async function create(fields: CreateResultFields) {
       await recalculateFighterRecords(fight.fighter_a_profile_id);
       await recalculateFighterRecords(fight.fighter_b_profile_id);
       if (fight.event_id) {
-        const eventsService = await import('@src/modules/events/service');
         await eventsService.checkAndUpdateEventStatus(fight.event_id);
       }
     }
@@ -106,7 +106,6 @@ export async function update(id: string, fields: UpdateResultFields) {
       await recalculateFighterRecords(fight.fighter_a_profile_id);
       await recalculateFighterRecords(fight.fighter_b_profile_id);
       if (fight.event_id) {
-        const eventsService = await import('@src/modules/events/service');
         await eventsService.checkAndUpdateEventStatus(fight.event_id);
       }
     }
