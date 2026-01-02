@@ -54,14 +54,22 @@ export async function create(fields: CreateResultFields) {
     const fightRes = await query<{
       fighter_a_profile_id: string;
       fighter_b_profile_id: string;
+      event_id: string | null;
     }>(
-      'select fighter_a_profile_id, fighter_b_profile_id from fights where id = $1',
+      `select f.fighter_a_profile_id, f.fighter_b_profile_id, es.event_id
+       from fights f
+       join event_slots es on es.fight_id = f.id
+       where f.id = $1`,
       [result.fightId],
     );
     const fight = fightRes.rows[0];
     if (fight) {
       await recalculateFighterRecords(fight.fighter_a_profile_id);
       await recalculateFighterRecords(fight.fighter_b_profile_id);
+      if (fight.event_id) {
+        const eventsService = await import('@src/modules/events/service');
+        await eventsService.checkAndUpdateEventStatus(fight.event_id);
+      }
     }
   }
   return result;
@@ -85,14 +93,22 @@ export async function update(id: string, fields: UpdateResultFields) {
     const fightRes = await query<{
       fighter_a_profile_id: string;
       fighter_b_profile_id: string;
+      event_id: string | null;
     }>(
-      'select fighter_a_profile_id, fighter_b_profile_id from fights where id = $1',
+      `select f.fighter_a_profile_id, f.fighter_b_profile_id, es.event_id
+       from fights f
+       join event_slots es on es.fight_id = f.id
+       where f.id = $1`,
       [result.fightId],
     );
     const fight = fightRes.rows[0];
     if (fight) {
       await recalculateFighterRecords(fight.fighter_a_profile_id);
       await recalculateFighterRecords(fight.fighter_b_profile_id);
+      if (fight.event_id) {
+        const eventsService = await import('@src/modules/events/service');
+        await eventsService.checkAndUpdateEventStatus(fight.event_id);
+      }
     }
   }
   return result;

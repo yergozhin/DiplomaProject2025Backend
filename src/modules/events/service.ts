@@ -3,11 +3,19 @@ import { EventSlot, Event } from './model';
 import type { EventUpdateFields } from './repo';
 import * as eventStatusHistoryRepo from '@src/modules/event-status-history/repo';
 
-export function list() {
+export async function list() {
+  const events = await repo.all();
+  for (const event of events) {
+    await repo.updateEventStatusIfNeeded(event.id);
+  }
   return repo.all();
 }
 
-export function listPublished() {
+export async function listPublished() {
+  const events = await repo.getPublished();
+  for (const event of events) {
+    await repo.updateEventStatusIfNeeded(event.id);
+  }
   return repo.getPublished();
 }
 
@@ -27,7 +35,11 @@ export async function createEvent(ploId: string, name: string, slots: string[]) 
   return { ...event, slots: createdSlots };
 }
 
-export function getByPloId(ploId: string) {
+export async function getByPloId(ploId: string) {
+  const events = await repo.getByPloId(ploId);
+  for (const event of events) {
+    await repo.updateEventStatusIfNeeded(event.id);
+  }
   return repo.getByPloId(ploId);
 }
 
@@ -101,6 +113,10 @@ export async function publishEvent(
 
 export function getFightsForEvent(eventId: string) {
   return repo.getFightsForEvent(eventId);
+}
+
+export async function checkAndUpdateEventStatus(eventId: string) {
+  return repo.updateEventStatusIfNeeded(eventId);
 }
 
 

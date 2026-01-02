@@ -1,5 +1,6 @@
 import { query } from '@src/db/client';
 import type { Event, EventSlot, EventWithSlots } from './model';
+import * as eventStatusHistoryRepo from '@src/modules/event-status-history/repo';
 
 const EVENT_SELECT = `
   e.id,
@@ -231,6 +232,50 @@ export async function getFightsForEvent(eventId: string): Promise<EventFight[]> 
     [eventId],
   );
   return r.rows;
+}
+
+export async function getLastFightTimeForEvent(eventId: string): Promise<string | null> {
+  const r = await query<{ start_time: string }>(
+    `select max(es.start_time) as start_time
+     from event_slots es
+     where es.event_id = $1 and es.fight_id is not null`,
+    [eventId],
+  );
+  return r.rows[0]?.start_time ?? null;
+}
+
+export async function updateEventStatusIfNeeded(eventId: string): Promise<Event | null> {
+  const event = await getById(eventId);
+  if (!event) {
+    return null;
+  }
+
+  if (event.status !== 'published') {
+    return event;
+  }
+
+  const lastFightTime = await getLastFightTimeForEvent(eventId);
+  if (!lastFightTime) {
+    return event;
+  }
+
+  const now = new Date();
+  const lastFightDate = new Date(lastFightTime);
+
+  if (lastFightDate < now) {
+    const updated = await updateEventStatus(eventId, event.ploId, 'completed');
+    if (updated) {
+      await eventStatusHistoryRepo.create({
+        eventId,
+        status: 'completed',
+        changedBy: event.ploId,
+        changeReason: 'Last fight date has passed',
+      });
+    }
+    return updated;
+  }
+
+  return event;
 }
 
 
