@@ -158,3 +158,13 @@ export async function publishEvent(req: AuthRequest, res: Response) {
   res.json(result.event);
 }
 
+export async function getFightsForEvent(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  const { eventId } = req.params;
+  if (typeof eventId !== 'string' || eventId.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const fights = await s.getFightsForEvent(eventId);
+  res.json(fights);
+}
+

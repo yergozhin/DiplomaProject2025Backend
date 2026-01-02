@@ -192,4 +192,45 @@ export async function updateEvent(
   return r.rows[0] ?? null;
 }
 
+export interface EventFight {
+  fightId: string;
+  slotId: string;
+  slotStartTime: string;
+  fighterAId: string;
+  fighterAName: string;
+  fighterAEmail: string;
+  fighterAProfileId: string;
+  fighterBId: string;
+  fighterBName: string;
+  fighterBEmail: string;
+  fighterBProfileId: string;
+}
+
+export async function getFightsForEvent(eventId: string): Promise<EventFight[]> {
+  const r = await query<EventFight>(
+    `select
+      f.id as "fightId",
+      es.id as "slotId",
+      es.start_time as "slotStartTime",
+      fpa.user_id as "fighterAId",
+      coalesce(fpa.first_name || ' ' || fpa.last_name, fpa.first_name, fpa.last_name, ua.name) as "fighterAName",
+      ua.email as "fighterAEmail",
+      fpa.id as "fighterAProfileId",
+      fpb.user_id as "fighterBId",
+      coalesce(fpb.first_name || ' ' || fpb.last_name, fpb.first_name, fpb.last_name, ub.name) as "fighterBName",
+      ub.email as "fighterBEmail",
+      fpb.id as "fighterBProfileId"
+    from event_slots es
+    join fights f on es.fight_id = f.id
+    join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+    join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
+    join users ua on fpa.user_id = ua.id
+    join users ub on fpb.user_id = ub.id
+    where es.event_id = $1 and es.fight_id is not null
+    order by es.start_time`,
+    [eventId],
+  );
+  return r.rows;
+}
+
 

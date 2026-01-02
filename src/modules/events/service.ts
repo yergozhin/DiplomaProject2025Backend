@@ -99,4 +99,8 @@ export async function publishEvent(
   return { event: updated };
 }
 
+export function getFightsForEvent(eventId: string) {
+  return repo.getFightsForEvent(eventId);
+}
+
 
