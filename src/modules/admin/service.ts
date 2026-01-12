@@ -1,10 +1,14 @@
 import * as repo from './repo';
 
-export function getPlos() {
-  return repo.listPlos();
-}
+export const getPlos = () => repo.listPlos();
 
-export function setPloStatus(ploId: string, status: 'unverified' | 'verified') {
+export async function setPloStatus(ploId: string, status: 'unverified' | 'verified') {
+  if (!ploId) throw new Error('PLO ID required');
+  
+  if (status !== 'unverified' && status !== 'verified') {
+    throw new Error('Invalid status');
+  }
+  
   return repo.updatePloStatus(ploId, status);
 }
 
@@ -13,6 +17,8 @@ export function getUsers() {
 }
 
 export function verifyEmail(userId: string) {
+  if (!userId) throw new Error('User ID required');
+  
   return repo.verifyUserEmail(userId);
 }
 

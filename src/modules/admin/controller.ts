@@ -21,15 +21,19 @@ export async function listPlos(req: AuthRequest, res: Response) {
 
 export async function updatePloStatus(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  
   const { ploId } = req.params;
   if (typeof ploId !== 'string' || ploId.trim().length === 0) {
     return res.status(400).json({ error: 'invalid' });
   }
+  
   const body = req.body as UpdatePloStatusBody;
   const status = parseStatus(body.status);
   if (!status) return res.status(400).json({ error: 'invalid' });
+  
   const result = await s.setPloStatus(ploId, status);
   if (!result) return res.status(404).json({ error: 'not_found' });
+  
   res.json(result);
 }
 
