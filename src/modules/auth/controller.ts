@@ -9,14 +9,15 @@ interface AuthRequestBody {
 }
 
 function parseRole(value: unknown): Role | null {
-  if (value === Roles.Fighter || value === Roles.PLO || value === Roles.Spectator) {
+  if (value === 'fighter' || value === 'plo' || value === 'spectator') {
     return value;
   }
   return null;
 }
 
 function parseString(value: unknown): string | null {
-  return typeof value === 'string' ? value : null;
+  if (typeof value === 'string') return value;
+  return null;
 }
 
 export async function register(req: Request, res: Response) {
@@ -24,19 +25,23 @@ export async function register(req: Request, res: Response) {
   const email = parseString(body.email);
   const password = parseString(body.password);
   const role = parseRole(body.role);
-  if (email == null || password == null || role == null) {
+  
+  if (!email || !password || !role) {
     return res.status(400).json({ error: 'invalid' });
   }
+  
   try {
-    const u = await service.register(email, password, role);
-    if (!u) return res.status(409).json({ error: 'exists' });
-    res.status(201).json(u);
-  } catch (err: unknown) {
-    if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {
+    const user = await service.register(email, password, role);
+    if (!user) {
       return res.status(409).json({ error: 'exists' });
     }
-    console.error('Registration error:', err);
-    return res.status(500).json({ error: 'registration_failed' });
+    res.status(201).json(user);
+  } catch (err: any) {
+    if (err?.code === '23505') {
+      return res.status(409).json({ error: 'exists' });
+    }
+    console.error('register error:', err);
+    res.status(500).json({ error: 'registration_failed' });
   }
 }
 
@@ -45,14 +50,20 @@ export async function login(req: Request, res: Response) {
   const email = parseString(body.email);
   const password = parseString(body.password);
   const role = parseRole(body.role);
-  if (email == null || password == null || role == null) {
+  
+  if (!email || !password || !role) {
     return res.status(400).json({ error: 'invalid' });
   }
+  
   const result = await service.login(email, password, role);
-  if (!result) return res.status(401).json({ error: 'unauthorized' });
+  if (!result) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  
   if ('error' in result && result.error === 'email_not_verified') {
     return res.status(403).json({ error: 'email_not_verified' });
   }
+  
   res.json(result);
 }
 
@@ -61,10 +72,12 @@ export async function verifyEmail(req: Request, res: Response) {
   if (!token) {
     return res.status(400).json({ error: 'invalid' });
   }
+  
   const result = await service.verifyEmail(token);
   if (!result) {
     return res.status(404).json({ error: 'token_invalid_or_expired' });
   }
+  
   res.json({ message: 'Email verified successfully', user: result });
 }
 
@@ -72,9 +85,11 @@ export async function resendVerificationEmail(req: Request, res: Response) {
   const body = req.body as AuthRequestBody;
   const email = parseString(body.email);
   const role = parseRole(body.role);
-  if (email == null || role == null) {
+  
+  if (!email || !role) {
     return res.status(400).json({ error: 'invalid' });
   }
+  
   try {
     const result = await service.resendVerificationEmail(email, role);
     if ('error' in result) {
@@ -86,7 +101,8 @@ export async function resendVerificationEmail(req: Request, res: Response) {
       }
     }
     res.json({ message: result.message });
-  } catch {
+  } catch (err) {
+    console.error('resend error:', err);
     return res.status(500).json({ error: 'email_send_failed' });
   }
 }
@@ -95,9 +111,11 @@ export async function requestPasswordReset(req: Request, res: Response) {
   const body = req.body as AuthRequestBody;
   const email = parseString(body.email);
   const role = parseRole(body.role);
-  if (email == null || role == null) {
+  
+  if (!email || !role) {
     return res.status(400).json({ error: 'invalid' });
   }
+  
   try {
     const result = await service.requestPasswordReset(email, role);
     if ('error' in result) {
@@ -106,7 +124,8 @@ export async function requestPasswordReset(req: Request, res: Response) {
       }
     }
     res.json({ message: result.message });
-  } catch {
+  } catch (err) {
+    console.error('password reset request error:', err);
     return res.status(500).json({ error: 'email_send_failed' });
   }
 }
@@ -115,13 +134,16 @@ export async function resetPassword(req: Request, res: Response) {
   const body = req.body as { token?: unknown, password?: unknown };
   const token = parseString(body.token);
   const password = parseString(body.password);
-  if (token == null || password == null) {
+  
+  if (!token || !password) {
     return res.status(400).json({ error: 'invalid' });
   }
+  
   const result = await service.resetPassword(token, password);
   if (!result) {
     return res.status(404).json({ error: 'token_invalid_or_expired' });
   }
+  
   res.json({ message: 'Password reset successfully' });
 }
 

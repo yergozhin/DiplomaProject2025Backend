@@ -7,40 +7,25 @@ export async function findUserByEmailAndRole(
   role: Role,
 ): Promise<AuthUser | null> {
   if (role === 'plo') {
-    const r = await query<AuthUser>(
-      `
-        select
-          u.id,
-          u.email,
-          u.role,
-          u.password_hash,
-          pp.plo_status,
-          u.email_verified
-        from users u
-        left join plo_profiles pp on u.id = pp.user_id
-        where u.email = $1 and u.role = $2
-        limit 1
-      `,
+    const result = await query<AuthUser>(
+      `select u.id, u.email, u.role, u.password_hash, pp.plo_status, u.email_verified
+       from users u
+       left join plo_profiles pp on u.id = pp.user_id
+       where u.email = $1 and u.role = $2
+       limit 1`,
       [email, role],
     );
-    return r.rows[0] ?? null;
+    return result.rows[0] || null;
   }
-  const r = await query<AuthUser>(
-    `
-      select
-        id,
-        email,
-        role,
-        password_hash,
-        null as plo_status,
-        email_verified
-      from users
-      where email = $1 and role = $2
-      limit 1
-    `,
+  
+  const result = await query<AuthUser>(
+    `select id, email, role, password_hash, null as plo_status, email_verified
+     from users
+     where email = $1 and role = $2
+     limit 1`,
     [email, role],
   );
-  return r.rows[0] ?? null;
+  return result.rows[0] || null;
 }
 
 export async function createUser(
@@ -53,15 +38,14 @@ export async function createUser(
   const client = await pool.connect();
   try {
     await client.query('begin');
-    const userRes = await client.query<AuthUser>(
-      `
-        insert into users (email, password_hash, role, email_verification_token, email_verification_token_expires_at)
-        values ($1, $2, $3, $4, $5)
-        returning id, email, role
-      `,
+    
+    const userResult = await client.query<AuthUser>(
+      `insert into users (email, password_hash, role, email_verification_token, email_verification_token_expires_at)
+       values ($1, $2, $3, $4, $5)
+       returning id, email, role`,
       [email, passwordHash, role, verificationToken, tokenExpiresAt],
     );
-    const user = userRes.rows[0];
+    const user = userResult.rows[0];
     
     if (role === 'fighter') {
       await client.query(
@@ -104,16 +88,16 @@ export async function createUser(
     await client.query('commit');
     
     if (role === 'plo') {
-      const ploRes = await client.query<{ plo_status: 'unverified' | 'verified' }>(
+      const ploResult = await client.query<{ plo_status: 'unverified' | 'verified' }>(
         'select plo_status from plo_profiles where user_id = $1',
         [user.id],
       );
-      const ploStatus = ploRes.rows[0]?.plo_status as 'unverified' | 'verified' | null;
-      return { id: user.id, email: user.email, role: user.role, plo_status: ploStatus ?? null };
+      const ploStatus = ploResult.rows[0]?.plo_status || null;
+      return { id: user.id, email: user.email, role: user.role, plo_status: ploStatus };
     }
     
     return { id: user.id, email: user.email, role: user.role, plo_status: null };
-  } catch (err: unknown) {
+  } catch (err) {
     await client.query('rollback');
     throw err;
   } finally {
@@ -124,25 +108,17 @@ export async function createUser(
 export async function findUserByVerificationToken(
   token: string,
 ): Promise<AuthUser | null> {
-  const r = await query<AuthUser>(
-    `
-      select
-        u.id,
-        u.email,
-        u.role,
-        u.password_hash,
-        pp.plo_status,
-        u.email_verified
-      from users u
-      left join plo_profiles pp on u.id = pp.user_id
-      where u.email_verification_token = $1
-        and u.email_verification_token_expires_at > now()
-        and u.email_verified = false
-      limit 1
-    `,
+  const result = await query<AuthUser>(
+    `select u.id, u.email, u.role, u.password_hash, pp.plo_status, u.email_verified
+     from users u
+     left join plo_profiles pp on u.id = pp.user_id
+     where u.email_verification_token = $1
+       and u.email_verification_token_expires_at > now()
+       and u.email_verified = false
+     limit 1`,
     [token],
   );
-  return r.rows[0] ?? null;
+  return result.rows[0] || null;
 }
 
 export async function verifyUserEmail(userId: string): Promise<void> {
@@ -177,24 +153,16 @@ export async function updateVerificationToken(
 export async function findUserByPasswordResetToken(
   token: string,
 ): Promise<AuthUser | null> {
-  const r = await query<AuthUser>(
-    `
-      select
-        u.id,
-        u.email,
-        u.role,
-        u.password_hash,
-        pp.plo_status,
-        u.email_verified
-      from users u
-      left join plo_profiles pp on u.id = pp.user_id
-      where u.password_reset_token = $1
-        and u.password_reset_token_expires_at > now()
-      limit 1
-    `,
+  const result = await query<AuthUser>(
+    `select u.id, u.email, u.role, u.password_hash, pp.plo_status, u.email_verified
+     from users u
+     left join plo_profiles pp on u.id = pp.user_id
+     where u.password_reset_token = $1
+       and u.password_reset_token_expires_at > now()
+     limit 1`,
     [token],
   );
-  return r.rows[0] ?? null;
+  return result.rows[0] || null;
 }
 
 export async function updatePasswordResetToken(
