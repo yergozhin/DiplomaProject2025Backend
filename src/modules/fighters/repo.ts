@@ -208,22 +208,59 @@ export async function getById(id: string): Promise<Fighter | null> {
   return r.rows[0] ?? null;
 }
 
-export async function allExcept(excludeId: string): Promise<Fighter[]> {
-  const r = await query<Fighter>(
-    `select ${FIGHTER_COLUMNS}
-       ${FIGHTER_FROM_JOIN}
-       where u.role = $1
-         and u.id != $2
-        and not exists (
-          select 1 from fights f
-          join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
-          join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
-          where f.status in ('requested', 'accepted', 'scheduled')
-            and ((fpa.user_id = u.id and fpb.user_id = $2) or (fpa.user_id = $2 and fpb.user_id = u.id))
-        )
-       order by fp.first_name nulls last, fp.last_name nulls last, u.name`,
-    ['fighter', excludeId],
-  );
+export interface OpponentFilters {
+  weightClass?: string | null;
+  searchName?: string | null;
+}
+
+export async function allExcept(
+  excludeId: string,
+  filters?: OpponentFilters,
+): Promise<Fighter[]> {
+  const conditions: string[] = ['u.role = $1', 'u.id != $2'];
+  const params: unknown[] = ['fighter', excludeId];
+  let paramCount = 3;
+
+  conditions.push(`
+    not exists (
+      select 1 from fights f
+      join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+      join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
+      where f.status in ('requested', 'accepted', 'scheduled')
+        and ((fpa.user_id = u.id and fpb.user_id = $2) or (fpa.user_id = $2 and fpb.user_id = u.id))
+    )
+  `);
+
+  if (filters?.weightClass) {
+    conditions.push(`wc.name = $${paramCount}`);
+    params.push(filters.weightClass);
+    paramCount++;
+  }
+
+  if (filters?.searchName) {
+    const searchPattern = `%${filters.searchName.trim()}%`;
+    conditions.push(`(
+      fp.first_name ilike $${paramCount} or
+      fp.last_name ilike $${paramCount} or
+      fp.nickname ilike $${paramCount} or
+      u.name ilike $${paramCount} or
+      u.email ilike $${paramCount} or
+      (fp.first_name || ' ' || fp.last_name) ilike $${paramCount}
+    )`);
+    params.push(searchPattern);
+    paramCount++;
+  }
+
+  const whereClause = conditions.length > 0 ? `where ${conditions.join(' and ')}` : '';
+
+  const sqlQuery = `
+    select ${FIGHTER_COLUMNS}
+    ${FIGHTER_FROM_JOIN}
+    ${whereClause}
+    order by fp.first_name nulls last, fp.last_name nulls last, u.name
+  `;
+
+  const r = await query<Fighter>(sqlQuery, params);
   return r.rows;
 }
 

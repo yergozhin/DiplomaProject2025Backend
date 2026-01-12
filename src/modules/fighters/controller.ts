@@ -163,7 +163,20 @@ export async function updateProfile(req: AuthRequest, res: Response) {
 
 export async function getList(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-  const r = await s.listExcept(req.user.userId);
+  
+  const weightClassResult = parseOptionalString(req.query.weightClass as unknown);
+  const searchNameResult = parseOptionalString(req.query.searchName as unknown);
+
+  if (!weightClassResult.valid || !searchNameResult.valid) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+
+  const filters = {
+    weightClass: weightClassResult.value,
+    searchName: searchNameResult.value,
+  };
+
+  const r = await s.listExcept(req.user.userId, filters);
   res.json(r);
 }
 

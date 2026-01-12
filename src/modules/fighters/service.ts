@@ -5,6 +5,7 @@ import type {
   FighterRecordFields,
   CreateVerificationFields,
   VerificationStatus,
+  OpponentFilters,
 } from './repo';
 
 export function list() {
@@ -19,8 +20,8 @@ export function getById(id: string) {
   return repo.getById(id);
 }
 
-export function listExcept(userId: string) {
-  return repo.allExcept(userId);
+export function listExcept(userId: string, filters?: OpponentFilters) {
+  return repo.allExcept(userId, filters);
 }
 
 export async function updateRecord(
