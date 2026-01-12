@@ -1,23 +1,23 @@
 import * as repo from './repo';
 import type { EventLocation, CreateLocationFields, UpdateLocationFields } from './model';
 
-export function create(fields: CreateLocationFields) {
+export const create = async (fields: CreateLocationFields) => {
+  if (!fields.eventId) throw new Error('Event ID required');
   return repo.create(fields);
-}
+};
 
 export function getByEventId(eventId: string) {
   return repo.getByEventId(eventId);
 }
 
-export function getById(id: string) {
-  return repo.getById(id);
-}
+export const getById = (id: string) => repo.getById(id);
 
-export function update(id: string, fields: UpdateLocationFields) {
+export async function update(id: string, fields: UpdateLocationFields) {
+  if (!id) throw new Error('ID required');
   return repo.update(id, fields);
 }
 
-export function deleteById(id: string) {
+export function remove(id: string) {
   return repo.deleteById(id);
 }
 
