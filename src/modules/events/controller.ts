@@ -26,6 +26,7 @@ function parseName(value: unknown): string | null {
 
 function parseSlots(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
+  
   const slots: string[] = [];
   for (const item of value) {
     if (typeof item !== 'string' || item.trim().length === 0) {
@@ -47,33 +48,40 @@ function parseOptionalInt(value: unknown) {
   if (value == null || value === '') return null;
   if (typeof value !== 'number') return null;
   if (!Number.isFinite(value)) return null;
+  
   const int = Math.round(value);
   return int >= 0 ? int : null;
 }
 
-export async function getAll(_req: AuthRequest, res: Response) {
-  const r = await s.list();
-  res.json(r);
+export function getAll(_req: AuthRequest, res: Response) {
+  s.list().then(r => {
+    res.json(r);
+  });
 }
 
-export async function getPublished(_req: AuthRequest, res: Response) {
-  const r = await s.listPublished();
-  res.json(r);
+export function getPublished(_req: AuthRequest, res: Response) {
+  s.listPublished().then(events => {
+    res.json(events);
+  });
 }
 
 export async function create(req: AuthRequest, res: Response) {
-  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-  if (req.user.role === Roles.PLO && req.user.ploStatus !== 'verified') {
-    return res.status(403).json({ error: 'plo_not_verified' });
+  try {
+    if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+    if (req.user.role === Roles.PLO && req.user.ploStatus !== 'verified') {
+      return res.status(403).json({ error: 'plo_not_verified' });
+    }
+    const body = req.body as EventCreateBody;
+    const name = parseName(body.name);
+    const slots = parseSlots(body.slots);
+    if (name == null || slots == null) {
+      return res.status(400).json({ error: 'invalid' });
+    }
+    const event = await s.createEvent(req.user.userId, name, slots);
+    res.status(201).json(event);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'invalid' });
   }
-  const body = req.body as EventCreateBody;
-  const name = parseName(body.name);
-  const slots = parseSlots(body.slots);
-  if (name == null || slots == null) {
-    return res.status(400).json({ error: 'invalid' });
-  }
-  const event = await s.createEvent(req.user.userId, name, slots);
-  res.status(201).json(event);
 }
 
 export async function getMyEvents(req: AuthRequest, res: Response) {
@@ -100,6 +108,7 @@ export async function updateEvent(req: AuthRequest, res: Response) {
   if (req.user.role === Roles.PLO && req.user.ploStatus !== 'verified') {
     return res.status(403).json({ error: 'plo_not_verified' });
   }
+  
   const { eventId } = req.params;
   if (typeof eventId !== 'string' || eventId.trim().length === 0) {
     return res.status(400).json({ error: 'invalid' });
@@ -125,6 +134,7 @@ export async function updateEvent(req: AuthRequest, res: Response) {
 
   const updated = await s.updateEvent(eventId, req.user.userId, payload);
   if (!updated) return res.status(404).json({ error: 'not_found' });
+  
   res.json(updated);
 }
 

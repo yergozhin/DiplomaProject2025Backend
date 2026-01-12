@@ -5,9 +5,11 @@ import * as eventStatusHistoryRepo from '@src/modules/event-status-history/repo'
 
 export async function list() {
   const events = await repo.all();
-  for (const event of events) {
-    await repo.updateEventStatusIfNeeded(event.id);
+  
+  for (let i = 0; i < events.length; i++) {
+    await repo.updateEventStatusIfNeeded(events[i].id);
   }
+  
   return repo.all();
 }
 
@@ -20,30 +22,46 @@ export async function listPublished() {
 }
 
 export async function createEvent(ploId: string, name: string, slots: string[]) {
+  if (!ploId || !name || name.trim() === '') {
+    throw new Error('PLO ID and event name are required');
+  }
+  if (!slots || slots.length === 0) {
+    throw new Error('At least one time slot is required');
+  }
+  
   const event = await repo.create(ploId, name);
+  
   await eventStatusHistoryRepo.create({
     eventId: event.id,
     status: 'draft',
     changedBy: ploId,
     changeReason: 'Event created',
   });
+  
   const createdSlots: EventSlot[] = [];
-  for (const startTime of slots) {
-    const slot = await repo.addSlot(event.id, startTime);
+  for (let i = 0; i < slots.length; i++) {
+    const slot = await repo.addSlot(event.id, slots[i]);
     createdSlots.push(slot);
   }
+  
   return { ...event, slots: createdSlots };
 }
 
 export async function getByPloId(ploId: string) {
   const events = await repo.getByPloId(ploId);
+  
   for (const event of events) {
     await repo.updateEventStatusIfNeeded(event.id);
   }
+  
   return repo.getByPloId(ploId);
 }
 
 export async function getAvailableSlotsForEvent(eventId: string, ploId: string) {
+  if (!eventId || !ploId) {
+    return { error: 'event_not_found' };
+  }
+  
   const event = await repo.getById(eventId);
   if (!event) {
     return { error: 'event_not_found' };
@@ -51,12 +69,14 @@ export async function getAvailableSlotsForEvent(eventId: string, ploId: string) 
   if (event.ploId !== ploId) {
     return { error: 'event_not_owned' };
   }
+  
   return repo.getAvailableSlots(eventId);
 }
 
-export function updateEvent(eventId: string, ploId: string, fields: EventUpdateFields) {
+export const updateEvent = async (eventId: string, ploId: string, fields: EventUpdateFields) => {
+  if (!eventId || !ploId) throw new Error('Event ID and PLO ID required');
   return repo.updateEvent(eventId, ploId, fields);
-}
+};
 
 type PublishEventError = 'not_found' | 'invalid_status' | 'missing_required_fields' | 'no_slots';
 
@@ -73,24 +93,21 @@ export async function publishEvent(
     return { event: null, error: 'invalid_status' };
   }
 
-  const requiredFields = [
-    event.venueName,
-    event.venueAddress,
-    event.city,
-    event.country,
-    event.venueCapacity,
-    event.posterImage,
-    event.ticketLink,
-  ];
-
-  const missing = requiredFields.some((value) => {
-    if (value == null) return true;
-    if (typeof value === 'number') return value <= 0;
-    if (typeof value === 'string') return value.trim().length === 0;
-    return false;
-  });
-
-  if (missing) {
+  const requiredFields = [event.venueName, event.venueAddress, event.city, event.country, event.posterImage, event.ticketLink];
+  
+  let hasEmptyField = false;
+  for (let i = 0; i < requiredFields.length; i++) {
+    const field = requiredFields[i];
+    if (!field || !field.trim()) {
+      hasEmptyField = true;
+      break;
+    }
+  }
+  if (hasEmptyField) {
+    return { event: null, error: 'missing_required_fields' };
+  }
+  
+  if (!event.venueCapacity || event.venueCapacity <= 0) {
     return { event: null, error: 'missing_required_fields' };
   }
 
@@ -108,12 +125,13 @@ export async function publishEvent(
       changeReason: null,
     });
   }
+  
   return { event: updated };
 }
 
-export function getFightsForEvent(eventId: string) {
+export const getFightsForEvent = (eventId: string) => {
   return repo.getFightsForEvent(eventId);
-}
+};
 
 export async function checkAndUpdateEventStatus(eventId: string) {
   return repo.updateEventStatusIfNeeded(eventId);
