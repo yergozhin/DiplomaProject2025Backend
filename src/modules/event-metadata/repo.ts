@@ -1,64 +1,63 @@
 import { query } from '@src/db/client';
 import type { EventMetadata, CreateMetadataFields, UpdateMetadataFields } from './model';
 
-export async function create(fields: CreateMetadataFields): Promise<EventMetadata> {
-  const r = await query<EventMetadata>(
-    `insert into event_metadata (event_id, poster_image, ticket_link)
-     values ($1, $2, $3)
-     returning id, event_id as "eventId", poster_image as "posterImage", ticket_link as "ticketLink", updated_at as "updatedAt"`,
-    [fields.eventId, fields.posterImage ?? null, fields.ticketLink ?? null],
-  );
-  return r.rows[0];
+export function create(fields: CreateMetadataFields): Promise<EventMetadata> {
+  return query<EventMetadata>(
+    `insert into event_metadata (event_id, poster_image, ticket_link) values ($1, $2, $3) returning id, event_id as "eventId", poster_image as "posterImage", ticket_link as "ticketLink", updated_at as "updatedAt"`,
+    [fields.eventId, fields.posterImage || null, fields.ticketLink || null],
+  ).then(result => result.rows[0]);
 }
 
 export async function getByEventId(eventId: string): Promise<EventMetadata | null> {
-  const r = await query<EventMetadata>(
-    `select id, event_id as "eventId", poster_image as "posterImage", ticket_link as "ticketLink", updated_at as "updatedAt"
-     from event_metadata
-     where event_id = $1`,
+  const res = await query<EventMetadata>(
+    `select id, event_id as "eventId", poster_image as "posterImage", ticket_link as "ticketLink", updated_at as "updatedAt" from event_metadata where event_id = $1`,
     [eventId],
   );
-  return r.rows[0] ?? null;
+  return res.rows[0] || null;
 }
 
 export async function getById(id: string): Promise<EventMetadata | null> {
-  const r = await query<EventMetadata>(
-    `select id, event_id as "eventId", poster_image as "posterImage", ticket_link as "ticketLink", updated_at as "updatedAt"
-     from event_metadata
-     where id = $1`,
+  const result = await query<EventMetadata>(
+    `select id, event_id as "eventId", poster_image as "posterImage", ticket_link as "ticketLink", updated_at as "updatedAt" from event_metadata where id = $1`,
     [id],
   );
-  return r.rows[0] ?? null;
+  return result.rows[0] || null;
 }
 
 export async function update(id: string, fields: UpdateMetadataFields): Promise<EventMetadata | null> {
-  const updates: string[] = [];
-  const values: unknown[] = [];
-  let paramCount = 1;
-
+  const changes: Record<string, unknown> = {};
+  
   if (fields.posterImage !== undefined) {
-    updates.push(`poster_image = $${paramCount++}`);
-    values.push(fields.posterImage);
+    changes.poster_image = fields.posterImage;
   }
   if (fields.ticketLink !== undefined) {
-    updates.push(`ticket_link = $${paramCount++}`);
-    values.push(fields.ticketLink);
+    changes.ticket_link = fields.ticketLink;
   }
-
-  if (updates.length === 0) {
+  
+  if (Object.keys(changes).length === 0) {
     return getById(id);
   }
-
-  updates.push('updated_at = now()');
-  values.push(id);
-  const r = await query<EventMetadata>(
-    `update event_metadata
-     set ${updates.join(', ')}
-     where id = $${paramCount}
-     returning id, event_id as "eventId", poster_image as "posterImage", ticket_link as "ticketLink", updated_at as "updatedAt"`,
-    values,
+  
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+  let paramIndex = 1;
+  
+  const keys = Object.keys(changes);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    setClauses.push(`${key} = $${paramIndex}`);
+    params.push(changes[key]);
+    paramIndex++;
+  }
+  
+  setClauses.push('updated_at = now()');
+  params.push(id);
+  
+  const result = await query<EventMetadata>(
+    `update event_metadata set ${setClauses.join(', ')} where id = $${paramIndex} returning id, event_id as "eventId", poster_image as "posterImage", ticket_link as "ticketLink", updated_at as "updatedAt"`,
+    params,
   );
-  return r.rows[0] ?? null;
+  return result.rows[0] || null;
 }
 
 export async function deleteById(id: string): Promise<void> {

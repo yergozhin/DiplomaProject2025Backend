@@ -6,6 +6,9 @@ export function create(fields: CreateMetadataFields) {
 }
 
 export function getByEventId(eventId: string) {
+  if (!eventId) {
+    return Promise.resolve(null);
+  }
   return repo.getByEventId(eventId);
 }
 
@@ -14,10 +17,9 @@ export function getById(id: string) {
 }
 
 export function update(id: string, fields: UpdateMetadataFields) {
+  if (!id) throw new Error('ID required');
   return repo.update(id, fields);
 }
 
-export function deleteById(id: string) {
-  return repo.deleteById(id);
-}
+export const deleteMetadata = (id: string) => repo.deleteById(id);
 

@@ -10,79 +10,65 @@ export async function create(req: AuthRequest, res: Response) {
       posterImage?: unknown,
       ticketLink?: unknown,
     };
-    const eventId = typeof body.eventId === 'string' ? body.eventId : null;
-    const posterImage = typeof body.posterImage === 'string' ? body.posterImage : null;
-    const ticketLink = typeof body.ticketLink === 'string' ? body.ticketLink : null;
-    if (!eventId) {
+    if (typeof body.eventId !== 'string' || body.eventId.trim().length === 0) {
       return res.status(400).json({ error: 'invalid' });
     }
+    
     const fields: CreateMetadataFields = {
-      eventId,
-      posterImage,
-      ticketLink,
+      eventId: body.eventId,
+      posterImage: typeof body.posterImage === 'string' ? body.posterImage : null,
+      ticketLink: typeof body.ticketLink === 'string' ? body.ticketLink : null,
     };
+    
     const metadata = await s.create(fields);
     res.status(201).json(metadata);
-  } catch {
-    res.status(500).json({ error: 'Failed to create event metadata' });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'invalid' });
   }
 }
 
-export async function getByEvent(req: Request, res: Response) {
-  try {
-    const eventId = req.params.eventId;
-    const metadata = await s.getByEventId(eventId);
+export function getByEvent(req: Request, res: Response) {
+  const eventId = req.params.eventId;
+  s.getByEventId(eventId).then(metadata => {
     if (!metadata) {
-      return res.status(404).json({ error: 'Event metadata not found' });
+      res.status(404).json({ error: 'not found' });
+    } else {
+      res.json(metadata);
     }
-    res.json(metadata);
-  } catch {
-    res.status(500).json({ error: 'Failed to get event metadata' });
-  }
+  });
 }
 
 export async function getById(req: Request, res: Response) {
-  try {
-    const id = req.params.id;
-    const metadata = await s.getById(id);
-    if (!metadata) {
-      return res.status(404).json({ error: 'Event metadata not found' });
-    }
-    res.json(metadata);
-  } catch {
-    res.status(500).json({ error: 'Failed to get event metadata' });
+  const id = req.params.id;
+  const metadata = await s.getById(id);
+  if (!metadata) {
+    return res.status(404).json({ error: 'Event metadata not found' });
   }
+  res.json(metadata);
 }
 
 export async function update(req: AuthRequest, res: Response) {
-  try {
-    const id = req.params.id;
-    const body = req.body as {
-      posterImage?: unknown,
-      ticketLink?: unknown,
-    };
-    const posterImage = typeof body.posterImage === 'string' ? body.posterImage : null;
-    const ticketLink = typeof body.ticketLink === 'string' ? body.ticketLink : null;
-    const fields: UpdateMetadataFields = {
-      posterImage,
-      ticketLink,
-    };
-    const metadata = await s.update(id, fields);
-    if (!metadata) {
-      return res.status(404).json({ error: 'Event metadata not found' });
-    }
-    res.json(metadata);
-  } catch {
-    res.status(500).json({ error: 'Failed to update event metadata' });
+  const id = req.params.id;
+  const body = req.body as any;
+  
+  const fields: UpdateMetadataFields = {};
+  if (body.posterImage !== undefined) {
+    fields.posterImage = typeof body.posterImage === 'string' ? body.posterImage : null;
   }
+  if (body.ticketLink !== undefined) {
+    fields.ticketLink = typeof body.ticketLink === 'string' ? body.ticketLink : null;
+  }
+  
+  const metadata = await s.update(id, fields);
+  if (!metadata) {
+    return res.status(404).json({ error: 'Event metadata not found' });
+  }
+  
+  res.json(metadata);
 }
 
 export async function deleteById(req: AuthRequest, res: Response) {
-  try {
-    const id = req.params.id;
-    await s.deleteById(id);
-    res.status(204).send();
-  } catch {
-    res.status(500).json({ error: 'Failed to delete event metadata' });
-  }
+  const id = req.params.id;
+  await s.deleteMetadata(id);
+  res.status(204).send();
 }
