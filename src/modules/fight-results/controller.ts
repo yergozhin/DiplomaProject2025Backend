@@ -13,94 +13,89 @@ export async function create(req: AuthRequest, res: Response) {
       timeEnded?: unknown,
       judgeScores?: unknown,
     };
-    const fightId = typeof body.fightId === 'string' ? body.fightId : null;
-    const winnerId = typeof body.winnerId === 'string' ? body.winnerId : null;
-    const resultType = typeof body.resultType === 'string' && ['knockout', 'technical_knockout', 'submission', 'decision', 'draw', 'no_contest', 'disqualification'].includes(body.resultType) ? body.resultType as 'knockout' | 'technical_knockout' | 'submission' | 'decision' | 'draw' | 'no_contest' | 'disqualification' : null;
-    const roundEnded = typeof body.roundEnded === 'number' ? body.roundEnded : null;
-    const timeEnded = typeof body.timeEnded === 'string' ? body.timeEnded : null;
-    const judgeScores = body.judgeScores && typeof body.judgeScores === 'object' && body.judgeScores !== null ? body.judgeScores as Record<string, unknown> : null;
-    if (!fightId) {
+    
+    if (typeof body.fightId !== 'string' || !body.fightId) {
       return res.status(400).json({ error: 'invalid' });
     }
+    
+    const resultTypes = ['knockout', 'technical_knockout', 'submission', 'decision', 'draw', 'no_contest', 'disqualification'];
+    const resultType = typeof body.resultType === 'string' && resultTypes.includes(body.resultType)
+      ? body.resultType as 'knockout' | 'technical_knockout' | 'submission' | 'decision' | 'draw' | 'no_contest' | 'disqualification'
+      : null;
+    
     const fields: CreateResultFields = {
-      fightId,
-      winnerId,
+      fightId: body.fightId,
+      winnerId: typeof body.winnerId === 'string' ? body.winnerId : null,
       resultType,
-      roundEnded,
-      timeEnded,
-      judgeScores,
+      roundEnded: typeof body.roundEnded === 'number' ? body.roundEnded : null,
+      timeEnded: typeof body.timeEnded === 'string' ? body.timeEnded : null,
+      judgeScores: body.judgeScores && typeof body.judgeScores === 'object' && body.judgeScores !== null ? body.judgeScores as Record<string, unknown> : null,
     };
+    
     const result = await s.create(fields);
     res.status(201).json(result);
-  } catch {
-    res.status(500).json({ error: 'Failed to create fight result' });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'invalid' });
   }
 }
 
 export async function getByFight(req: Request, res: Response) {
-  try {
-    const fightId = req.params.fightId;
-    const result = await s.getByFightId(fightId);
-    if (!result) {
-      return res.status(404).json({ error: 'Fight result not found' });
-    }
-    res.json(result);
-  } catch {
-    res.status(500).json({ error: 'Failed to get fight result' });
+  const fightId = req.params.fightId;
+  const result = await s.getByFightId(fightId);
+  if (!result) {
+    return res.status(404).json({ error: 'Fight result not found' });
   }
+  res.json(result);
 }
 
 export async function getById(req: Request, res: Response) {
-  try {
-    const id = req.params.id;
-    const result = await s.getById(id);
-    if (!result) {
-      return res.status(404).json({ error: 'Fight result not found' });
-    }
-    res.json(result);
-  } catch {
-    res.status(500).json({ error: 'Failed to get fight result' });
+  const id = req.params.id;
+  const result = await s.getById(id);
+  if (!result) {
+    return res.status(404).json({ error: 'Fight result not found' });
   }
+  res.json(result);
 }
 
 export async function update(req: AuthRequest, res: Response) {
-  try {
-    const id = req.params.id;
-    const body = req.body as {
-      winnerId?: unknown,
-      resultType?: unknown,
-      roundEnded?: unknown,
-      timeEnded?: unknown,
-      judgeScores?: unknown,
-    };
-    const winnerId = typeof body.winnerId === 'string' ? body.winnerId : null;
-    const resultType = typeof body.resultType === 'string' && ['knockout', 'technical_knockout', 'submission', 'decision', 'draw', 'no_contest', 'disqualification'].includes(body.resultType) ? body.resultType as 'knockout' | 'technical_knockout' | 'submission' | 'decision' | 'draw' | 'no_contest' | 'disqualification' : null;
-    const roundEnded = typeof body.roundEnded === 'number' ? body.roundEnded : null;
-    const timeEnded = typeof body.timeEnded === 'string' ? body.timeEnded : null;
-    const judgeScores = body.judgeScores && typeof body.judgeScores === 'object' && body.judgeScores !== null ? body.judgeScores as Record<string, unknown> : null;
-    const fields: UpdateResultFields = {
-      winnerId,
-      resultType,
-      roundEnded,
-      timeEnded,
-      judgeScores,
-    };
-    const result = await s.update(id, fields);
-    if (!result) {
-      return res.status(404).json({ error: 'Fight result not found' });
-    }
-    res.json(result);
-  } catch {
-    res.status(500).json({ error: 'Failed to update fight result' });
+  const id = req.params.id;
+  const body = req.body as {
+    winnerId?: unknown,
+    resultType?: unknown,
+    roundEnded?: unknown,
+    timeEnded?: unknown,
+    judgeScores?: unknown,
+  };
+  
+  const resultTypes = ['knockout', 'technical_knockout', 'submission', 'decision', 'draw', 'no_contest', 'disqualification'];
+  const winnerId = typeof body.winnerId === 'string' ? body.winnerId : null;
+  const resultType = typeof body.resultType === 'string' && resultTypes.includes(body.resultType) 
+    ? body.resultType as 'knockout' | 'technical_knockout' | 'submission' | 'decision' | 'draw' | 'no_contest' | 'disqualification' 
+    : null;
+  const roundEnded = typeof body.roundEnded === 'number' ? body.roundEnded : null;
+  const timeEnded = typeof body.timeEnded === 'string' ? body.timeEnded : null;
+  const judgeScores = body.judgeScores && typeof body.judgeScores === 'object' && body.judgeScores !== null 
+    ? body.judgeScores as Record<string, unknown> 
+    : null;
+  
+  const fields: UpdateResultFields = {
+    winnerId,
+    resultType,
+    roundEnded,
+    timeEnded,
+    judgeScores,
+  };
+  
+  const result = await s.update(id, fields);
+  if (!result) {
+    return res.status(404).json({ error: 'Fight result not found' });
   }
+  
+  res.json(result);
 }
 
 export async function deleteById(req: AuthRequest, res: Response) {
-  try {
-    const id = req.params.id;
-    await s.deleteById(id);
-    res.status(204).send();
-  } catch {
-    res.status(500).json({ error: 'Failed to delete fight result' });
-  }
+  const id = req.params.id;
+  await s.remove(id);
+  res.status(204).send();
 }
