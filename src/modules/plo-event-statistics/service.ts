@@ -1,23 +1,22 @@
 import * as repo from './repo';
 import type { PloEventStatistics, CreateStatisticsFields, UpdateStatisticsFields } from './model';
 
-export function create(fields: CreateStatisticsFields) {
+export const create = async (fields: CreateStatisticsFields) => {
   return repo.create(fields);
-}
+};
 
 export function getByPloId(ploId: string) {
   return repo.getByPloId(ploId);
 }
 
-export function getById(id: string) {
-  return repo.getById(id);
-}
+export const getById = (id: string) => repo.getById(id);
 
-export function update(id: string, fields: UpdateStatisticsFields) {
+export async function update(id: string, fields: UpdateStatisticsFields) {
+  if (!id) throw new Error('ID required');
   return repo.update(id, fields);
 }
 
-export function deleteById(id: string) {
+export function remove(id: string) {
   return repo.deleteById(id);
 }
 
