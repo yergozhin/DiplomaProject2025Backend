@@ -15,55 +15,49 @@ export async function create(req: AuthRequest, res: Response) {
     const minWeightKg = typeof body.minWeightKg === 'number' ? body.minWeightKg : null;
     const maxWeightKg = typeof body.maxWeightKg === 'number' ? body.maxWeightKg : null;
     const description = typeof body.description === 'string' ? body.description : null;
+    
     if (!name) {
       return res.status(400).json({ error: 'invalid' });
     }
+
     const fields: CreateWeightClassFields = {
       name,
       minWeightKg,
       maxWeightKg,
       description,
     };
+    
     const weightClass = await s.create(fields);
     res.status(201).json(weightClass);
-  } catch {
-    res.status(500).json({ error: 'Failed to create weight class' });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'invalid' });
   }
 }
 
-export async function getAll(req: Request, res: Response) {
-  try {
-    const weightClasses = await s.all();
+export function getAll(req: Request, res: Response) {
+  s.getAll().then(weightClasses => {
     res.json(weightClasses);
-  } catch {
-    res.status(500).json({ error: 'Failed to get weight classes' });
-  }
+  });
 }
 
-export async function getById(req: Request, res: Response) {
-  try {
-    const id = req.params.id;
-    const weightClass = await s.getById(id);
+export function getById(req: Request, res: Response) {
+  const id = req.params.id;
+  s.getById(id).then(weightClass => {
     if (!weightClass) {
-      return res.status(404).json({ error: 'Weight class not found' });
+      res.status(404).json({ error: 'not found' });
+    } else {
+      res.json(weightClass);
     }
-    res.json(weightClass);
-  } catch {
-    res.status(500).json({ error: 'Failed to get weight class' });
-  }
+  });
 }
 
 export async function getByName(req: Request, res: Response) {
-  try {
-    const name = req.params.name;
-    const weightClass = await s.getByName(name);
-    if (!weightClass) {
-      return res.status(404).json({ error: 'Weight class not found' });
-    }
-    res.json(weightClass);
-  } catch {
-    res.status(500).json({ error: 'Failed to get weight class' });
+  const name = req.params.name;
+  const weightClass = await s.getByName(name);
+  if (!weightClass) {
+    return res.status(404).json({ error: 'Weight class not found' });
   }
+  res.json(weightClass);
 }
 
 export async function update(req: AuthRequest, res: Response) {
@@ -75,33 +69,36 @@ export async function update(req: AuthRequest, res: Response) {
       maxWeightKg?: unknown,
       description?: unknown,
     };
-    const name = typeof body.name === 'string' ? body.name : undefined;
-    const minWeightKg = typeof body.minWeightKg === 'number' ? body.minWeightKg : null;
-    const maxWeightKg = typeof body.maxWeightKg === 'number' ? body.maxWeightKg : null;
-    const description = typeof body.description === 'string' ? body.description : null;
-    const fields: UpdateWeightClassFields = {
-      name,
-      minWeightKg,
-      maxWeightKg,
-      description,
-    };
+    
+    const fields: UpdateWeightClassFields = {};
+    
+    if (body.name !== undefined) {
+      fields.name = typeof body.name === 'string' ? body.name : undefined;
+    }
+    if (body.minWeightKg !== undefined && typeof body.minWeightKg === 'number') {
+      fields.minWeightKg = body.minWeightKg;
+    }
+    if (body.maxWeightKg !== undefined && typeof body.maxWeightKg === 'number') {
+      fields.maxWeightKg = body.maxWeightKg;
+    }
+    if (body.description !== undefined) {
+      fields.description = typeof body.description === 'string' ? body.description : null;
+    }
+    
     const weightClass = await s.update(id, fields);
     if (!weightClass) {
       return res.status(404).json({ error: 'Weight class not found' });
     }
+    
     res.json(weightClass);
-  } catch {
-    res.status(500).json({ error: 'Failed to update weight class' });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'invalid' });
   }
 }
 
 export async function deleteById(req: AuthRequest, res: Response) {
-  try {
-    const id = req.params.id;
-    await s.deleteById(id);
-    res.status(204).send();
-  } catch {
-    res.status(500).json({ error: 'Failed to delete weight class' });
-  }
+  const id = req.params.id;
+  await s.remove(id);
+  res.status(204).send();
 }
 
