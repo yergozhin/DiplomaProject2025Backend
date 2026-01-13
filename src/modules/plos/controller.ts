@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '@src/middlewares/auth';
 import * as s from './service';
+import * as repo from './repo';
 
 interface UpdateBody {
   leagueName?: unknown;
@@ -33,8 +34,10 @@ function parseDate(value: unknown): string | null {
 
 export async function getProfile(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
-  const profile = await s.getProfile(req.user.userId);
+  
+  const profile = await repo.getProfile(req.user.userId);
   if (!profile) return res.status(404).json({ error: 'not_found' });
+  
   res.json(profile);
 }
 
