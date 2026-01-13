@@ -15,7 +15,7 @@ export async function findUserByEmailAndRole(
        limit 1`,
       [email, role],
     );
-    return result.rows[0] || null;
+    return result.rows[0] ?? null;
   }
   
   const result = await query<AuthUser>(
@@ -92,7 +92,7 @@ export async function createUser(
         'select plo_status from plo_profiles where user_id = $1',
         [user.id],
       );
-      const ploStatus = ploResult.rows[0]?.plo_status || null;
+      const ploStatus = ploResult.rows[0]?.plo_status ?? null;
       return { id: user.id, email: user.email, role: user.role, plo_status: ploStatus };
     }
     

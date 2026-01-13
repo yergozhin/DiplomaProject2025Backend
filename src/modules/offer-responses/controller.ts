@@ -4,7 +4,7 @@ import * as s from './service';
 import type { CreateResponseFields, UpdateResponseFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
-  const body = req.body as any;
+  const body = req.body;
   
   if (!body.offerId || !body.fighterId || typeof body.amount !== 'number') {
     return res.status(400).json({ error: 'invalid' });
@@ -48,7 +48,7 @@ export async function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body as any;
+  const body = req.body;
   
   const validStatuses = ['pending', 'accepted', 'rejected'];
   const amount = typeof body.amount === 'number' ? body.amount : undefined;

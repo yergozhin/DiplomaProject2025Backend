@@ -4,22 +4,31 @@ import * as repo from './repo';
 import type { CreateInjuryFields, UpdateInjuryFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
-  const body = req.body as any;
+  const body = req.body as {
+    fighterId?: unknown;
+    injuryType?: unknown;
+    injuryDescription?: unknown;
+    injuryDate?: unknown;
+    recoveryStatus?: unknown;
+    medicalNotes?: unknown;
+  };
   
   if (!body.fighterId || !body.injuryType) {
     return res.status(400).json({ error: 'invalid' });
   }
   
   const validStatuses = ['recovering', 'cleared', 'ongoing'];
-  const recoveryStatus = validStatuses.includes(body.recoveryStatus) ? body.recoveryStatus : null;
+  const recoveryStatus = typeof body.recoveryStatus === 'string' && validStatuses.includes(body.recoveryStatus) 
+    ? body.recoveryStatus as 'recovering' | 'cleared' | 'ongoing' 
+    : null;
   
   const fields: CreateInjuryFields = {
-    fighterId: body.fighterId,
-    injuryType: body.injuryType,
-    injuryDescription: body.injuryDescription || null,
-    injuryDate: body.injuryDate || null,
+    fighterId: typeof body.fighterId === 'string' ? body.fighterId : '',
+    injuryType: typeof body.injuryType === 'string' ? body.injuryType : '',
+    injuryDescription: typeof body.injuryDescription === 'string' ? body.injuryDescription : null,
+    injuryDate: typeof body.injuryDate === 'string' ? body.injuryDate : null,
     recoveryStatus,
-    medicalNotes: body.medicalNotes || null,
+    medicalNotes: typeof body.medicalNotes === 'string' ? body.medicalNotes : null,
   };
   
   if (!fields.fighterId || !fields.injuryType) {
@@ -51,7 +60,13 @@ export async function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body as any;
+  const body = req.body as {
+    injuryType?: unknown;
+    injuryDescription?: unknown;
+    injuryDate?: unknown;
+    recoveryStatus?: unknown;
+    medicalNotes?: unknown;
+  };
   
   const validStatuses = ['recovering', 'cleared', 'ongoing'];
   const fields: UpdateInjuryFields = {};

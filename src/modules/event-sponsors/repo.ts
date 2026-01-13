@@ -3,25 +3,25 @@ import type { EventSponsor, CreateSponsorFields, UpdateSponsorFields } from './m
 
 export async function create(fields: CreateSponsorFields): Promise<EventSponsor> {
   const result = await query<EventSponsor>(
-    `insert into event_sponsors (event_id, sponsor_name, sponsor_logo, sponsorship_level, sponsorship_amount) values ($1, $2, $3, $4, $5) returning id, event_id as "eventId", sponsor_name as "sponsorName", sponsor_logo as "sponsorLogo", sponsorship_level as "sponsorshipLevel", sponsorship_amount as "sponsorshipAmount"`,
-    [fields.eventId, fields.sponsorName, fields.sponsorLogo || null, fields.sponsorshipLevel || null, fields.sponsorshipAmount || null],
+    'insert into event_sponsors (event_id, sponsor_name, sponsor_logo, sponsorship_level, sponsorship_amount) values ($1, $2, $3, $4, $5) returning id, event_id as "eventId", sponsor_name as "sponsorName", sponsor_logo as "sponsorLogo", sponsorship_level as "sponsorshipLevel", sponsorship_amount as "sponsorshipAmount"',
+    [fields.eventId, fields.sponsorName, fields.sponsorLogo ?? null, fields.sponsorshipLevel ?? null, fields.sponsorshipAmount ?? null],
   );
   return result.rows[0];
 }
 
 export function getByEventId(eventId: string): Promise<EventSponsor[]> {
   return query<EventSponsor>(
-    `select id, event_id as "eventId", sponsor_name as "sponsorName", sponsor_logo as "sponsorLogo", sponsorship_level as "sponsorshipLevel", sponsorship_amount as "sponsorshipAmount" from event_sponsors where event_id = $1 order by case sponsorship_level when 'platinum' then 1 when 'gold' then 2 when 'silver' then 3 when 'bronze' then 4 else 5 end, sponsor_name`,
+    'select id, event_id as "eventId", sponsor_name as "sponsorName", sponsor_logo as "sponsorLogo", sponsorship_level as "sponsorshipLevel", sponsorship_amount as "sponsorshipAmount" from event_sponsors where event_id = $1 order by case sponsorship_level when \'platinum\' then 1 when \'gold\' then 2 when \'silver\' then 3 when \'bronze\' then 4 else 5 end, sponsor_name',
     [eventId],
   ).then(res => res.rows);
 }
 
 export async function getById(id: string): Promise<EventSponsor | null> {
   const result = await query<EventSponsor>(
-    `select id, event_id as "eventId", sponsor_name as "sponsorName", sponsor_logo as "sponsorLogo", sponsorship_level as "sponsorshipLevel", sponsorship_amount as "sponsorshipAmount" from event_sponsors where id = $1`,
+    'select id, event_id as "eventId", sponsor_name as "sponsorName", sponsor_logo as "sponsorLogo", sponsorship_level as "sponsorshipLevel", sponsorship_amount as "sponsorshipAmount" from event_sponsors where id = $1',
     [id],
   );
-  return result.rows[0] || null;
+  return result.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateSponsorFields): Promise<EventSponsor | null> {
@@ -54,7 +54,7 @@ export async function update(id: string, fields: UpdateSponsorFields): Promise<E
   values.push(id);
   const sql = `update event_sponsors set ${updates.join(', ')} where id = $${values.length} returning id, event_id as "eventId", sponsor_name as "sponsorName", sponsor_logo as "sponsorLogo", sponsorship_level as "sponsorshipLevel", sponsorship_amount as "sponsorshipAmount"`;
   const result = await query<EventSponsor>(sql, values);
-  return result.rows[0] || null;
+  return result.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

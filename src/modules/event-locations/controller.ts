@@ -4,7 +4,14 @@ import * as repo from './repo';
 import type { CreateLocationFields, UpdateLocationFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
-  const body = req.body as any;
+  const body = req.body as {
+    eventId?: unknown;
+    venueName?: unknown;
+    venueAddress?: unknown;
+    city?: unknown;
+    country?: unknown;
+    venueCapacity?: unknown;
+  };
   
   if (typeof body.eventId !== 'string' || !body.eventId || typeof body.venueName !== 'string' || !body.venueName) {
     return res.status(400).json({ error: 'invalid' });
@@ -22,8 +29,9 @@ export async function create(req: AuthRequest, res: Response) {
   try {
     const location = await repo.create(fields);
     res.status(201).json(location);
-  } catch (err: any) {
-    res.status(400).json({ error: err.message || 'invalid' });
+  } catch (err: unknown) {
+    const message = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : 'invalid';
+    res.status(400).json({ error: message });
   }
 }
 
@@ -51,7 +59,13 @@ export async function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body as any;
+  const body = req.body as {
+    venueName?: unknown;
+    venueAddress?: unknown;
+    city?: unknown;
+    country?: unknown;
+    venueCapacity?: unknown;
+  };
   
   const venueName = typeof body.venueName === 'string' ? body.venueName : null;
   const venueAddress = typeof body.venueAddress === 'string' ? body.venueAddress : null;

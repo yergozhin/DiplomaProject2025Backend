@@ -29,8 +29,9 @@ export async function create(req: AuthRequest, res: Response) {
     };
     const contract = await s.create(fields);
     res.status(201).json(contract);
-  } catch (err: any) {
-    res.status(400).json({ error: err.message || 'invalid' });
+  } catch (err: unknown) {
+    const message = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : 'invalid';
+    res.status(400).json({ error: message });
   }
 }
 
@@ -57,7 +58,12 @@ export async function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body as any;
+  const body = req.body as {
+    contractAmount?: unknown;
+    currency?: unknown;
+    contractSigned?: unknown;
+    contractTerms?: unknown;
+  };
   
   const contractAmount = typeof body.contractAmount === 'number' ? body.contractAmount : undefined;
   const currency = typeof body.currency === 'string' ? body.currency : undefined;

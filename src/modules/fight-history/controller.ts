@@ -5,7 +5,11 @@ import type { CreateHistoryFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
   try {
-    const body = req.body as any;
+    const body = req.body as {
+      fightId?: unknown;
+      status?: unknown;
+      changeReason?: unknown;
+    };
     
     const fightId = typeof body.fightId === 'string' ? body.fightId : null;
     const status = typeof body.status === 'string' ? body.status : null;
@@ -26,8 +30,9 @@ export async function create(req: AuthRequest, res: Response) {
     const history = await s.create(fields);
     
     res.status(201).json(history);
-  } catch (err: any) {
-    res.status(400).json({ error: err.message || 'invalid' });
+  } catch (err: unknown) {
+    const message = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : 'invalid';
+    res.status(400).json({ error: message });
   }
 }
 

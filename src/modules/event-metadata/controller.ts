@@ -22,8 +22,9 @@ export async function create(req: AuthRequest, res: Response) {
     
     const metadata = await s.create(fields);
     res.status(201).json(metadata);
-  } catch (err: any) {
-    res.status(400).json({ error: err.message || 'invalid' });
+  } catch (err: unknown) {
+    const message = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : 'invalid';
+    res.status(400).json({ error: message });
   }
 }
 
@@ -49,7 +50,10 @@ export async function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body as any;
+  const body = req.body as {
+    posterImage?: unknown;
+    ticketLink?: unknown;
+  };
   
   const fields: UpdateMetadataFields = {};
   if (body.posterImage !== undefined) {

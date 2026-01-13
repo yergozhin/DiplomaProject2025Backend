@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Roles, type Role } from '@src/common/constants/Roles';
+import type { Role } from '@src/common/constants/Roles';
 import * as service from './service';
 
 interface AuthRequestBody {
@@ -36,8 +36,8 @@ export async function register(req: Request, res: Response) {
       return res.status(409).json({ error: 'exists' });
     }
     res.status(201).json(user);
-  } catch (err: any) {
-    if (err?.code === '23505') {
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && err.code === '23505') {
       return res.status(409).json({ error: 'exists' });
     }
     console.error('register error:', err);

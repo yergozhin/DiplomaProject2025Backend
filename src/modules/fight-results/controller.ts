@@ -34,8 +34,9 @@ export async function create(req: AuthRequest, res: Response) {
     
     const result = await s.create(fields);
     res.status(201).json(result);
-  } catch (err: any) {
-    res.status(400).json({ error: err.message || 'invalid' });
+  } catch (err: unknown) {
+    const message = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : 'invalid';
+    res.status(400).json({ error: message });
   }
 }
 

@@ -85,7 +85,7 @@ export async function findExisting(fighterAId: string, fighterBId: string): Prom
      limit 1`,
     [fighterAId, fighterBId, 'deleted'],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getFighterById(id: string): Promise<{ id: string } | null> {
@@ -93,7 +93,7 @@ export async function getFighterById(id: string): Promise<{ id: string } | null>
     'select id from users where id=$1 and role=$2',
     [id, 'fighter'],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getRequestsTo(fighterId: string): Promise<FightRequestWithSender[]> {
@@ -133,7 +133,7 @@ export async function getById(id: string): Promise<Fight | null> {
     where f.id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function accept(id: string): Promise<Fight | null> {
@@ -147,7 +147,7 @@ export async function accept(id: string): Promise<Fight | null> {
      returning f.id, fpa.user_id as "fighterAId", fpb.user_id as "fighterBId", f.status`,
     ['accepted', id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function reject(id: string): Promise<Fight | null> {
@@ -161,7 +161,7 @@ export async function reject(id: string): Promise<Fight | null> {
      returning f.id, fpa.user_id as "fighterAId", fpb.user_id as "fighterBId", f.status`,
     ['deleted', id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getAccepted(): Promise<FightWithFighters[]> {
@@ -333,7 +333,7 @@ export async function getByIdWithFighters(id: string): Promise<FightWithFighters
     left join weight_classes wcb on fpab.weight_class_id = wcb.id
     where f.id = $1
   `, [id]);
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 

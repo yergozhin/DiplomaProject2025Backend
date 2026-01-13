@@ -6,7 +6,7 @@ export async function create(fields: CreateWeightClassFields): Promise<WeightCla
     `insert into weight_classes (name, min_weight_kg, max_weight_kg, description)
      values ($1, $2, $3, $4)
      returning id, name, min_weight_kg as "minWeightKg", max_weight_kg as "maxWeightKg", description, created_at as "createdAt"`,
-    [fields.name, fields.minWeightKg || null, fields.maxWeightKg || null, fields.description || null],
+    [fields.name, fields.minWeightKg ?? null, fields.maxWeightKg ?? null, fields.description ?? null],
   );
   return r.rows[0];
 }
@@ -27,7 +27,7 @@ export async function getById(id: string): Promise<WeightClass | null> {
      where id = $1`,
     [id],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getByName(name: string): Promise<WeightClass | null> {
@@ -37,11 +37,11 @@ export async function getByName(name: string): Promise<WeightClass | null> {
      where name = $1`,
     [name],
   );
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateWeightClassFields): Promise<WeightClass | null> {
-  const toUpdate: Array<{ field: string; val: unknown }> = [];
+  const toUpdate: { field: string, val: unknown }[] = [];
   
   if (fields.name !== undefined) toUpdate.push({ field: 'name', val: fields.name });
   if (fields.minWeightKg !== undefined) toUpdate.push({ field: 'min_weight_kg', val: fields.minWeightKg });
@@ -53,12 +53,12 @@ export async function update(id: string, fields: UpdateWeightClassFields): Promi
   }
   
   const setParts: string[] = [];
-  for (let i = 0; i < toUpdate.length; i++) {
-    setParts.push(`${toUpdate[i].field} = $${i + 1}`);
+  for (const [i, item] of toUpdate.entries()) {
+    setParts.push(`${item.field} = $${i + 1}`);
   }
   const paramValues: unknown[] = [];
-  for (let i = 0; i < toUpdate.length; i++) {
-    paramValues.push(toUpdate[i].val);
+  for (const item of toUpdate) {
+    paramValues.push(item.val);
   }
   paramValues.push(id);
   
@@ -67,7 +67,7 @@ export async function update(id: string, fields: UpdateWeightClassFields): Promi
     paramValues,
   );
   
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

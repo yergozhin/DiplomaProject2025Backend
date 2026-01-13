@@ -6,8 +6,8 @@ import * as eventStatusHistoryRepo from '@src/modules/event-status-history/repo'
 export async function list() {
   const events = await repo.all();
   
-  for (let i = 0; i < events.length; i++) {
-    await repo.updateEventStatusIfNeeded(events[i].id);
+  for (const event of events) {
+    await repo.updateEventStatusIfNeeded(event.id);
   }
   
   return repo.all();
@@ -39,8 +39,8 @@ export async function createEvent(ploId: string, name: string, slots: string[]) 
   });
   
   const createdSlots: EventSlot[] = [];
-  for (let i = 0; i < slots.length; i++) {
-    const slot = await repo.addSlot(event.id, slots[i]);
+  for (const slotTime of slots) {
+    const slot = await repo.addSlot(event.id, slotTime);
     createdSlots.push(slot);
   }
   
@@ -96,9 +96,8 @@ export async function publishEvent(
   const requiredFields = [event.venueName, event.venueAddress, event.city, event.country, event.posterImage, event.ticketLink];
   
   let hasEmptyField = false;
-  for (let i = 0; i < requiredFields.length; i++) {
-    const field = requiredFields[i];
-    if (!field || !field.trim()) {
+  for (const field of requiredFields) {
+    if (!field?.trim()) {
       hasEmptyField = true;
       break;
     }

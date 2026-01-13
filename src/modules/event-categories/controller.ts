@@ -5,7 +5,7 @@ import * as repo from './repo';
 import type { CreateCategoryFields, UpdateCategoryFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
-  const body = req.body as any;
+  const body = req.body as { name?: unknown; description?: unknown };
   
   const name = typeof body.name === 'string' ? body.name : null;
   const description = typeof body.description === 'string' ? body.description : null;
@@ -43,7 +43,7 @@ export function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body as any;
+  const body = req.body as { name?: unknown; description?: unknown };
   
   const name = typeof body.name === 'string' ? body.name : null;
   const description = typeof body.description === 'string' ? body.description : null;

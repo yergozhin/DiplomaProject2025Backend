@@ -3,7 +3,7 @@ import type { PloEventStatistics, CreateStatisticsFields, UpdateStatisticsFields
 
 export async function create(fields: CreateStatisticsFields): Promise<PloEventStatistics> {
   const result = await query<PloEventStatistics>(
-    `with inserted as (insert into plo_event_statistics (plo_id, total_events, completed_events, total_fights_organized, statistics_date) values ((select id from plo_profiles where user_id = $1), $2, $3, $4, $5) returning id, plo_id, total_events, completed_events, total_fights_organized, statistics_date) select i.id, pp.user_id as "ploId", i.total_events as "totalEvents", i.completed_events as "completedEvents", i.total_fights_organized as "totalFightsOrganized", i.statistics_date as "statisticsDate" from inserted i join plo_profiles pp on i.plo_id = pp.id`,
+    'with inserted as (insert into plo_event_statistics (plo_id, total_events, completed_events, total_fights_organized, statistics_date) values ((select id from plo_profiles where user_id = $1), $2, $3, $4, $5) returning id, plo_id, total_events, completed_events, total_fights_organized, statistics_date) select i.id, pp.user_id as "ploId", i.total_events as "totalEvents", i.completed_events as "completedEvents", i.total_fights_organized as "totalFightsOrganized", i.statistics_date as "statisticsDate" from inserted i join plo_profiles pp on i.plo_id = pp.id',
     [fields.ploId, fields.totalEvents || 0, fields.completedEvents || 0, fields.totalFightsOrganized || 0, fields.statisticsDate],
   );
   return result.rows[0];
@@ -47,10 +47,10 @@ export async function getByPloId(ploId: string): Promise<PloEventStatistics[]> {
 
 export async function getById(id: string): Promise<PloEventStatistics | null> {
   const result = await query<PloEventStatistics>(
-    `select pes.id, pp.user_id as "ploId", pes.total_events as "totalEvents", pes.completed_events as "completedEvents", pes.total_fights_organized as "totalFightsOrganized", pes.statistics_date as "statisticsDate" from plo_event_statistics pes join plo_profiles pp on pes.plo_id = pp.id where pes.id = $1`,
+    'select pes.id, pp.user_id as "ploId", pes.total_events as "totalEvents", pes.completed_events as "completedEvents", pes.total_fights_organized as "totalFightsOrganized", pes.statistics_date as "statisticsDate" from plo_event_statistics pes join plo_profiles pp on pes.plo_id = pp.id where pes.id = $1',
     [id],
   );
-  return result.rows[0] || null;
+  return result.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateStatisticsFields): Promise<PloEventStatistics | null> {
@@ -84,7 +84,7 @@ export async function update(id: string, fields: UpdateStatisticsFields): Promis
     `update plo_event_statistics pes set ${fieldUpdates.join(', ')} from plo_profiles pp where pes.id = $${finalParamIndex} and pes.plo_id = pp.id returning pes.id, pp.user_id as "ploId", pes.total_events as "totalEvents", pes.completed_events as "completedEvents", pes.total_fights_organized as "totalFightsOrganized", pes.statistics_date as "statisticsDate"`,
     paramValues,
   );
-  return result.rows[0] || null;
+  return result.rows[0] ?? null;
 }
 
 export async function deleteById(id: string): Promise<void> {

@@ -5,7 +5,7 @@ import type { CreateRankingFields, UpdateRankingFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
   try {
-    const { fighterId, weightClassId, rankingPosition, rankingPoints, rankingDate } = req.body as any;
+    const { fighterId, weightClassId, rankingPosition, rankingPoints, rankingDate } = req.body;
     
     if (!fighterId || !weightClassId || !rankingDate) {
       return res.status(400).json({ error: 'invalid' });
@@ -21,8 +21,9 @@ export async function create(req: AuthRequest, res: Response) {
     
     const ranking = await s.create(fields);
     res.status(201).json(ranking);
-  } catch (err: any) {
-    res.status(400).json({ error: err.message || 'invalid' });
+  } catch (err: unknown) {
+    const message = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : 'invalid';
+    res.status(400).json({ error: message });
   }
 }
 
@@ -52,7 +53,7 @@ export function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body as any;
+  const body = req.body;
   
   const rankingPosition = typeof body.rankingPosition === 'number' ? body.rankingPosition : null;
   const rankingPoints = typeof body.rankingPoints === 'number' ? body.rankingPoints : undefined;

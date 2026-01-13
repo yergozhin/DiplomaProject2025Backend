@@ -4,20 +4,24 @@ import * as s from './service';
 import type { CreateStatusHistoryFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
-  const body = req.body as any;
+  const body = req.body as {
+    eventId?: unknown;
+    status?: unknown;
+    changeReason?: unknown;
+  };
   const validStatuses = ['draft', 'published', 'cancelled', 'rejected', 'completed'];
   
-  if (!body.eventId || !body.status || !validStatuses.includes(body.status)) {
+  if (!body.eventId || !body.status || typeof body.status !== 'string' || !validStatuses.includes(body.status)) {
     return res.status(400).json({ error: 'invalid' });
   }
   
-  const changedBy = req.user?.userId || null;
+  const changedBy = req.user?.userId ?? null;
   
   const fields: CreateStatusHistoryFields = {
-    eventId: body.eventId,
-    status: body.status,
+    eventId: typeof body.eventId === 'string' ? body.eventId : '',
+    status: body.status as 'draft' | 'published' | 'cancelled' | 'rejected' | 'completed',
     changedBy,
-    changeReason: body.changeReason || null,
+    changeReason: typeof body.changeReason === 'string' ? body.changeReason : null,
   };
   
   const history = await s.create(fields);

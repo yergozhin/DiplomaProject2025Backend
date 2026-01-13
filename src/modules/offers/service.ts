@@ -37,15 +37,15 @@ export async function sendOffers(ploId: string, fightId: string, eventId: string
   }
   const existingOffers = await repo.getOffersForFightEventSlotPlo(fightId, eventId, eventSlotId, ploId);
   if (existingOffers.length > 0) {
-    for (let i = 0; i < existingOffers.length; i++) {
-      if (existingOffers[i].status === 'pending') {
+    for (const offer of existingOffers) {
+      if (offer.status === 'pending') {
         return { error: 'offer_already_exists' };
       }
     }
     if (existingOffers.length === 2) {
       let allAccepted = true;
-      for (let i = 0; i < existingOffers.length; i++) {
-        if (existingOffers[i].status !== 'accepted') {
+      for (const offer of existingOffers) {
+        if (offer.status !== 'accepted') {
           allAccepted = false;
           break;
         }
@@ -103,8 +103,7 @@ export async function updateOfferStatus(fighterId: string, offerId: string, stat
     const fightDate = new Date(dateStr.split('T')[0]);
     
     let hasValidClearance = false;
-    for (let i = 0; i < fighterClearances.length; i++) {
-      const c = fighterClearances[i];
+    for (const c of fighterClearances) {
       if (c.status === 'approved') {
         if (!c.expirationDate) {
           hasValidClearance = true;
@@ -125,67 +124,65 @@ export async function updateOfferStatus(fighterId: string, offerId: string, stat
     const offers = await repo.getOffersForFightEventSlot(offer.fightId, offer.eventId, offer.eventSlotId, offer.ploId);
     if (offers.length === 2) {
       let allAccepted = true;
-      for (let i = 0; i < offers.length; i++) {
-        if (offers[i].status !== 'accepted') {
+      for (const offer of offers) {
+        if (offer.status !== 'accepted') {
           allAccepted = false;
           break;
         }
       }
       if (allAccepted) {
-      const fight = await repo.getFightById(offer.fightId);
-      if (!fight) {
-        return { error: 'fight_not_found' };
-      }
-      const slot = await repo.getEventSlotById(offer.eventSlotId);
-      if (!slot) {
-        return { error: 'slot_not_found' };
-      }
-      const fighterAClearances = await medicalClearancesRepo.getByFighterId(fight.fighterAId);
-      const fighterBClearances = await medicalClearancesRepo.getByFighterId(fight.fighterBId);
-      const slotDate = slot.startTime ? new Date(slot.startTime) : new Date();
-      const fightDate = new Date(slotDate.toISOString().split('T')[0]);
+        const fight = await repo.getFightById(offer.fightId);
+        if (!fight) {
+          return { error: 'fight_not_found' };
+        }
+        const slot = await repo.getEventSlotById(offer.eventSlotId);
+        if (!slot) {
+          return { error: 'slot_not_found' };
+        }
+        const fighterAClearances = await medicalClearancesRepo.getByFighterId(fight.fighterAId);
+        const fighterBClearances = await medicalClearancesRepo.getByFighterId(fight.fighterBId);
+        const slotDate = slot.startTime ? new Date(slot.startTime) : new Date();
+        const fightDate = new Date(slotDate.toISOString().split('T')[0]);
       
-      let fighterAHasValidClearance = false;
-      for (let i = 0; i < fighterAClearances.length; i++) {
-        const c = fighterAClearances[i];
-        if (c.status === 'approved') {
-          if (!c.expirationDate) {
-            fighterAHasValidClearance = true;
-            break;
-          }
-          if (new Date(c.expirationDate) >= fightDate) {
-            fighterAHasValidClearance = true;
-            break;
+        let fighterAHasValidClearance = false;
+        for (const c of fighterAClearances) {
+          if (c.status === 'approved') {
+            if (!c.expirationDate) {
+              fighterAHasValidClearance = true;
+              break;
+            }
+            if (new Date(c.expirationDate) >= fightDate) {
+              fighterAHasValidClearance = true;
+              break;
+            }
           }
         }
-      }
       
-      let fighterBHasValidClearance = false;
-      for (let i = 0; i < fighterBClearances.length; i++) {
-        const c = fighterBClearances[i];
-        if (c.status === 'approved') {
-          if (!c.expirationDate) {
-            fighterBHasValidClearance = true;
-            break;
-          }
-          if (new Date(c.expirationDate) >= fightDate) {
-            fighterBHasValidClearance = true;
-            break;
+        let fighterBHasValidClearance = false;
+        for (const c of fighterBClearances) {
+          if (c.status === 'approved') {
+            if (!c.expirationDate) {
+              fighterBHasValidClearance = true;
+              break;
+            }
+            if (new Date(c.expirationDate) >= fightDate) {
+              fighterBHasValidClearance = true;
+              break;
+            }
           }
         }
-      }
       
-      if (fighterAHasValidClearance && fighterBHasValidClearance) {
-        await repo.updateFightStatus(offer.fightId, 'scheduled');
-        await historyRepo.create({
-          fightId: offer.fightId,
-          status: 'scheduled',
-          changedBy: offer.ploId,
-          changeReason: 'Both fighters accepted offers for event slot',
-        });
-        await repo.updateEventSlotFight(offer.eventSlotId, offer.fightId);
-        await repo.rejectPendingOffersForEventSlot(offer.eventSlotId, offer.fightId);
-      }
+        if (fighterAHasValidClearance && fighterBHasValidClearance) {
+          await repo.updateFightStatus(offer.fightId, 'scheduled');
+          await historyRepo.create({
+            fightId: offer.fightId,
+            status: 'scheduled',
+            changedBy: offer.ploId,
+            changeReason: 'Both fighters accepted offers for event slot',
+          });
+          await repo.updateEventSlotFight(offer.eventSlotId, offer.fightId);
+          await repo.rejectPendingOffersForEventSlot(offer.eventSlotId, offer.fightId);
+        }
       }
     }
   }

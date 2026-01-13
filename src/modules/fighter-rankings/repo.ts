@@ -3,7 +3,7 @@ import type { FighterRanking, CreateRankingFields, UpdateRankingFields } from '.
 
 export async function create(fields: CreateRankingFields): Promise<FighterRanking> {
   const result = await query<FighterRanking>(
-    `with inserted as (insert into fighter_rankings (fighter_id, weight_class_id, ranking_position, ranking_points, ranking_date) values ((select id from fighter_profiles where user_id = $1), $2, $3, $4, $5) returning id, fighter_id, weight_class_id, ranking_position, ranking_points, ranking_date) select i.id, fp.user_id as "fighterId", i.weight_class_id as "weightClassId", i.ranking_position as "rankingPosition", i.ranking_points as "rankingPoints", i.ranking_date as "rankingDate" from inserted i join fighter_profiles fp on i.fighter_id = fp.id`,
+    'with inserted as (insert into fighter_rankings (fighter_id, weight_class_id, ranking_position, ranking_points, ranking_date) values ((select id from fighter_profiles where user_id = $1), $2, $3, $4, $5) returning id, fighter_id, weight_class_id, ranking_position, ranking_points, ranking_date) select i.id, fp.user_id as "fighterId", i.weight_class_id as "weightClassId", i.ranking_position as "rankingPosition", i.ranking_points as "rankingPoints", i.ranking_date as "rankingDate" from inserted i join fighter_profiles fp on i.fighter_id = fp.id',
     [fields.fighterId, fields.weightClassId, fields.rankingPosition, fields.rankingPoints, fields.rankingDate],
   );
   const ranking = result.rows[0];
@@ -11,7 +11,7 @@ export async function create(fields: CreateRankingFields): Promise<FighterRankin
     'select name from weight_classes where id = $1',
     [ranking.weightClassId],
   );
-  return { ...ranking, weightClassName: weightClassRes.rows[0]?.name || null };
+  return { ...ranking, weightClassName: weightClassRes.rows[0]?.name ?? null };
 }
 
 export async function getByFighterId(fighterId: string): Promise<FighterRanking[]> {
@@ -147,10 +147,10 @@ export async function getByWeightClass(weightClassId: string): Promise<FighterRa
 
 export async function getById(id: string): Promise<FighterRanking | null> {
   const result = await query<FighterRanking>(
-    `select fr.id, fp.user_id as "fighterId", fr.weight_class_id as "weightClassId", wc.name as "weightClassName", fr.ranking_position as "rankingPosition", fr.ranking_points as "rankingPoints", fr.ranking_date as "rankingDate" from fighter_rankings fr join fighter_profiles fp on fr.fighter_id = fp.id left join weight_classes wc on fr.weight_class_id = wc.id where fr.id = $1`,
+    'select fr.id, fp.user_id as "fighterId", fr.weight_class_id as "weightClassId", wc.name as "weightClassName", fr.ranking_position as "rankingPosition", fr.ranking_points as "rankingPoints", fr.ranking_date as "rankingDate" from fighter_rankings fr join fighter_profiles fp on fr.fighter_id = fp.id left join weight_classes wc on fr.weight_class_id = wc.id where fr.id = $1',
     [id],
   );
-  return result.rows[0] || null;
+  return result.rows[0] ?? null;
 }
 
 export async function update(id: string, fields: UpdateRankingFields): Promise<FighterRanking | null> {
@@ -190,7 +190,7 @@ export async function update(id: string, fields: UpdateRankingFields): Promise<F
     'select name from weight_classes where id = $1',
     [ranking.weightClassId],
   );
-  return { ...ranking, weightClassName: weightClassRes.rows[0]?.name || null };
+  return { ...ranking, weightClassName: weightClassRes.rows[0]?.name ?? null };
 }
 
 export async function getAllLatest(): Promise<FighterRanking[]> {

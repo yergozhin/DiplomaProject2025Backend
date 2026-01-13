@@ -8,9 +8,9 @@ function hashPassword(p: string) {
   return crypto.createHash('sha256').update(p).digest('hex');
 }
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH ?? '';
 
 function checkAdmin(email: string, password: string): boolean {
   if (!ADMIN_EMAIL || email !== ADMIN_EMAIL) return false;
@@ -64,7 +64,7 @@ export async function register(email: string, password: string, role: Role) {
     id: newUser.id,
     email: newUser.email,
     role: newUser.role,
-    ploStatus: newUser.plo_status || null,
+    ploStatus: newUser.plo_status ?? null,
   };
 }
 
@@ -96,7 +96,7 @@ export async function login(email: string, password: string, role: Role) {
     return { error: 'email_not_verified' };
   }
   
-  const ploStatus = user.role === Roles.PLO ? (user.plo_status || 'unverified') : null;
+  const ploStatus = user.role === Roles.PLO ? (user.plo_status ?? 'unverified') : null;
   const token = sign({ userId: user.id, role: user.role, ploStatus });
   
   return {
@@ -104,7 +104,7 @@ export async function login(email: string, password: string, role: Role) {
       id: user.id,
       email: user.email,
       role: user.role,
-      ploStatus: user.plo_status || null,
+      ploStatus: user.plo_status ?? null,
     },
     token,
   };
@@ -165,7 +165,7 @@ export async function resetPassword(token: string, newPassword: string) {
     id: user.id,
     email: user.email,
     role: user.role,
-    ploStatus: user.plo_status || null,
+    ploStatus: user.plo_status ?? null,
   };
 }
 

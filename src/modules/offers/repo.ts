@@ -108,7 +108,7 @@ export async function getFightById(id: string): Promise<FightRow | null> {
     where f.id = $1
   `;
   const r = await query<FightRow>(sql, [id]);
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getEventById(id: string): Promise<EventRow | null> {
@@ -119,7 +119,7 @@ export async function getEventById(id: string): Promise<EventRow | null> {
     where e.id = $1
   `;
   const r = await query<EventRow>(sql, [id]);
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getEventSlotById(id: string): Promise<EventSlotRow | null> {
@@ -127,7 +127,7 @@ export async function getEventSlotById(id: string): Promise<EventSlotRow | null>
     select id, event_id as "eventId", fight_id as "fightId", start_time as "startTime" from event_slots where id = $1
   `;
   const r = await query<EventSlotRow>(sql, [id]);
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function findExistingOffer(
@@ -140,7 +140,7 @@ export async function findExistingOffer(
     limit 1
   `;
   const r = await query<Offer>(sql, [fightId, ploId]);
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getOffersForFightEventSlotPlo(
@@ -163,7 +163,7 @@ export async function getById(id: string): Promise<Offer | null> {
     where o.id = $1
   `;
   const r = await query<Offer>(sql, [id]);
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function deleteByFightAndPlo(
@@ -252,7 +252,7 @@ export async function updateStatus(
       o.created_at as "createdAt"
   `;
   const r = await query<Offer>(sql, [status, id, fighterId]);
-  return r.rows[0] || null;
+  return r.rows[0] ?? null;
 }
 
 export async function getOffersForFightEventSlot(

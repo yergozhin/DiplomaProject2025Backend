@@ -5,7 +5,16 @@ import type { CreateStatisticFields, UpdateStatisticFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
   try {
-    const body = req.body as any;
+    const body = req.body as {
+      fightId?: unknown;
+      fighterId?: unknown;
+      strikesLanded?: unknown;
+      strikesAttempted?: unknown;
+      takedownsLanded?: unknown;
+      takedownsAttempted?: unknown;
+      submissionAttempts?: unknown;
+      controlTimeSeconds?: unknown;
+    };
     
     const fightId = typeof body.fightId === 'string' ? body.fightId : null;
     const fighterId = typeof body.fighterId === 'string' ? body.fighterId : null;
@@ -34,8 +43,9 @@ export async function create(req: AuthRequest, res: Response) {
     const statistic = await s.create(fields);
     
     res.status(201).json(statistic);
-  } catch (err: any) {
-    res.status(400).json({ error: err.message || 'invalid' });
+  } catch (err: unknown) {
+    const message = err && typeof err === 'object' && 'message' in err && typeof err.message === 'string' ? err.message : 'invalid';
+    res.status(400).json({ error: message });
   }
 }
 
@@ -65,7 +75,14 @@ export function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body as any;
+  const body = req.body as {
+    strikesLanded?: unknown;
+    strikesAttempted?: unknown;
+    takedownsLanded?: unknown;
+    takedownsAttempted?: unknown;
+    submissionAttempts?: unknown;
+    controlTimeSeconds?: unknown;
+  };
   
   const strikesLanded = typeof body.strikesLanded === 'number' ? body.strikesLanded : undefined;
   const strikesAttempted = typeof body.strikesAttempted === 'number' ? body.strikesAttempted : undefined;

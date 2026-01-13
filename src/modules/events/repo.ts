@@ -88,7 +88,7 @@ export async function getById(id: string): Promise<Event | null> {
       where e.id = $1`,
     [id],
   );
-  return r.rows?.[0] || null;
+  return r.rows?.[0] ?? null;
 }
 
 export async function getByIdAndPloId(id: string, ploId: string): Promise<Event | null> {
@@ -99,7 +99,7 @@ export async function getByIdAndPloId(id: string, ploId: string): Promise<Event 
         and pp.user_id = $2`,
     [id, ploId],
   );
-  return r.rows?.[0] || null;
+  return r.rows?.[0] ?? null;
 }
 
 export async function getSlotCount(eventId: string): Promise<number> {
@@ -128,7 +128,7 @@ export async function updateEventStatus(
     `,
     [eventId, ploId, status],
   );
-  return r.rows?.[0] || null;
+  return r.rows?.[0] ?? null;
 }
 
 export async function getAvailableSlots(eventId: string): Promise<EventSlot[]> {
@@ -190,7 +190,7 @@ export async function updateEvent(
       fields.ticketLink,
     ],
   );
-  return r.rows?.[0] || null;
+  return r.rows?.[0] ?? null;
 }
 
 export interface EventFight {
