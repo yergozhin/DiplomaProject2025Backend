@@ -22,29 +22,35 @@ interface UpdateOfferBody {
 }
 
 function parseId(value: unknown): string | null {
-  return typeof value === 'string' && value.trim().length > 0 ? value : null;
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function parseCurrency(value: unknown): string | null {
-  return typeof value === 'string' && value.trim().length > 0 ? value : null;
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function parseAmount(value: unknown): number | null {
-  if (typeof value !== 'number') return null;
-  if (!Number.isFinite(value)) return null;
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
   return value;
 }
 
-export async function getAll(_req: AuthRequest, res: Response) {
-  const r = await s.list();
-  res.json(r);
+export function getAll(_req: AuthRequest, res: Response) {
+  s.list().then(offers => {
+    res.json(offers);
+  });
 }
 
 export async function sendOffers(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  
   if (req.user.role === 'plo' && req.user.ploStatus !== 'verified') {
     return res.status(403).json({ error: 'plo_not_verified' });
   }
+  
   const body = req.body as SendOffersBody;
   const fightId = parseId(body.fightId);
   const eventId = parseId(body.eventId);
@@ -53,10 +59,13 @@ export async function sendOffers(req: AuthRequest, res: Response) {
   const fighterACurrency = parseCurrency(body.fighterACurrency);
   const fighterBAmount = parseAmount(body.fighterBAmount);
   const fighterBCurrency = parseCurrency(body.fighterBCurrency);
+  
   if (!fightId || !eventId || !eventSlotId || fighterAAmount === null || !fighterACurrency || fighterBAmount === null || !fighterBCurrency) {
     return res.status(400).json({ error: 'invalid' });
   }
+  
   const result = await s.sendOffers(req.user.userId, fightId, eventId, eventSlotId, fighterAAmount, fighterACurrency, fighterBAmount, fighterBCurrency);
+  
   if ('error' in result) {
     if (result.error === 'fight_not_found') return res.status(404).json({ error: 'fight_not_found' });
     if (result.error === 'fight_not_accepted') return res.status(400).json({ error: 'fight_not_accepted' });
@@ -68,6 +77,7 @@ export async function sendOffers(req: AuthRequest, res: Response) {
     if (result.error === 'offer_already_exists') return res.status(409).json({ error: 'offer_already_exists' });
     return res.status(400).json({ error: result.error });
   }
+  
   res.status(201).json(result);
 }
 
