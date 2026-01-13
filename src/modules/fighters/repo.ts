@@ -58,17 +58,9 @@ const VERIFICATION_COLUMNS = `
   fv.created_at as "createdAt"
 `;
 
-function isUuid(value: string | null | undefined): value is string {
+function isValidUuid(value: string | null | undefined): boolean {
   if (!value) return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
-function buildFullName(firstName: string | null, lastName: string | null): string | null {
-  const parts: string[] = [];
-  if (firstName && firstName.trim().length > 0) parts.push(firstName.trim());
-  if (lastName && lastName.trim().length > 0) parts.push(lastName.trim());
-  if (parts.length === 0) return null;
-  return parts.join(' ');
 }
 
 export interface FighterProfileFields {
@@ -111,11 +103,11 @@ export interface CreateVerificationFields {
 }
 
 export async function all(): Promise<Fighter[]> {
-  const r = await query<Fighter>(
+  const result = await query<Fighter>(
     `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.role=$1 order by fp.first_name nulls last, fp.last_name nulls last, u.name`,
     ['fighter'],
   );
-  return r.rows;
+  return result.rows;
 }
 
 export async function updateProfile(id: string, fields: FighterProfileFields): Promise<Fighter | null> {
@@ -127,7 +119,7 @@ export async function updateProfile(id: string, fields: FighterProfileFields): P
       'select id from weight_classes where name = $1 limit 1',
       [fields.currentWeightClass],
     );
-    const weightClassId = weightClassRes.rows[0]?.id ?? null;
+    const weightClassId = weightClassRes.rows[0]?.id || null;
     
     await client.query(
       `update fighter_profiles
@@ -191,7 +183,7 @@ export async function updateProfile(id: string, fields: FighterProfileFields): P
       `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role=$2`,
       [id, 'fighter'],
     );
-    return r.rows[0] ?? null;
+    return r.rows[0] || null;
   } catch (err: unknown) {
     await client.query('rollback');
     throw err;
@@ -205,7 +197,7 @@ export async function getById(id: string): Promise<Fighter | null> {
     `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role=$2`,
     [id, 'fighter'],
   );
-  return r.rows[0] ?? null;
+  return r.rows[0] || null;
 }
 
 export interface OpponentFilters {
@@ -223,12 +215,12 @@ export async function allExcept(
 
   conditions.push(`
     not exists (
-      select 1 from fights f
-      join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
-      join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
-      where f.status in ('requested', 'accepted', 'scheduled')
-        and ((fpa.user_id = u.id and fpb.user_id = $2) or (fpa.user_id = $2 and fpb.user_id = u.id))
-    )
+          select 1 from fights f
+          join fighter_profiles fpa on f.fighter_a_profile_id = fpa.id
+          join fighter_profiles fpb on f.fighter_b_profile_id = fpb.id
+          where f.status in ('requested', 'accepted', 'scheduled')
+            and ((fpa.user_id = u.id and fpb.user_id = $2) or (fpa.user_id = $2 and fpb.user_id = u.id))
+        )
   `);
 
   if (filters?.weightClass) {
@@ -269,7 +261,7 @@ export async function updateRecord(
   adminId: string,
   fields: FighterRecordFields,
 ): Promise<Fighter | null> {
-  const adminUuid = isUuid(adminId) ? adminId : null;
+  const adminUuid = isValidUuid(adminId) ? adminId : null;
   const client = await pool.connect();
   try {
     await client.query('begin');
@@ -306,7 +298,7 @@ export async function updateRecord(
       `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role=$2`,
       [fighterId, 'fighter'],
     );
-    return r.rows[0] ?? null;
+    return r.rows[0] || null;
   } catch (err: unknown) {
     await client.query('rollback');
     throw err;
@@ -389,7 +381,7 @@ export async function updateVerificationStatus(
   adminNote: string | null,
 ): Promise<{ verification: FighterVerification | null, fighter: Fighter | null }> {
   const client = await pool.connect();
-  const adminUuid = isUuid(adminId) ? adminId : null;
+  const adminUuid = isValidUuid(adminId) ? adminId : null;
   try {
     await client.query('begin');
     const existingRes = await client.query<FighterVerification>(
@@ -458,7 +450,7 @@ export async function updateVerificationStatus(
         `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.id=$1 and u.role='fighter'`,
         [existing.fighterId],
       );
-      updatedFighter = fighterUpdated.rows[0] ?? null;
+      updatedFighter = fighterUpdated.rows[0] || null;
     }
 
     const updatedVerificationRes = await client.query<FighterVerification>(
@@ -475,7 +467,7 @@ export async function updateVerificationStatus(
 
     await client.query('commit');
     return {
-      verification: updatedVerificationRes.rows[0] ?? null,
+      verification: updatedVerificationRes.rows[0] || null,
       fighter: updatedFighter,
     };
   } catch (err: unknown) {
@@ -495,7 +487,7 @@ export async function getPendingVerificationDetails(
        where u.id = $1 and u.role = 'fighter'`,
     [fighterId],
   );
-  const fighter = fighterRes.rows[0] ?? null;
+  const fighter = fighterRes.rows[0] || null;
   if (!fighter) {
     return { fighter: null, verifications: [] };
   }

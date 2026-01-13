@@ -50,11 +50,10 @@ function parseRequiredString(value: unknown): string | null {
 }
 
 function parseOptionalString(value: unknown): { valid: boolean, value: string | null } {
-  if (value == null) return { valid: true, value: null };
+  if (value == null || value === '') return { valid: true, value: null };
   if (typeof value !== 'string') return { valid: false, value: null };
   const trimmed = value.trim();
-  if (trimmed.length === 0) return { valid: true, value: null };
-  return { valid: true, value: trimmed };
+  return { valid: true, value: trimmed.length > 0 ? trimmed : null };
 }
 
 function parseOptionalDate(value: unknown): { valid: boolean, value: string | null } {
@@ -67,21 +66,21 @@ function parseOptionalDate(value: unknown): { valid: boolean, value: string | nu
 
 function parseOptionalInt(value: unknown): { valid: boolean, value: number | null } {
   if (value == null || value === '') return { valid: true, value: null };
+  
   if (typeof value === 'number') {
-    if (!Number.isFinite(value)) return { valid: false, value: null };
-    const int = Math.round(value);
-    if (int < 0) return { valid: false, value: null };
-    return { valid: true, value: int };
+    if (!Number.isFinite(value) || value < 0) return { valid: false, value: null };
+    return { valid: true, value: Math.round(value) };
   }
+  
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed) return { valid: true, value: null };
+    
     const num = Number(trimmed);
-    if (!Number.isFinite(num)) return { valid: false, value: null };
-    const int = Math.round(num);
-    if (int < 0) return { valid: false, value: null };
-    return { valid: true, value: int };
+    if (!Number.isFinite(num) || num < 0) return { valid: false, value: null };
+    return { valid: true, value: Math.round(num) };
   }
+  
   return { valid: false, value: null };
 }
 

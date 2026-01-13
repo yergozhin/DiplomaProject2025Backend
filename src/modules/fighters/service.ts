@@ -8,17 +8,15 @@ import type {
   OpponentFilters,
 } from './repo';
 
-export function list() {
-  return repo.all();
-}
+export const list = () => repo.all();
 
 export function updateProfile(id: string, fields: FighterProfileFields) {
+  if (!id) throw new Error('Fighter ID required');
+  
   return repo.updateProfile(id, fields);
 }
 
-export function getById(id: string) {
-  return repo.getById(id);
-}
+export const getById = (id: string) => repo.getById(id);
 
 export function listExcept(userId: string, filters?: OpponentFilters) {
   return repo.allExcept(userId, filters);
@@ -30,19 +28,29 @@ export async function updateRecord(
   fields: FighterRecordFields,
 ): Promise<{ fighter: Fighter | null, error?: 'invalid_record' | 'not_found' }> {
   if (fields.totalFights !== null) {
-    const sum = (fields.wins ?? 0) + (fields.losses ?? 0) + (fields.draws ?? 0);
-    if (sum > fields.totalFights) {
+    const wins = fields.wins || 0;
+    const losses = fields.losses || 0;
+    const draws = fields.draws || 0;
+    const total = wins + losses + draws;
+    
+    if (total > fields.totalFights) {
       return { fighter: null, error: 'invalid_record' };
     }
   }
-  const updated = await repo.updateRecord(fighterId, adminId, fields);
-  if (!updated) {
+  
+  const fighter = await repo.updateRecord(fighterId, adminId, fields);
+  if (!fighter) {
     return { fighter: null, error: 'not_found' };
   }
-  return { fighter: updated };
+  
+  return { fighter };
 }
 
 export function createVerification(fighterId: string, payload: CreateVerificationFields) {
+  if (!fighterId) throw new Error('Fighter ID required');
+  if (!payload.type || !payload.value) {
+    throw new Error('Verification type and value are required');
+  }
   return repo.createVerification(fighterId, payload);
 }
 
@@ -50,9 +58,7 @@ export function listVerifications(fighterId: string) {
   return repo.listVerificationsByFighter(fighterId);
 }
 
-export function listPendingVerifications() {
-  return repo.listPendingVerifications();
-}
+export const listPendingVerifications = () => repo.listPendingVerifications();
 
 export function updateVerificationStatus(
   verificationId: string,
@@ -67,8 +73,6 @@ export function listFightersWithPendingVerifications() {
   return repo.listFightersWithPendingVerifications();
 }
 
-export function getPendingVerificationDetails(fighterId: string) {
-  return repo.getPendingVerificationDetails(fighterId);
-}
+export const getPendingVerificationDetails = (fighterId: string) => repo.getPendingVerificationDetails(fighterId);
 
 
