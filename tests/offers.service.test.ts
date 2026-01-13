@@ -175,6 +175,7 @@ describe('Offers Service', () => {
         id: 'slot-1',
         eventId: 'event-2',
         fightId: null,
+        startTime: new Date().toISOString(),
       });
       
       const result = await service.sendOffers(
@@ -207,6 +208,7 @@ describe('Offers Service', () => {
         id: 'slot-1',
         eventId: 'event-1',
         fightId: 'other-fight',
+        startTime: new Date().toISOString(),
       });
       
       const result = await service.sendOffers(
@@ -239,6 +241,7 @@ describe('Offers Service', () => {
         id: 'slot-1',
         eventId: 'event-1',
         fightId: null,
+        startTime: new Date().toISOString(),
       });
       vi.mocked(repo.getOffersForFightEventSlotPlo).mockResolvedValueOnce([
         { id: 'offer-1', status: 'pending' } as any,
