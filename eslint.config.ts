@@ -93,6 +93,7 @@ export default defineConfig([
       }],
       '@typescript-eslint/no-non-null-assertion': 0,
       '@typescript-eslint/no-unused-expressions': 'warn',
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
       'comma-dangle': ['warn', 'always-multiline'],
       'no-console': 1,
       'no-extra-boolean-cast': 0,

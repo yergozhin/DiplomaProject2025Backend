@@ -4,20 +4,28 @@ import * as s from './service';
 import type { CreateResponseFields, UpdateResponseFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
-  const body = req.body;
+  const body = req.body as {
+    offerId?: unknown;
+    fighterId?: unknown;
+    amount?: unknown;
+    currency?: unknown;
+    status?: unknown;
+  };
   
   if (!body.offerId || !body.fighterId || typeof body.amount !== 'number') {
     return res.status(400).json({ error: 'invalid' });
   }
   
   const validStatuses = ['pending', 'accepted', 'rejected'];
-  const status = validStatuses.includes(body.status) ? body.status : undefined;
+  const status = typeof body.status === 'string' && validStatuses.includes(body.status) 
+    ? body.status as 'pending' | 'accepted' | 'rejected' 
+    : undefined;
   
   const fields: CreateResponseFields = {
-    offerId: body.offerId,
-    fighterId: body.fighterId,
+    offerId: typeof body.offerId === 'string' ? body.offerId : '',
+    fighterId: typeof body.fighterId === 'string' ? body.fighterId : '',
     amount: body.amount,
-    currency: body.currency,
+    currency: typeof body.currency === 'string' ? body.currency : undefined,
     status,
   };
   
@@ -48,7 +56,11 @@ export async function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body;
+  const body = req.body as {
+    amount?: unknown;
+    currency?: unknown;
+    status?: unknown;
+  };
   
   const validStatuses = ['pending', 'accepted', 'rejected'];
   const amount = typeof body.amount === 'number' ? body.amount : undefined;

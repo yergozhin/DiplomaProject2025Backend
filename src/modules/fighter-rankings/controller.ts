@@ -5,18 +5,25 @@ import type { CreateRankingFields, UpdateRankingFields } from './model';
 
 export async function create(req: AuthRequest, res: Response) {
   try {
-    const { fighterId, weightClassId, rankingPosition, rankingPoints, rankingDate } = req.body;
+    const body = req.body as {
+      fighterId?: unknown;
+      weightClassId?: unknown;
+      rankingPosition?: unknown;
+      rankingPoints?: unknown;
+      rankingDate?: unknown;
+    };
+    const { fighterId, weightClassId, rankingPosition, rankingPoints, rankingDate } = body;
     
     if (!fighterId || !weightClassId || !rankingDate) {
       return res.status(400).json({ error: 'invalid' });
     }
     
     const fields: CreateRankingFields = {
-      fighterId,
-      weightClassId,
+      fighterId: typeof fighterId === 'string' ? fighterId : '',
+      weightClassId: typeof weightClassId === 'string' ? weightClassId : '',
       rankingPosition: typeof rankingPosition === 'number' ? rankingPosition : null,
       rankingPoints: typeof rankingPoints === 'number' ? rankingPoints : 0,
-      rankingDate,
+      rankingDate: typeof rankingDate === 'string' ? rankingDate : '',
     };
     
     const ranking = await s.create(fields);
@@ -53,7 +60,11 @@ export function getById(req: Request, res: Response) {
 
 export async function update(req: AuthRequest, res: Response) {
   const id = req.params.id;
-  const body = req.body;
+  const body = req.body as {
+    rankingPosition?: unknown;
+    rankingPoints?: unknown;
+    rankingDate?: unknown;
+  };
   
   const rankingPosition = typeof body.rankingPosition === 'number' ? body.rankingPosition : null;
   const rankingPoints = typeof body.rankingPoints === 'number' ? body.rankingPoints : undefined;
