@@ -54,6 +54,16 @@ export async function all(): Promise<Offer[]> {
   return r.rows;
 }
 
+export async function allByPloId(ploId: string): Promise<Offer[]> {
+  const sql = `
+    ${offerSelect}
+    where pp.user_id = $1
+    order by o.created_at desc
+  `;
+  const r = await query<Offer>(sql, [ploId]);
+  return r.rows;
+}
+
 export async function create(
   fightId: string,
   eventId: string,

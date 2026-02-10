@@ -4,6 +4,8 @@ import * as medicalClearancesRepo from '../medical-clearances/repo';
 
 export const list = () => repo.all();
 
+export const listByPloId = (ploId: string) => repo.allByPloId(ploId);
+
 export async function sendOffers(ploId: string, fightId: string, eventId: string, eventSlotId: string, fighterAAmount: number, fighterACurrency: string, fighterBAmount: number, fighterBCurrency: string) {
   if (!ploId || !fightId || !eventId || !eventSlotId) {
     return { error: 'missing_required_fields' };

@@ -38,8 +38,9 @@ function parseAmount(value: unknown): number | null {
   return value;
 }
 
-export function getAll(_req: AuthRequest, res: Response) {
-  s.list().then(offers => {
+export function getAll(req: AuthRequest, res: Response) {
+  if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+  s.listByPloId(req.user.userId).then(offers => {
     res.json(offers);
   });
 }
