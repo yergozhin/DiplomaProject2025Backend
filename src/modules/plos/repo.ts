@@ -54,6 +54,22 @@ export async function getProfile(ploId: string): Promise<PloProfile | null> {
   return r.rows[0] ?? null;
 }
 
+export async function getProfileByEmail(email: string): Promise<PloProfile | null> {
+  const r = await query<PloProfile>(
+    `
+      select ${SELECT_COLUMNS}
+        from users u
+        left join plo_profiles pp on u.id = pp.user_id
+        left join plo_contact_info pci on pp.id = pci.plo_id
+       where u.email = $1
+         and u.role = 'plo'
+       limit 1
+    `,
+    [email],
+  );
+  return r.rows[0] ?? null;
+}
+
 export interface PloProfileUpdate {
   leagueName: string | null;
   ownerFirstName: string | null;

@@ -35,10 +35,14 @@ const offerSelect = `
     o.amount,
     o.currency,
     o.status,
-    o.created_at as "createdAt"
+    o.created_at as "createdAt",
+    e.name as "eventName",
+    es.start_time as "slotStartTime"
   from offers o
   left join fighter_profiles fp on o.fighter_profile_id = fp.id
   left join plo_profiles pp on o.plo_profile_id = pp.id
+  left join events e on o.event_id = e.id
+  left join event_slots es on o.event_slot_id = es.id
 `;
 
 export async function all(): Promise<Offer[]> {
@@ -47,6 +51,16 @@ export async function all(): Promise<Offer[]> {
     order by o.created_at desc
   `;
   const r = await query<Offer>(sql);
+  return r.rows;
+}
+
+export async function allByPloId(ploId: string): Promise<Offer[]> {
+  const sql = `
+    ${offerSelect}
+    where pp.user_id = $1
+    order by o.created_at desc
+  `;
+  const r = await query<Offer>(sql, [ploId]);
   return r.rows;
 }
 

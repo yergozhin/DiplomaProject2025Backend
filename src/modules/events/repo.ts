@@ -139,6 +139,14 @@ export async function getAvailableSlots(eventId: string): Promise<EventSlot[]> {
   return r.rows;
 }
 
+export async function getAllSlots(eventId: string): Promise<EventSlot[]> {
+  const r = await query<EventSlot>(
+    'select id, event_id as "eventId", start_time as "startTime", fight_id as "fightId" from event_slots where event_id = $1 order by start_time',
+    [eventId],
+  );
+  return r.rows;
+}
+
 
 export interface EventUpdateFields {
   eventName: string | null;

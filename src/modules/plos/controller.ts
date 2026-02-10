@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthRequest } from '@src/middlewares/auth';
 import * as s from './service';
 import * as repo from './repo';
@@ -38,6 +38,26 @@ export async function getProfile(req: AuthRequest, res: Response) {
   const profile = await repo.getProfile(req.user.userId);
   if (!profile) return res.status(404).json({ error: 'not_found' });
   
+  res.json(profile);
+}
+
+export async function getPublicById(req: Request, res: Response) {
+  const { ploId } = req.params;
+  if (typeof ploId !== 'string' || ploId.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const profile = await repo.getProfile(ploId);
+  if (!profile) return res.status(404).json({ error: 'not_found' });
+  res.json(profile);
+}
+
+export async function getPublicByEmail(req: Request, res: Response) {
+  const { email } = req.params;
+  if (typeof email !== 'string' || email.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const profile = await repo.getProfileByEmail(email);
+  if (!profile) return res.status(404).json({ error: 'not_found' });
   res.json(profile);
 }
 

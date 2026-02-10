@@ -150,6 +150,17 @@ export async function updateVerificationToken(
   );
 }
 
+export async function findUsersByEmail(email: string): Promise<AuthUser[]> {
+  const result = await query<AuthUser>(
+    `select u.id, u.email, u.role, u.password_hash, pp.plo_status, u.email_verified
+     from users u
+     left join plo_profiles pp on u.id = pp.user_id
+     where u.email = $1`,
+    [email],
+  );
+  return result.rows;
+}
+
 export async function findUserByPasswordResetToken(
   token: string,
 ): Promise<AuthUser | null> {
@@ -181,6 +192,22 @@ export async function updatePasswordResetToken(
   );
 }
 
+export async function updatePasswordResetTokenForAllRoles(
+  email: string,
+  token: string,
+  expiresAt: Date,
+): Promise<void> {
+  await query(
+    `
+      update users
+      set password_reset_token = $2,
+          password_reset_token_expires_at = $3
+      where email = $1
+    `,
+    [email, token, expiresAt],
+  );
+}
+
 export async function updatePassword(
   userId: string,
   passwordHash: string,
@@ -194,6 +221,22 @@ export async function updatePassword(
       where id = $1
     `,
     [userId, passwordHash],
+  );
+}
+
+export async function updatePasswordForAllRoles(
+  email: string,
+  passwordHash: string,
+): Promise<void> {
+  await query(
+    `
+      update users
+      set password_hash = $2,
+          password_reset_token = null,
+          password_reset_token_expires_at = null
+      where email = $1
+    `,
+    [email, passwordHash],
   );
 }
 

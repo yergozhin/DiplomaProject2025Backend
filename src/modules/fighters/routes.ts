@@ -4,6 +4,8 @@ import { Roles } from '@src/common/constants/Roles';
 import * as c from './controller';
 
 const r = Router();
+r.get('/public/:fighterId', c.getPublicById);
+r.get('/public/by-email/:email', c.getPublicByEmail);
 r.get('/', c.getAll);
 r.get('/possible-opponents', requireAuth, requireRole(Roles.Fighter), c.getList);
 r.get('/profile', requireAuth, requireRole(Roles.Fighter), c.getProfile);

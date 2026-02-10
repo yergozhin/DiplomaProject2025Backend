@@ -131,15 +131,15 @@ export async function resendVerificationEmail(email: string, role: Role) {
   return { message: 'Verification email sent' };
 }
 
-export async function requestPasswordReset(email: string, role: Role) {
-  const user = await repo.findUserByEmailAndRole(email, role);
-  if (!user) return { error: 'user_not_found' };
+export async function requestPasswordReset(email: string) {
+  const users = await repo.findUsersByEmail(email);
+  if (users.length === 0) return { error: 'user_not_found' };
   
   const token = generateVerificationToken();
   const expires = new Date();
   expires.setTime(expires.getTime() + 60 * 60 * 1000);
   
-  await repo.updatePasswordResetToken(user.id, token, expires);
+  await repo.updatePasswordResetTokenForAllRoles(email, token, expires);
   
   try {
     await sendPasswordResetEmail(email, token);
@@ -159,7 +159,7 @@ export async function resetPassword(token: string, newPassword: string) {
   if (!user) return null;
   
   const hashed = hashPassword(newPassword);
-  await repo.updatePassword(user.id, hashed);
+  await repo.updatePasswordForAllRoles(user.email, hashed);
   
   return {
     id: user.id,

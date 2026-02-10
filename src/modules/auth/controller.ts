@@ -110,14 +110,13 @@ export async function resendVerificationEmail(req: Request, res: Response) {
 export async function requestPasswordReset(req: Request, res: Response) {
   const body = req.body as AuthRequestBody;
   const email = parseString(body.email);
-  const role = parseRole(body.role);
   
-  if (!email || !role) {
+  if (!email) {
     return res.status(400).json({ error: 'invalid' });
   }
   
   try {
-    const result = await service.requestPasswordReset(email, role);
+    const result = await service.requestPasswordReset(email);
     if ('error' in result) {
       if (result.error === 'user_not_found') {
         return res.status(404).json({ error: 'user_not_found' });
