@@ -73,6 +73,23 @@ export async function getAvailableSlotsForEvent(eventId: string, ploId: string) 
   return repo.getAvailableSlots(eventId);
 }
 
+export async function getAllSlotsForEvent(eventId: string) {
+  if (!eventId) {
+    return { error: 'event_not_found' };
+  }
+  
+  const event = await repo.getById(eventId);
+  if (!event) {
+    return { error: 'event_not_found' };
+  }
+  
+  if (event.status !== 'published') {
+    return { error: 'event_not_published' };
+  }
+  
+  return repo.getAllSlots(eventId);
+}
+
 export const updateEvent = async (eventId: string, ploId: string, fields: EventUpdateFields) => {
   if (!eventId || !ploId) throw new Error('Event ID and PLO ID required');
   return repo.updateEvent(eventId, ploId, fields);
@@ -131,6 +148,23 @@ export async function publishEvent(
 export const getFightsForEvent = (eventId: string) => {
   return repo.getFightsForEvent(eventId);
 };
+
+export async function getPublicFightsForEvent(eventId: string) {
+  if (!eventId) {
+    return { error: 'event_not_found' };
+  }
+  
+  const event = await repo.getById(eventId);
+  if (!event) {
+    return { error: 'event_not_found' };
+  }
+  
+  if (event.status !== 'published') {
+    return { error: 'event_not_published' };
+  }
+  
+  return repo.getFightsForEvent(eventId);
+}
 
 export async function checkAndUpdateEventStatus(eventId: string) {
   return repo.updateEventStatusIfNeeded(eventId);

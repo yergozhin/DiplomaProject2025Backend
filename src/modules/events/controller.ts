@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { AuthRequest } from '@src/middlewares/auth';
 import { Roles } from '@src/common/constants/Roles';
 import * as s from './service';
@@ -177,5 +177,33 @@ export async function getFightsForEvent(req: AuthRequest, res: Response) {
   }
   const fights = await s.getFightsForEvent(eventId);
   res.json(fights);
+}
+
+export async function getAllSlots(req: Request, res: Response) {
+  const { eventId } = req.params;
+  if (!eventId || typeof eventId !== 'string' || eventId.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const r = await s.getAllSlotsForEvent(eventId);
+  if ('error' in r) {
+    if (r.error === 'event_not_found') return res.status(404).json({ error: 'event_not_found' });
+    if (r.error === 'event_not_published') return res.status(403).json({ error: 'event_not_published' });
+    return res.status(400).json({ error: r.error });
+  }
+  res.json(r);
+}
+
+export async function getPublicFights(req: Request, res: Response) {
+  const { eventId } = req.params;
+  if (!eventId || typeof eventId !== 'string' || eventId.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const r = await s.getPublicFightsForEvent(eventId);
+  if ('error' in r) {
+    if (r.error === 'event_not_found') return res.status(404).json({ error: 'event_not_found' });
+    if (r.error === 'event_not_published') return res.status(403).json({ error: 'event_not_published' });
+    return res.status(400).json({ error: r.error });
+  }
+  res.json(r);
 }
 
