@@ -113,6 +113,26 @@ export async function getProfile(req: AuthRequest, res: Response) {
   res.json(r);
 }
 
+export async function getPublicById(req: Request, res: Response) {
+  const { fighterId } = req.params;
+  if (typeof fighterId !== 'string' || fighterId.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const r = await s.getById(fighterId);
+  if (!r) return res.status(404).json({ error: 'not_found' });
+  res.json(r);
+}
+
+export async function getPublicByEmail(req: Request, res: Response) {
+  const { email } = req.params;
+  if (typeof email !== 'string' || email.trim().length === 0) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const r = await s.getByEmail(email);
+  if (!r) return res.status(404).json({ error: 'not_found' });
+  res.json(r);
+}
+
 export async function updateProfile(req: AuthRequest, res: Response) {
   if (!req.user) return res.status(401).json({ error: 'unauthorized' });
   const body = req.body as ProfileBody;

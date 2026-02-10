@@ -200,6 +200,14 @@ export async function getById(id: string): Promise<Fighter | null> {
   return r.rows[0] || null;
 }
 
+export async function getByEmail(email: string): Promise<Fighter | null> {
+  const r = await query<Fighter>(
+    `select ${FIGHTER_COLUMNS} ${FIGHTER_FROM_JOIN} where u.email=$1 and u.role=$2`,
+    [email, 'fighter'],
+  );
+  return r.rows[0] || null;
+}
+
 export interface OpponentFilters {
   weightClass?: string | null;
   searchName?: string | null;

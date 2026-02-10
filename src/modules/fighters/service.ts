@@ -18,6 +18,8 @@ export function updateProfile(id: string, fields: FighterProfileFields) {
 
 export const getById = (id: string) => repo.getById(id);
 
+export const getByEmail = (email: string) => repo.getByEmail(email);
+
 export function listExcept(userId: string, filters?: OpponentFilters) {
   return repo.allExcept(userId, filters);
 }

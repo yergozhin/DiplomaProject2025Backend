@@ -4,6 +4,8 @@ import { Roles } from '@src/common/constants/Roles';
 import * as c from './controller';
 
 const r = Router();
+r.get('/public/:ploId', c.getPublicById);
+r.get('/public/by-email/:email', c.getPublicByEmail);
 r.get('/profile', requireAuth, requireRole(Roles.PLO), c.getProfile);
 r.put('/profile', requireAuth, requireRole(Roles.PLO), c.updateProfile);
 export default r;
